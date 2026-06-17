@@ -1,0 +1,24 @@
+# Tasks
+
+- [x] Add file-extension language detection for common code and config formats.
+- [x] Render highlighted code behind the editable textarea.
+- [x] Keep user content escaped when using highlighted HTML.
+- [x] Add focused unit tests.
+- [x] Run targeted desktop tests and typecheck.
+- [x] Isolate the file editor from the global `highlight.js` dark theme.
+- [x] Add file-type-specific icons for common skill files.
+- [x] Replace generated file-icon badges with real Material Icon Theme SVG assets.
+- [x] Remove the transparent textarea overlay so highlighted code remains visible.
+- [x] Replace the file content `pre`/`textarea` implementation with a lightweight CodeMirror 6 editor.
+- [x] Add focused tests for CodeMirror language detection and editor mounting.
+- [x] Add non-empty TypeScript preview regression coverage and HTML/CSS fallback protections for blank highlighted output.
+- [x] Enable soft wrapping and internal vertical scrolling for the skill code editor.
+- [x] Normalize skill file relative paths to `/` so Windows file trees render as expandable folders instead of flat backslash paths.
+- [x] Make file editing mode explicit with edit / discard / cancel / save controls.
+- [x] Keep skill version-history timeline and content panes independently scrollable.
+- [x] Improve CodeMirror dark-mode token colors for readable syntax highlighting.
+- [x] Stop creating automatic skill version snapshots for ordinary local file save / rename / delete / directory-create operations.
+- [x] Preview supported skill resource files such as images, audio, video, and PDF without bloating bulk file reads.
+- [x] Add zoom controls for image and SVG resource previews.
+- [x] Prevent CodeMirror parent value sync from marking files dirty before users edit them.
+- [x] Keep Skill Markdown preview rendering when fenced code uses an unregistered language such as `powershell`.

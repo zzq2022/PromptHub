@@ -1,0 +1,34 @@
+version: 1
+
+profile: prompthub-hybrid-spec
+
+routes:
+  workflow.intake: spec/workflow/00-intake/README.md
+  workflow.requirements: spec/workflow/01-requirements/README.md
+  workflow.design: spec/workflow/02-design/README.md
+  workflow.implementation: spec/workflow/03-implementation/README.md
+  workflow.verification: spec/workflow/04-verification/README.md
+  workflow.tasks: spec/workflow/05-tasks/README.md
+
+  knowledge.context: spec/knowledge/context/
+  knowledge.structure: spec/knowledge/structure/
+  knowledge.behavior: spec/knowledge/behavior/
+  knowledge.reference: spec/knowledge/reference/
+
+  changes.index: spec/changes/README.md
+  changes.active: spec/changes/active/
+  changes.completed: spec/changes/completed/
+  changes.legacy: spec/changes/legacy/
+
+  records.issues: spec/issues/
+  records.releases: spec/releases/
+  records.decisions: spec/adr/
+  records.archive: spec/archive/
+  records.rules: spec/rules/
+
+notes:
+  - PromptHub keeps internal SSD under `spec/` instead of `docs/`.
+  - `workflow` is the project-level planning layer used with `spec-init`.
+  - `knowledge` is the long-lived truth layer mapped to PromptHub's stable specs, architecture, logic, and assets.
+  - `changes` stays aligned with PromptHub's existing active/archive/legacy change flow.
+  - `records` captures issues, rules, release summaries, ADRs, and archive entry points.

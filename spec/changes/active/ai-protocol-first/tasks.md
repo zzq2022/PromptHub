@@ -1,0 +1,47 @@
+# Tasks
+
+- [x] 明确变更边界
+- [x] 完成 delta spec
+- [x] 实施 `apiProtocol` 数据模型、迁移、snapshot / backup 变更
+- [x] 实施 AI workbench 协议选择与 Anthropic 流式限制
+- [x] 实施 renderer/main transport 协议分支改造
+- [x] 完成测试与验证
+- [x] 更新 implementation.md
+- [x] 同步稳定 specs / architecture / docs
+- [x] 修复 OpenAI-compatible 模型列表中 `owned_by=openai` 导致 DeepSeek/Qwen/StepFun/MiniMax/Baichuan/Llama/Grok/Command 等主流模型被误归入 GPT 的分组回归
+- [x] 将 AI 设置页模型管理区调整为供应商优先布局：左侧供应商/端点，右侧该供应商下模型
+- [x] 锁定模型编辑态的供应商/端点字段，避免模型编辑误改供应商配置
+- [x] 为已知视觉/生图模型补充选择时的默认属性推断
+- [x] 补齐批量添加混合模型时每个 modelId 独立推断类型/能力的回归测试与修复
+- [x] 修复模型路由常量引入后 MainContent 集成测试的 settings.store 窄 mock 漏导出问题
+- [x] 将供应商/模型设置区重排为左侧供应商列表、右侧供应商详情面板的设置页结构
+- [x] 补齐主流供应商类型预设顺序与唯一性回归测试，修复重复 `xAI` 预设
+- [x] 补齐供应商详情面板必须展示 API Key、API URL、Protocol 的组件回归
+- [x] 将模型服务主视图从状态卡片内容流改为设置菜单 / 模型服务中栏 / 详情面板的三栏结构
+- [x] 在模型服务中栏上方放置模型路由和高级参数入口，并单开供应商分区直接展示供应商列表、搜索框和添加供应商入口
+- [x] 将添加供应商从模型弹窗中拆出，新增独立供应商端点记录，允许供应商先存在、模型后添加
+- [x] 将模型弹窗中的供应商端点改为只读摘要，避免添加模型时误编辑供应商
+- [x] 为供应商弹窗补齐 API URL 自动规范化、Base URL 预览、请求地址预览和 `#` 禁用自动补全提示
+- [x] 移除供应商预设下拉中的国内/国外/其他分组，改为统一列表
+- [x] 将自定义供应商固定为第一项，并允许自定义选择 OpenAI / Gemini / Anthropic 兼容协议
+- [x] 为预制供应商补齐图标分类并补充回归测试
+- [x] 修复删除模型时误让模型派生供应商消失的问题，删除最后一个模型前保留供应商端点记录
+- [x] 将供应商详情模型区拆成手动添加 `+` 和获取模型列表两个独立入口，并支持弹窗内批量添加
+- [x] 将手动添加模型弹窗和获取模型列表弹窗拆开，`+` 不再展示供应商端点信息或拉取模型列表
+- [x] 将模型表单顶部的“模型类型”单选移除，改为在“模型能力”区配置对话 / 图像 / 视觉能力
+- [x] 收口供应商/模型边界，将供应商实例名和供应商类型拆开
+- [x] 为 `AIProviderConfig` 增加实例名并让中栏列表、详情页、搜索优先使用实例名
+- [x] 对照主流模型管理工具的能力 schema，补齐推理、工具调用、联网搜索、Embedding、Rerank 能力维度
+- [x] 修复双能力模型保存时只保留单一路由参数的问题
+- [x] 将预制供应商图标从 Lucide 兜底替换为真实品牌图标资产，并补充回归断言
+- [x] 将手动模型编辑的能力区收敛为常用能力，不再显式展示对话、工具调用、联网搜索、Embedding、Rerank
+- [x] 将模型列表标签拆分为能力图标和路由文字，并统一测试动作试管图标
+- [x] 修复 Prompt 生图测试面板仍显示供应商类型的问题，改为显示用户配置的供应商实例名
+- [x] 修复 Prompt 生图测试失败只出 toast 的问题，在测试面板内保留失败原因
+- [x] 修复 OpenAI-compatible / Gemini / FLUX / Ideogram / Recraft / Replicate / Stability 生图请求从 renderer 直连导致 CORS 失败的问题，统一走主进程 AI transport
+- [x] 将所有生图请求超时从 60s 提升到 300s，覆盖 OpenAI-compatible、Gemini、FLUX、Ideogram、Recraft、Replicate polling、Stability
+- [x] 修复服务商返回 HTML/504 网关错误页时前端原样展示整段 HTML 的问题，改为展示简短可读错误
+- [x] 将 GPT Image 单图请求体收敛为 `model + prompt`，避免默认 `n: 1` 影响自定义代理兼容性
+- [x] 为 AI 测试抽屉和自绘 Prompt 弹窗补齐进入动画，并补充 UI 回归断言
+- [x] 将 AI provider / model / route 配置收口为 `config/ai-models.json` 单一持久化源，desktop `settings.set` 不再把 AI 字段写入 SQLite settings
+- [x] 为模型配置补 `providerId`，避免多个同类型/同 URL 自定义供应商被合并成一个端点

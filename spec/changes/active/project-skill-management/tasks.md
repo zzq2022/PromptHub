@@ -1,0 +1,27 @@
+# Tasks
+
+- [ ] 更新版本号到 `0.5.6`
+- [x] 定义项目级 Skill 的共享类型与持久化方案
+- [x] 实现项目目录注册/删除/更新的设置或管理入口
+- [x] 在 Skill 左侧导航新增 `Projects` 一级入口
+- [x] 实现项目列表与项目详情页基础 UI
+- [x] 接入项目 Skill 扫描与结果展示
+- [x] 实现“纳入库”与“纳入库并分发”动作
+- [x] 评估并实现项目 Skill 的直接管理入口
+- [x] 设计并实现“分发到当前项目目录”的项目级部署能力
+- [x] 在项目页头部增加“从我的技能导入”，支持多选与高级目标目录
+- [x] 补充单元测试 / 集成测试
+- [x] 更新 implementation.md
+- [x] 修正项目扫描默认路径与重复导入的边界行为
+- [x] 修复项目扫描结果与 My Skills 的同名误关联
+- [x] 修复项目技能部署到自身目录树时的嵌套复制问题
+- [x] 修复设置加载时对 legacy custom agent 路径的回退短路问题
+- [x] 修复 Skill Settings 中包含 custom agents 时的平台排序按钮边界
+- [x] 修复 Rules 页面中 custom agent 配置变更后的缓存残留与刷新不一致问题
+- [x] 为 built-in agent 引入完整 override 配置模型（root + relative paths）
+- [x] 统一 renderer / main process 对 effective agent config 的派生逻辑
+- [x] 将 Skill Settings 中 built-in agent 配置升级为完整路径配置 UI
+- [x] 为项目 Skill 扫描结果补充复制/软链接/外部软链接标签，并在详情页分别展示快捷方式路径和源 Skill 路径
+- [x] 修复项目 Skill 普通复制安装被误标记为“外部安装”的 badge 判定
+- [x] 将项目 Skill 来源标签口径收敛为：copy 显示复制安装，非 PromptHub 管理的 symlink 显示外部安装
+- [x] 修复从 My Skills 复制安装到项目后，项目详情仍提示“导入到我的 Skill”的识别漏洞

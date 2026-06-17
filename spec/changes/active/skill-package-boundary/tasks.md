@@ -1,0 +1,48 @@
+# Tasks
+
+- [x] Inspect stable Skill behavior and structure docs.
+- [x] Inspect current Skill import/store implementation paths.
+- [x] Identify the content-only path that caused directory loss.
+- [x] Add active change record for the package boundary.
+- [x] Add failing tests for full-package Gitea/custom Git import.
+- [x] Add failing tests that store installation cannot persist only `SKILL.md` when source metadata represents a package.
+- [x] Add real local Git fixture coverage for clone-backed package import.
+- [x] Add boundary/fuzz tests for path traversal, missing `SKILL.md`, ambiguous multi-skill repos, internal directory filtering, and symlink filtering.
+- [x] Add stress test for large Skill package inventory copy.
+- [x] Add IPC validation and fingerprint persistence tests for `skill:saveRemoteGitToRepo`.
+- [x] Add package install rollback test when remote package persistence fails.
+- [x] Implement package-level install/sync path for custom Git/Gitea sources.
+- [x] Upgrade manual Skill creation so blank instructions produce a package-aware starter `SKILL.md`.
+- [x] Add built-in Skill guidance for authoring good package-style Skills.
+- [x] Add built-in PromptHub CLI operator Skill.
+- [x] Verify safety scan and file browser consume managed package directories after install.
+- [x] Fix installed custom Gitea safety scans so internal source provenance does not block managed local package scanning.
+- [x] Add safety scan regression tests for installed managed packages with internal Gitea source URLs and pre-install blocked source behavior.
+- [x] Add custom Git/Gitea refresh regression tests for user-selected repositories whose hostnames resolve to private network addresses.
+- [x] Add installed Skill update white-box regression matrix for private Git/Gitea content URLs while keeping arbitrary internal URLs blocked.
+- [x] Add Skill store regression tests for install pending animation across recommended, already-imported, detail, and concurrent install states.
+- [x] Audit safety scan prompt construction for full-package content coverage.
+- [x] Add prompt-sensitive tests proving ordinary docs/reference files are sent to AI, not only `SKILL.md` and scripts.
+- [x] Add tests proving repository preflight findings are passed to AI as review evidence.
+- [x] Add large-package prompt budget and truncation tests.
+- [x] Add real filesystem symlink escape filtering coverage for safety scan.
+- [x] Add batch installed scan test proving renderer store passes `local_repo_path` to main safety scan.
+- [x] Add UI regression tests for official unopened store count/search consistency.
+- [x] Add UI regression test for stale installed platform status in rendered Skill list rows.
+- [x] Add UI regression test for expanding nested synthetic package folders in the Skill file browser.
+- [x] Fix official unopened store count/search consistency across Sidebar, TopBar, and store catalog behavior.
+- [x] Fix rendered Skill list platform status refresh after install state changes.
+- [x] Fix package file browser directory buttons so nested folders expose and toggle expansion state.
+- [x] Fix `skills.sh` store installs so entries clone the full GitHub skill package directory instead of writing only parsed `SKILL.md`.
+- [x] Fix non-standard `skills.sh` repositories such as `vercel-labs/agent-skills` so install does not guess `skills/<skill-name>` and can resolve the package by `SKILL.md` frontmatter after clone.
+- [x] Fix store quick-install failure to surface as install failure instead of safety scan failure when package persistence fails.
+- [x] Fix source update checks so stale install baselines from package sync do not report local modifications when local content already matches the current remote content.
+- [x] Align the Skill detail personal notes panel by moving its title outside the card, matching the right-column section hierarchy.
+- [x] Fix ClawHub store installs so entries use the official zip download package and persist all files.
+- [x] Add zip package IPC/service tests for full inventory copy, fingerprint persistence, traversal rejection, and temp cleanup.
+- [x] Strengthen project TDD and coverage rules to require 100% line/function/branch/condition coverage for new and changed production code.
+- [x] Sync final behavior back to stable docs after implementation.
+- [x] Add GitHub install cleanup and rollback regressions for managed repo migration.
+- [x] Fix GitHub install so successful managed migration removes the temporary clone and post-create failures roll back the DB row.
+- [x] Add remote store inflight filter-race regression coverage.
+- [x] Fix remote store inflight keys and stale-result guards so concurrent skills.sh / ClawHub queries cannot overwrite the active filter.

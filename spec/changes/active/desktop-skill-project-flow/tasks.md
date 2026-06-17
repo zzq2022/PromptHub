@@ -1,0 +1,27 @@
+- [x] 调整项目视图头部与分栏对齐
+- [x] 优化添加项目弹窗的路径优先与自动填充
+- [x] 添加项目后自动扫描项目 Skills
+- [x] 为项目列表/头部增加首字母标识
+- [x] 更新桌面端相关单元测试
+- [x] 运行桌面端 lint / typecheck / 定向测试
+- [x] 更新 implementation.md
+- [x] 调整项目级 Skill 详情页的预览右栏与收录动作
+- [x] 修复本地文件夹 Source 的导入/更新链路，区分本地 source 与远程 store skill
+- [x] 为本地 Source 的安装、更新与详情预览补回归测试
+- [x] 为“从我的技能导入到项目”高级导入设置补充复制 / 软连接模式
+- [x] 统一全局 Skill 详情页右栏为“全局分发 / 项目分发”卡，并收敛项目路径摘要显示
+- [x] 修正全局 Skill 详情默认分发入口：每次打开 Skill 默认停留在“全局分发”
+- [x] 为全局 Skill 详情的“项目分发”补齐高级设置：复用 copy/symlink 语义，并支持 `.agents/skills` 默认目标和额外目标目录
+- [x] 让全局 Skill 详情的“项目分发”复用项目页导入偏好，包括已保存的目标目录与自定义目录
+- [x] 修复审查发现的问题：项目分发模式改为显式点击写入偏好，并为全局详情页补齐 self-target 防护
+- [x] 将项目 Skill 结果区从大卡片宫格收口为紧凑列表，并把次要动作改为 icon-only
+- [x] 修复 Cherry Studio 平台识别：macOS 默认路径从 `CherryStudioDev` 改为正式版 `CherryStudio`，并接入真实平台图标
+- [x] 修复 Cherry Studio 安装适配：优先使用当前版本 `Data/agents.db` 与 `skills` / `agent_skills` / `agents` 表，保留旧 `cherrystudio.sqlite` 兼容
+- [x] 修复从 Agent/平台目录导入到我的 Skill 后，全局分发面板仍显示对应平台未安装的问题
+- [x] 优化全局平台安装成功提示，显示具体 Skill 名和目标平台名
+- [x] 完善 Skill 来源标签：区分本地文件夹导入、项目导入、商店/Git 导入和具体 Agent 平台导入
+- [x] 修复 Cherry Studio 平台扫描页卸载只删除文件夹、不删除 `agents.db` 中 `skills` / `agent_skills` 记录的问题，并禁止删除 Cherry Studio 内置 Skill
+- [x] 修正 Cherry Studio 软连接分发：支持 DB 注册 + `Data/Skills/<folder>` 目录 symlink，并验证卸载只删除链接不删除 PromptHub 源目录
+- [x] 补齐 Cherry Studio 软连接分发 CRUD 覆盖：创建、状态读取、重复安装更新、copy/symlink 模式互切、卸载与失败回退
+- [x] 修复商店详情“从我的 Skill 中移除”按钮：移除动作复用已导入状态的 source/slug/content URL fallback 匹配，避免显示已导入但点击无效
+- [x] 为项目 Skill 工作区补充删除项目入口：二次确认后移除 PromptHub 项目记录与偏好，不删除磁盘文件，并自动切换到下一个项目

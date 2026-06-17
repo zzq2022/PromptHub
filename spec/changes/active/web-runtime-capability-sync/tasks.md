@@ -1,0 +1,33 @@
+- [x] 审查 desktop preload 与 Web bridge 的关键能力差异
+- [x] 补齐 Web bridge 中缺失的 Prompt / Rules / Skill / electron 能力
+- [x] 为缺失能力新增最小 Web 路由或服务
+- [x] 补充 Web 端桥接与路由回归测试
+- [x] 修复 Web bridge 安装时序，确保复用桌面页面首次渲染前已进入 Web runtime
+- [x] 对齐 Web runtime 与桌面版 Skill 工作区页面入口，不再隐藏商店、项目、agent、分发和文件页签
+- [x] 移除 Web 全局样式对桌面主题、字体和字号的覆盖
+- [x] 优化 Web 登录/设置页验证码区域，压缩无效间距并统一验证码输入框样式
+- [x] 明确自部署 Web 产品边界：备份 / 浏览工作区，不替代桌面端本机分发能力
+- [x] 补齐 Prompt 桌面兼容恢复 bridge：folder/prompt/version direct insert、version delete、workspace sync
+- [x] 为 Prompt direct restore 补真实路由测试和 Web bridge 映射测试
+- [x] 补齐 Cloudflare Worker 对 Prompt direct restore API 的同名兼容路由和 D1 snapshot 写入测试
+- [x] 优化项目 Skill 列表卡片布局，固定操作列和按钮尺寸，避免中英文文案导致卡片长短不一
+- [x] 修复项目 Skill 详情打开/返回时被旧的收藏筛选状态带回“收藏”的视图状态问题
+- [x] 明确我的 Skill 顶部扫描/刷新入口边界，并为本地扫描和预览弹窗重扫增加超时保护，避免无限转圈
+- [x] 补齐扫描/刷新新增文案的 7 语言翻译 key
+- [x] 批量管理入口支持二次点击收起，避免必须到批量工具条里点取消
+- [x] Agent Skill 卡片改为大卡片信息布局，并补齐打开、打开我的 Skill、快速卸载等右下角图标操作
+- [x] Agent Skill 侧栏入口显示已检测 Agent 数量，并尊重禁用平台设置
+- [x] Agent 安装我的 Skill 复用项目导入弹窗样式，保留复制 / 软链接模式但隐藏项目高级目标设置
+- [x] 扫描 / 刷新类按钮补齐成功 toast 反馈，避免用户无法判断扫描是否执行
+- [x] 对齐项目 Skill 与 Agent Skill 详情页顶部操作：已追踪 Skill 都能直接打开我的 Skill，并保留打开来源 / 移除入口
+- [x] 将已分发 / 待分发从左侧一级导航移入我的 Skill 顶部状态筛选，并兼容旧 distribution 视图状态
+- [x] 将收藏从 Skill 左侧一级导航移入我的 Skill 顶部筛选，左侧只保留模块级入口
+- [x] 修复 Agent Skill 软链接来源打开行为，打开 `.cline/.agents` 等来源路径时定位链接本身而不是跳到我的 Skill 仓库目标
+- [x] 补齐 Agent Skill 导入到我的 Skill 的卡片和详情入口，并复用扫描 Skill 导入边界
+- [x] 拆分新建 Skill 中的本地扫描入口：Agent 导入跳转 Agent Skill；任意本地目录必须先选择路径再扫描
+- [x] 移除我的 Skill 顶部旧“扫描本地”图标入口，只保留库刷新按钮；刷新按钮使用独立 loading 状态并提供 toast
+- [x] 保持 Web runtime 的 Skill 页面入口可见，不再被旧 capability 守卫强制降级到我的 Skill
+- [x] 运行 `lint` / `typecheck` / `test` / `build`
+- [x] 更新 implementation.md
+- [ ] 为旧 Web 读取新桌面备份快照补充未知字段 / 未知枚举兼容测试
+- [ ] 为桌面到 Web 的备份导入补 manifest 级兼容保护

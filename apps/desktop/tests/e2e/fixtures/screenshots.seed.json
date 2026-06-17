@@ -1,0 +1,319 @@
+{
+  "settings": {
+    "language": "en",
+    "theme": "dark",
+    "motionPreference": "standard"
+  },
+  "folders": [
+    {
+      "id": "folder_engineering",
+      "name": "Engineering",
+      "parentId": null,
+      "icon": "Code",
+      "isPrivate": false,
+      "order": 0,
+      "createdAt": "2026-04-01T09:00:00.000Z",
+      "updatedAt": "2026-05-10T09:00:00.000Z"
+    },
+    {
+      "id": "folder_marketing",
+      "name": "Marketing",
+      "parentId": null,
+      "icon": "Megaphone",
+      "isPrivate": false,
+      "order": 1,
+      "createdAt": "2026-04-01T09:01:00.000Z",
+      "updatedAt": "2026-05-10T09:01:00.000Z"
+    },
+    {
+      "id": "folder_operations",
+      "name": "Operations",
+      "parentId": null,
+      "icon": "Activity",
+      "isPrivate": false,
+      "order": 2,
+      "createdAt": "2026-04-01T09:02:00.000Z",
+      "updatedAt": "2026-05-10T09:02:00.000Z"
+    },
+    {
+      "id": "folder_personal",
+      "name": "Personal",
+      "parentId": null,
+      "icon": "Heart",
+      "isPrivate": false,
+      "order": 3,
+      "createdAt": "2026-04-01T09:03:00.000Z",
+      "updatedAt": "2026-05-10T09:03:00.000Z"
+    }
+  ],
+  "prompts": [
+    {
+      "id": "prompt_eng_review",
+      "title": "Code Review Buddy",
+      "description": "Reviews diffs for clarity, correctness, and tests.",
+      "promptType": "text",
+      "systemPrompt": "You are a senior staff engineer doing a careful, kind code review.",
+      "userPrompt": "Review the following diff for {{repo}}. Flag missing tests and unclear naming.\n\n{{diff}}",
+      "variables": [
+        { "name": "repo", "type": "text", "required": true },
+        { "name": "diff", "type": "text", "required": true }
+      ],
+      "tags": ["engineering", "review"],
+      "folderId": "folder_engineering",
+      "images": [],
+      "videos": [],
+      "isFavorite": true,
+      "isPinned": true,
+      "version": 4,
+      "currentVersion": 4,
+      "usageCount": 28,
+      "source": null,
+      "notes": "Used for weekly review rituals.",
+      "lastAiResponse": null,
+      "createdAt": "2026-04-02T08:30:00.000Z",
+      "updatedAt": "2026-05-12T14:20:00.000Z"
+    },
+    {
+      "id": "prompt_eng_postmortem",
+      "title": "Incident Postmortem",
+      "description": "Drafts a blameless postmortem from a timeline of events.",
+      "promptType": "text",
+      "systemPrompt": "Write a calm, blameless postmortem.",
+      "userPrompt": "Service {{service}} had an incident on {{date}}. Timeline:\n{{timeline}}",
+      "variables": [
+        { "name": "service", "type": "text", "required": true },
+        { "name": "date", "type": "text", "required": true },
+        { "name": "timeline", "type": "text", "required": true }
+      ],
+      "tags": ["engineering", "incident"],
+      "folderId": "folder_engineering",
+      "images": [],
+      "videos": [],
+      "isFavorite": false,
+      "isPinned": false,
+      "version": 2,
+      "currentVersion": 2,
+      "usageCount": 7,
+      "source": null,
+      "notes": null,
+      "lastAiResponse": null,
+      "createdAt": "2026-04-08T10:00:00.000Z",
+      "updatedAt": "2026-05-08T15:11:00.000Z"
+    },
+    {
+      "id": "prompt_mkt_launch",
+      "title": "Launch Tweet Draft",
+      "description": "Compresses a feature launch into a 280-char tweet.",
+      "promptType": "text",
+      "systemPrompt": "You write punchy product launch tweets.",
+      "userPrompt": "Write a launch tweet for {{feature}}. Audience: {{audience}}.",
+      "variables": [
+        { "name": "feature", "type": "text", "required": true },
+        { "name": "audience", "type": "text", "required": false }
+      ],
+      "tags": ["marketing", "social"],
+      "folderId": "folder_marketing",
+      "images": [],
+      "videos": [],
+      "isFavorite": true,
+      "isPinned": false,
+      "version": 1,
+      "currentVersion": 1,
+      "usageCount": 12,
+      "source": null,
+      "notes": null,
+      "lastAiResponse": null,
+      "createdAt": "2026-04-15T09:00:00.000Z",
+      "updatedAt": "2026-05-09T11:00:00.000Z"
+    },
+    {
+      "id": "prompt_mkt_changelog",
+      "title": "Changelog Polish",
+      "description": "Cleans up release notes for tone and clarity.",
+      "promptType": "text",
+      "systemPrompt": "Edit changelog entries for clarity, keep them factual.",
+      "userPrompt": "Polish this changelog for the {{version}} release:\n\n{{changelog}}",
+      "variables": [
+        { "name": "version", "type": "text", "required": true },
+        { "name": "changelog", "type": "text", "required": true }
+      ],
+      "tags": ["marketing", "release"],
+      "folderId": "folder_marketing",
+      "images": [],
+      "videos": [],
+      "isFavorite": false,
+      "isPinned": false,
+      "version": 1,
+      "currentVersion": 1,
+      "usageCount": 4,
+      "source": null,
+      "notes": null,
+      "lastAiResponse": null,
+      "createdAt": "2026-04-18T13:00:00.000Z",
+      "updatedAt": "2026-05-11T09:30:00.000Z"
+    },
+    {
+      "id": "prompt_ops_deploy",
+      "title": "Deploy Checklist",
+      "description": "Validates deploy health before declaring success.",
+      "promptType": "text",
+      "systemPrompt": "You are a careful SRE assistant.",
+      "userPrompt": "Review deploy health for {{service}} in {{env}}.",
+      "variables": [
+        { "name": "service", "type": "text", "required": true },
+        { "name": "env", "type": "text", "required": false }
+      ],
+      "tags": ["operations", "deploy"],
+      "folderId": "folder_operations",
+      "images": [],
+      "videos": [],
+      "isFavorite": true,
+      "isPinned": false,
+      "version": 3,
+      "currentVersion": 3,
+      "usageCount": 19,
+      "source": null,
+      "notes": null,
+      "lastAiResponse": null,
+      "createdAt": "2026-04-13T00:00:00.000Z",
+      "updatedAt": "2026-05-12T08:00:00.000Z"
+    },
+    {
+      "id": "prompt_ops_oncall",
+      "title": "On-Call Handoff",
+      "description": "Summarizes on-call shifts for the next engineer.",
+      "promptType": "text",
+      "systemPrompt": "Summarize an on-call shift in 5 bullet points.",
+      "userPrompt": "Shift summary for {{name}} from {{start}} to {{end}}.\n\nNotes:\n{{notes}}",
+      "variables": [
+        { "name": "name", "type": "text", "required": true },
+        { "name": "start", "type": "text", "required": true },
+        { "name": "end", "type": "text", "required": true },
+        { "name": "notes", "type": "text", "required": true }
+      ],
+      "tags": ["operations", "oncall"],
+      "folderId": "folder_operations",
+      "images": [],
+      "videos": [],
+      "isFavorite": false,
+      "isPinned": false,
+      "version": 1,
+      "currentVersion": 1,
+      "usageCount": 6,
+      "source": null,
+      "notes": null,
+      "lastAiResponse": null,
+      "createdAt": "2026-04-21T11:00:00.000Z",
+      "updatedAt": "2026-05-07T08:00:00.000Z"
+    },
+    {
+      "id": "prompt_personal_journal",
+      "title": "Daily Reflection",
+      "description": "Three prompts to wind down the day.",
+      "promptType": "text",
+      "systemPrompt": "You are a calm reflection coach.",
+      "userPrompt": "Today's date: {{date}}. Walk me through three calm reflections.",
+      "variables": [
+        { "name": "date", "type": "text", "required": true }
+      ],
+      "tags": ["personal", "journal"],
+      "folderId": "folder_personal",
+      "images": [],
+      "videos": [],
+      "isFavorite": false,
+      "isPinned": false,
+      "version": 1,
+      "currentVersion": 1,
+      "usageCount": 22,
+      "source": null,
+      "notes": null,
+      "lastAiResponse": null,
+      "createdAt": "2026-04-25T22:00:00.000Z",
+      "updatedAt": "2026-05-12T22:00:00.000Z"
+    },
+    {
+      "id": "prompt_personal_studyplan",
+      "title": "Study Plan Generator",
+      "description": "Builds a 4-week plan for a topic.",
+      "promptType": "text",
+      "systemPrompt": "You are a patient tutor.",
+      "userPrompt": "Make me a 4-week study plan for {{topic}} at the {{level}} level.",
+      "variables": [
+        { "name": "topic", "type": "text", "required": true },
+        { "name": "level", "type": "text", "required": false }
+      ],
+      "tags": ["personal", "learning"],
+      "folderId": "folder_personal",
+      "images": [],
+      "videos": [],
+      "isFavorite": false,
+      "isPinned": false,
+      "version": 1,
+      "currentVersion": 1,
+      "usageCount": 3,
+      "source": null,
+      "notes": null,
+      "lastAiResponse": null,
+      "createdAt": "2026-04-28T20:00:00.000Z",
+      "updatedAt": "2026-05-06T20:00:00.000Z"
+    }
+  ],
+  "versions": [
+    {
+      "id": "version_eng_review_1",
+      "promptId": "prompt_eng_review",
+      "version": 4,
+      "systemPrompt": "You are a senior staff engineer doing a careful, kind code review.",
+      "userPrompt": "Review the following diff for {{repo}}. Flag missing tests and unclear naming.\n\n{{diff}}",
+      "variables": [
+        { "name": "repo", "type": "text", "required": true },
+        { "name": "diff", "type": "text", "required": true }
+      ],
+      "note": "Sharpened the missing-tests hint.",
+      "aiResponse": null,
+      "createdAt": "2026-05-12T14:20:00.000Z"
+    }
+  ],
+  "skills": [
+    {
+      "name": "write",
+      "description": "Helps draft and revise written content with structure and tone.",
+      "author": "Anthropic",
+      "tags": ["writing", "general"],
+      "files": [
+        {
+          "relativePath": "SKILL.md",
+          "content": "---\nname: write\ndescription: Helps draft and revise written content with structure and tone.\nversion: 1.1.0\ntags:\n  - writing\n  - general\nauthor: Anthropic\n---\n\n# Write\n\nHelp the user write better. Suggest structure, vary sentence length, and surface unclear assumptions before they start drafting.\n"
+        },
+        {
+          "relativePath": "examples/blog-outline.md",
+          "content": "# Blog Outline Example\n\n- Hook\n- Stakes\n- Three core ideas\n- Call to action\n"
+        }
+      ]
+    },
+    {
+      "name": "code-review",
+      "description": "Walks through diffs and surfaces missing tests, unclear naming, and risky changes.",
+      "author": "PromptHub",
+      "tags": ["engineering", "review"],
+      "files": [
+        {
+          "relativePath": "SKILL.md",
+          "content": "---\nname: code-review\ndescription: Walks through diffs and surfaces missing tests, unclear naming, and risky changes.\nversion: 1.0.0\ntags:\n  - engineering\n  - review\nauthor: PromptHub\n---\n\n# Code Review\n\nReview the diff carefully. Call out:\n\n1. Missing or weak tests\n2. Naming that hides intent\n3. Risk that should land behind a feature flag\n"
+        }
+      ]
+    },
+    {
+      "name": "release-notes",
+      "description": "Compresses a list of merged PRs into clean, customer-facing release notes.",
+      "author": "PromptHub",
+      "tags": ["release", "writing"],
+      "files": [
+        {
+          "relativePath": "SKILL.md",
+          "content": "---\nname: release-notes\ndescription: Compresses a list of merged PRs into clean, customer-facing release notes.\nversion: 0.5.6\ntags:\n  - release\n  - writing\nauthor: PromptHub\n---\n\n# Release Notes\n\nGroup changes by user-facing impact. Drop internal refactor noise unless it explains a behavior change.\n"
+        }
+      ]
+    }
+  ]
+}

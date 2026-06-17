@@ -1,0 +1,18 @@
+- [x] Create active change docs for skill uninstall lifecycle.
+- [x] Add full detail platform uninstall confirmation.
+- [x] Clarify delete confirmation copy for copy/symlink distributions.
+- [x] Add platform lifecycle regression tests.
+- [x] Add detail/project UI regression tests.
+- [x] Run focused unit tests, typecheck, and locale JSON validation.
+- [x] Add platform install detail status so the UI can distinguish copy vs symlink.
+- [x] Make PromptHub library deletion preserve copied distributions unless the user opts into deleting copies.
+- [x] Ensure symlink distributions are always removed during PromptHub library deletion.
+- [x] Add project distribution removal from the skill detail distribution panel.
+- [x] Inspect project target paths so PromptHub deletion removes project symlinks but keeps project copies by default.
+- [x] Fix project scans so symlink-installed skills appear in the Project Skills tab.
+- [x] Build the CRUD lifecycle matrix across PromptHub library, global platform, and project target scopes.
+- [x] White-box audit Create / Read / Update / Delete paths for copy and symlink distributions.
+- [x] Add project symlink update/read regression coverage.
+- [x] Add project symlink uninstall regression coverage that preserves the source directory.
+- [x] Verify focused lifecycle tests, typecheck, and affected-file ESLint.
+- [ ] Split a broader PromptHub-library CRUD matrix into a follow-up if DB record, managed repo, version history, and external repo sync need full lifecycle certification.
