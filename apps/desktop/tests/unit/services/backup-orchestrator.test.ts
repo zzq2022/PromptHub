@@ -13,32 +13,16 @@ vi.mock("../../../src/renderer/services/upgrade-backup", () => ({
   createUpgradeBackup: vi.fn(),
 }));
 
-vi.mock("../../../src/renderer/services/webdav", () => ({
-  autoSync: vi.fn(),
-  downloadFromWebDAV: vi.fn(),
-  testConnection: vi.fn(),
-  uploadToWebDAV: vi.fn(),
-}));
-
 vi.mock("../../../src/renderer/services/self-hosted-sync", () => ({
   pullFromSelfHostedWeb: vi.fn(),
   pushToSelfHostedWeb: vi.fn(),
   testSelfHostedConnection: vi.fn(),
 }));
 
-vi.mock("../../../src/renderer/services/s3-sync", () => ({
-  autoSync: vi.fn(),
-  downloadFromS3: vi.fn(),
-  testConnection: vi.fn(),
-  uploadToS3: vi.fn(),
-}));
-
 import {
   runFullExportBackup,
-  runS3AutoSync,
   runPreUpgradeBackup,
   runSelfHostedAutoSync,
-  runWebDAVAutoSync,
 } from "../../../src/renderer/services/backup-orchestrator";
 
 import {
@@ -47,12 +31,10 @@ import {
 } from "../../../src/renderer/services/database-backup";
 import { recordManualBackup } from "../../../src/renderer/services/backup-status";
 import { createUpgradeBackup } from "../../../src/renderer/services/upgrade-backup";
-import { autoSync } from "../../../src/renderer/services/webdav";
 import {
   pullFromSelfHostedWeb,
   pushToSelfHostedWeb,
 } from "../../../src/renderer/services/self-hosted-sync";
-import { autoSync as autoSyncS3 } from "../../../src/renderer/services/s3-sync";
 
 describe("backup-orchestrator", () => {
   beforeEach(() => {
@@ -111,7 +93,7 @@ describe("backup-orchestrator", () => {
     expect(result).toBeNull();
   });
 
-  it("runs pre-upgrade backup with legacy JSON backup and status update", async () => {
+  it("runs pre-upgrade backup with legacy ZIP backup and status update", async () => {
     vi.mocked(recordManualBackup).mockResolvedValue({
       lastManualBackupAt: "2026-05-10T00:00:00.000Z",
       lastManualBackupVersion: "0.5.5",
@@ -134,54 +116,6 @@ describe("backup-orchestrator", () => {
     expect(downloadBackup).not.toHaveBeenCalled();
     expect(recordManualBackup).toHaveBeenCalledWith("0.5.5");
     expect(status.lastManualBackupVersion).toBe("0.5.5");
-  });
-
-  it("delegates webdav auto sync call", async () => {
-    vi.mocked(autoSync).mockResolvedValue({
-      success: true,
-      message: "ok",
-      localChanged: false,
-    });
-
-    const result = await runWebDAVAutoSync({
-      config: {
-        url: "https://dav.example.com",
-        username: "u",
-        password: "p",
-      },
-      options: {
-        incrementalSync: true,
-      },
-    });
-
-    expect(autoSync).toHaveBeenCalledTimes(1);
-    expect(result.success).toBe(true);
-    expect(result.message).toBe("ok");
-  });
-
-  it("delegates s3 auto sync call", async () => {
-    vi.mocked(autoSyncS3).mockResolvedValue({
-      success: true,
-      message: "ok",
-      localChanged: false,
-    });
-
-    const result = await runS3AutoSync({
-      config: {
-        endpoint: "https://s3.example.com",
-        region: "us-east-1",
-        bucket: "prompthub-backups",
-        accessKeyId: "access",
-        secretAccessKey: "secret",
-      },
-      options: {
-        incrementalSync: true,
-      },
-    });
-
-    expect(autoSyncS3).toHaveBeenCalledTimes(1);
-    expect(result.success).toBe(true);
-    expect(result.message).toBe("ok");
   });
 
   it("uses push for self-hosted interval auto sync", async () => {

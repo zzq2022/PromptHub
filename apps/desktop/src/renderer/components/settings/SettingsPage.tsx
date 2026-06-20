@@ -110,18 +110,6 @@ const DATA_SETTINGS_SUBMENU_GROUPS: Array<{
         fallback: "Self-Hosted PromptHub",
         icon: ServerCogIcon,
       },
-      {
-        id: "webdav",
-        labelKey: "settings.webdavSyncMenu",
-        fallback: "WebDAV",
-        icon: CloudIcon,
-      },
-      {
-        id: "s3",
-        labelKey: "settings.s3SyncMenu",
-        fallback: "S3 Compatible Storage",
-        icon: DatabaseIcon,
-      },
     ],
   },
   {
@@ -151,11 +139,9 @@ export function SettingsPage({
     (state) => state.consumeSettingsSectionRequest,
   );
   const syncProvider = useSettingsStore((state) => state.syncProvider);
-  const webdavEnabled = useSettingsStore((state) => state.webdavEnabled);
   const selfHostedSyncEnabled = useSettingsStore(
     (state) => state.selfHostedSyncEnabled,
   );
-  const s3StorageEnabled = useSettingsStore((state) => state.s3StorageEnabled);
   const [activeSection, setActiveSection] = useState(
     webRuntime ? "web" : "general",
   );
@@ -222,10 +208,8 @@ export function SettingsPage({
   const enabledSubsections = useMemo(
     () => ({
       selfHosted: selfHostedSyncEnabled,
-      webdav: webdavEnabled,
-      s3: s3StorageEnabled,
     }),
-    [selfHostedSyncEnabled, s3StorageEnabled, webdavEnabled],
+    [selfHostedSyncEnabled],
   );
 
   return (

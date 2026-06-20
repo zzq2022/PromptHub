@@ -57,24 +57,6 @@ describe("settings sync provider guards", () => {
     localStorage.clear();
   });
 
-  it("falls back to manual when disabling the active WebDAV sync provider", async () => {
-    const { useSettingsStore, setSpy } = await importStoreWithSettingsSpies();
-
-    useSettingsStore.getState().setWebdavEnabled(true);
-    useSettingsStore.getState().setSyncProvider("webdav");
-    setSpy.mockClear();
-
-    useSettingsStore.getState().setWebdavEnabled(false);
-
-    expect(useSettingsStore.getState().webdavEnabled).toBe(false);
-    expect(useSettingsStore.getState().syncProvider).toBe("manual");
-    expect(lastPayloadWithKey(setSpy, "sync")?.sync).toEqual({
-      enabled: false,
-      provider: "manual",
-      autoSync: false,
-    });
-  });
-
   it("falls back to manual when disabling the active self-hosted sync provider", async () => {
     const { useSettingsStore, setSpy } = await importStoreWithSettingsSpies();
 
@@ -93,28 +75,10 @@ describe("settings sync provider guards", () => {
     });
   });
 
-  it("falls back to manual when disabling the active S3 sync provider", async () => {
-    const { useSettingsStore, setSpy } = await importStoreWithSettingsSpies();
-
-    useSettingsStore.getState().setS3StorageEnabled(true);
-    useSettingsStore.getState().setSyncProvider("s3");
-    setSpy.mockClear();
-
-    useSettingsStore.getState().setS3StorageEnabled(false);
-
-    expect(useSettingsStore.getState().s3StorageEnabled).toBe(false);
-    expect(useSettingsStore.getState().syncProvider).toBe("manual");
-    expect(lastPayloadWithKey(setSpy, "sync")?.sync).toEqual({
-      enabled: false,
-      provider: "manual",
-      autoSync: false,
-    });
-  });
-
   it("rejects selecting an automatic sync provider that is not enabled", async () => {
     const { useSettingsStore, setSpy } = await importStoreWithSettingsSpies();
 
-    useSettingsStore.getState().setSyncProvider("s3");
+    useSettingsStore.getState().setSyncProvider("self-hosted");
 
     expect(useSettingsStore.getState().syncProvider).toBe("manual");
     expect(lastPayloadWithKey(setSpy, "sync")?.sync).toEqual({
@@ -129,27 +93,8 @@ describe("settings sync provider guards", () => {
       "prompthub-settings",
       JSON.stringify({
         state: {
-          s3StorageEnabled: true,
-          s3SyncOnSave: true,
-        },
-        version: 8,
-      }),
-    );
-
-    const { useSettingsStore } = await importStoreWithSettingsSpies();
-
-    expect(useSettingsStore.getState().syncProvider).toBe("s3");
-  });
-
-  it("falls back to manual when legacy settings contain multiple active auto-sync providers", async () => {
-    localStorage.setItem(
-      "prompthub-settings",
-      JSON.stringify({
-        state: {
           selfHostedSyncEnabled: true,
           selfHostedSyncOnStartup: true,
-          s3StorageEnabled: true,
-          s3SyncOnSave: true,
         },
         version: 8,
       }),
@@ -157,7 +102,7 @@ describe("settings sync provider guards", () => {
 
     const { useSettingsStore } = await importStoreWithSettingsSpies();
 
-    expect(useSettingsStore.getState().syncProvider).toBe("manual");
+    expect(useSettingsStore.getState().syncProvider).toBe("self-hosted");
   });
 
   it("clamps an invalid persisted sync provider after migration", async () => {
@@ -165,8 +110,8 @@ describe("settings sync provider guards", () => {
       "prompthub-settings",
       JSON.stringify({
         state: {
-          s3StorageEnabled: false,
-          syncProvider: "s3",
+          selfHostedSyncEnabled: false,
+          syncProvider: "self-hosted",
         },
         version: 9,
       }),
@@ -181,10 +126,10 @@ describe("settings sync provider guards", () => {
     const { useSettingsStore, setSpy, loadSettingsFromMainProcess } =
       await importStoreWithSettingsSpies({
         githubToken: "",
-        sync: { provider: "s3" },
+        sync: { provider: "self-hosted" },
       });
 
-    expect(useSettingsStore.getState().s3StorageEnabled).toBe(false);
+    expect(useSettingsStore.getState().selfHostedSyncEnabled).toBe(false);
     setSpy.mockClear();
 
     await loadSettingsFromMainProcess();

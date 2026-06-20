@@ -79,9 +79,8 @@ export interface SyncSettings {
 
 export type SyncProviderKind =
   | 'manual'
-  | 'webdav'
-  | 'self-hosted'
-  | 's3';
+  | 'self-hosted';
+
 
 export interface DeviceManagementSettings {
   syncCadence?: 'manual' | '15m' | '1h' | '1d';

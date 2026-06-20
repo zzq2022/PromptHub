@@ -74,10 +74,10 @@ describe("SettingsPage", () => {
 
   it("shows enabled badge on active cloud backup targets in the data submenu", async () => {
     useSettingsStoreMock.mockReturnValue({
-      syncProvider: "webdav",
-      webdavEnabled: true,
-      selfHostedSyncEnabled: false,
-      s3StorageEnabled: true,
+      syncProvider: "self-hosted",
+      webdavEnabled: false,
+      selfHostedSyncEnabled: true,
+      s3StorageEnabled: false,
       desktopHomeModules: ["prompt", "skill", "rules"],
     });
 
@@ -92,14 +92,8 @@ describe("SettingsPage", () => {
     });
 
     expect(
-      screen.getByRole("button", { name: /WebDAV Enabled/ }),
+      screen.getByRole("button", { name: /Self-Hosted PromptHub Enabled/ }),
     ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /S3 Compatible Storage Enabled/ }),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: /Self-Hosted PromptHub Enabled/ }),
-    ).not.toBeInTheDocument();
   });
 
   it("shows a standalone agent management entry in the desktop settings navigation", async () => {

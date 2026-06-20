@@ -23,21 +23,13 @@ import {
 } from "./services/database";
 import { ImportedPromptData } from "./components/prompt/ImportPromptModal";
 import {
-  runS3AutoSync,
   runSelfHostedAutoSync as executeSelfHostedAutoSync,
-  runWebDAVAutoSync,
 } from "./services/backup-orchestrator";
 import {
-  hasValidS3Config,
   hasValidSelfHostedConfig,
-  hasValidWebDAVConfig,
   shouldRunBackgroundUpdateCheck,
-  shouldRunPeriodicS3Sync,
   shouldRunPeriodicSelfHostedSync,
-  shouldRunPeriodicWebDAVSync,
-  shouldRunStartupS3Sync,
   shouldRunStartupSelfHostedSync,
-  shouldRunStartupWebDAVSync,
 } from "./services/app-background";
 import { registerPeriodicAutoSyncController } from "./services/periodic-auto-sync";
 import { useToast } from "./components/ui/Toast";
@@ -107,10 +99,6 @@ function App() {
   const [showImportModal, setShowImportModal] = useState(false);
   const lastClipboardChecksumRef = useRef<string>("");
   const isUpdateCheckInFlightRef = useRef(false);
-  const isWebDAVSyncInFlightRef = useRef(false);
-  const pendingStartupSyncRef = useRef(false);
-  const isS3SyncInFlightRef = useRef(false);
-  const pendingS3StartupSyncRef = useRef(false);
   const isSelfHostedSyncInFlightRef = useRef(false);
   const pendingSelfHostedStartupSyncRef = useRef(false);
   const isWindowVisibleRef = useRef(true);
@@ -599,8 +587,6 @@ function App() {
 
     // Initialize database, then load data
     // 初始化数据库，然后加载数据
-    let startupSyncTimer: NodeJS.Timeout | null = null;
-    let s3StartupSyncTimer: NodeJS.Timeout | null = null;
     let selfHostedStartupSyncTimer: NodeJS.Timeout | null = null;
     let disposePeriodicAutoSync: (() => void) | null = null;
     let disposed = false;
@@ -640,87 +626,7 @@ function App() {
       });
     };
 
-    const runAutoSync = async (
-      reason: "startup" | "startup-resume" | "interval",
-    ) => {
-      const settings = useSettingsStore.getState();
-      const state = {
-        isVisible: isWindowVisibleRef.current,
-        isOnline: navigator.onLine !== false,
-        isRunning: isWebDAVSyncInFlightRef.current,
-      };
-
-      const canRun =
-        reason === "interval"
-          ? shouldRunPeriodicWebDAVSync(settings, state)
-          : shouldRunStartupWebDAVSync(settings, state);
-
-      if (!canRun) {
-        if (
-          reason !== "interval" &&
-          settings.webdavSyncOnStartup &&
-          hasValidWebDAVConfig(settings)
-        ) {
-          pendingStartupSyncRef.current = true;
-        }
-        return;
-      }
-
-      pendingStartupSyncRef.current = false;
-      isWebDAVSyncInFlightRef.current = true;
-
-      try {
-        const result = await runWebDAVAutoSync({
-          config: {
-            url: settings.webdavUrl,
-            username: settings.webdavUsername,
-            password: settings.webdavPassword,
-          },
-          options: {
-            includeImages: settings.webdavIncludeImages,
-            incrementalSync: settings.webdavIncrementalSync,
-            encryptionPassword:
-              settings.webdavEncryptionEnabled &&
-              settings.webdavEncryptionPassword
-                ? settings.webdavEncryptionPassword
-                : undefined,
-          },
-        });
-
-        if (!result.success) {
-          console.log(`⚠️ ${reason} sync failed:`, result.message);
-          return;
-        }
-
-        console.log(`✅ ${reason} sync completed:`, result.message);
-        if (result.localChanged) {
-          await Promise.all([fetchPrompts(), fetchFolders()]);
-        }
-      } catch (syncError) {
-        console.error(`⚠️ ${reason} sync error:`, syncError);
-      } finally {
-        isWebDAVSyncInFlightRef.current = false;
-      }
-    };
-
     const handleBackgroundTaskResume = () => {
-      if (
-        pendingStartupSyncRef.current &&
-        isWindowVisibleRef.current &&
-        navigator.onLine !== false
-      ) {
-        void runAutoSync("startup-resume");
-      }
-
-      if (
-        pendingS3StartupSyncRef.current &&
-        isWindowVisibleRef.current &&
-        navigator.onLine !== false &&
-        useSettingsStore.getState().syncProvider === "s3"
-      ) {
-        void runS3AutoSyncTask("startup-resume");
-      }
-
       if (
         pendingSelfHostedStartupSyncRef.current &&
         isWindowVisibleRef.current &&
@@ -728,71 +634,6 @@ function App() {
         useSettingsStore.getState().syncProvider === "self-hosted"
       ) {
         void runSelfHostedAutoSync("startup-resume");
-      }
-    };
-
-    const runS3AutoSyncTask = async (
-      reason: "startup" | "startup-resume" | "interval",
-    ) => {
-      const settings = useSettingsStore.getState();
-      const state = {
-        isVisible: isWindowVisibleRef.current,
-        isOnline: navigator.onLine !== false,
-        isRunning: isS3SyncInFlightRef.current,
-      };
-
-      const canRun =
-        reason === "interval"
-          ? shouldRunPeriodicS3Sync(settings, state)
-          : shouldRunStartupS3Sync(settings, state);
-
-      if (!canRun) {
-        if (
-          reason !== "interval" &&
-          settings.s3SyncOnStartup &&
-          hasValidS3Config(settings)
-        ) {
-          pendingS3StartupSyncRef.current = true;
-        }
-        return;
-      }
-
-      pendingS3StartupSyncRef.current = false;
-      isS3SyncInFlightRef.current = true;
-
-      try {
-        const result = await runS3AutoSync({
-          config: {
-            endpoint: settings.s3Endpoint,
-            region: settings.s3Region,
-            bucket: settings.s3Bucket,
-            accessKeyId: settings.s3AccessKeyId,
-            secretAccessKey: settings.s3SecretAccessKey,
-            backupPrefix: settings.s3BackupPrefix,
-          },
-          options: {
-            includeImages: settings.s3IncludeImages,
-            incrementalSync: settings.s3IncrementalSync,
-            encryptionPassword:
-              settings.s3EncryptionEnabled && settings.s3EncryptionPassword
-                ? settings.s3EncryptionPassword
-                : undefined,
-          },
-        });
-
-        if (!result.success) {
-          console.error(`⚠️ S3 ${reason} sync failed:`, result.message);
-          return;
-        }
-
-        console.log(`✅ S3 ${reason} sync completed:`, result.message);
-        if (result.localChanged) {
-          await Promise.all([fetchPrompts(), fetchFolders()]);
-        }
-      } catch (syncError) {
-        console.error(`⚠️ S3 ${reason} sync error:`, syncError);
-      } finally {
-        isS3SyncInFlightRef.current = false;
       }
     };
 
@@ -913,37 +754,6 @@ function App() {
       // Sync after startup (run after data is loaded; do not block UI)
       // 启动后同步（在数据加载完成后执行，不阻塞 UI）
       const settings = useSettingsStore.getState();
-      if (
-        settings.syncProvider === "webdav" &&
-        settings.webdavSyncOnStartup &&
-        hasValidWebDAVConfig(settings)
-      ) {
-        const delay = (settings.webdavSyncOnStartupDelay ?? 10) * 1000;
-        console.log(`🔄 Will sync with WebDAV in ${delay / 1000}s...`);
-        startupSyncTimer = setTimeout(() => {
-          if (!isWindowVisibleRef.current || navigator.onLine === false) {
-            pendingStartupSyncRef.current = true;
-            return;
-          }
-          void runAutoSync("startup");
-        }, delay);
-      }
-
-      if (
-        settings.syncProvider === "s3" &&
-        settings.s3SyncOnStartup &&
-        hasValidS3Config(settings)
-      ) {
-        const delay = (settings.s3SyncOnStartupDelay ?? 10) * 1000;
-        console.log(`🔄 Will sync with S3 in ${delay / 1000}s...`);
-        s3StartupSyncTimer = setTimeout(() => {
-          if (!isWindowVisibleRef.current || navigator.onLine === false) {
-            pendingS3StartupSyncRef.current = true;
-            return;
-          }
-          void runS3AutoSyncTask("startup");
-        }, delay);
-      }
 
       if (
         settings.syncProvider === "self-hosted" &&
@@ -990,12 +800,6 @@ function App() {
       disposePeriodicAutoSync = registerPeriodicAutoSyncController({
         getSettings: useSettingsStore.getState,
         subscribe: useSettingsStore.subscribe,
-        runWebDAV: () => {
-          void runAutoSync("interval");
-        },
-        runS3: () => {
-          void runS3AutoSyncTask("interval");
-        },
         runSelfHosted: () => {
           void runSelfHostedAutoSync("interval");
         },
@@ -1010,8 +814,6 @@ function App() {
 
     return () => {
       disposed = true;
-      if (startupSyncTimer) clearTimeout(startupSyncTimer);
-      if (s3StartupSyncTimer) clearTimeout(s3StartupSyncTimer);
       if (selfHostedStartupSyncTimer) clearTimeout(selfHostedStartupSyncTimer);
       disposePeriodicAutoSync?.();
       document.removeEventListener(

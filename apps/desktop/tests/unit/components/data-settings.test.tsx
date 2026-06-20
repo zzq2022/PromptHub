@@ -14,11 +14,7 @@ import {
 } from "../../../src/renderer/services/upgrade-backup";
 import {
   runFullExportBackup,
-  runS3ConnectionCheck,
-  runS3Download,
-  runS3Upload,
   runSelfHostedConnectionCheck,
-  runWebDAVConnectionCheck,
 } from "../../../src/renderer/services/backup-orchestrator";
 
 const useSettingsStoreMock = Object.assign(vi.fn(), { setState: vi.fn() });
@@ -70,11 +66,7 @@ vi.mock("../../../src/renderer/services/database", () => ({
   clearDatabase: vi.fn(),
 }));
 
-vi.mock("../../../src/renderer/services/webdav", () => ({
-  testConnection: vi.fn(),
-  uploadToWebDAV: vi.fn(),
-  downloadFromWebDAV: vi.fn(),
-}));
+
 
 vi.mock("../../../src/renderer/services/self-hosted-sync", () => ({
   testSelfHostedConnection: vi.fn(),
@@ -84,15 +76,9 @@ vi.mock("../../../src/renderer/services/self-hosted-sync", () => ({
 
 vi.mock("../../../src/renderer/services/backup-orchestrator", () => ({
   runFullExportBackup: vi.fn(),
-  runS3ConnectionCheck: vi.fn(),
-  runS3Download: vi.fn(),
-  runS3Upload: vi.fn(),
   runSelfHostedConnectionCheck: vi.fn(),
   runSelfHostedPull: vi.fn(),
   runSelfHostedPush: vi.fn(),
-  runWebDAVConnectionCheck: vi.fn(),
-  runWebDAVDownload: vi.fn(),
-  runWebDAVUpload: vi.fn(),
 }));
 
 vi.mock("../../../src/renderer/services/upgrade-backup", () => ({
@@ -121,30 +107,6 @@ function createSettingsState() {
     customSkillScanPaths: [],
     addCustomSkillScanPath: vi.fn(),
     removeCustomSkillScanPath: vi.fn(),
-    webdavEnabled: false,
-    setWebdavEnabled: vi.fn(),
-    webdavUrl: "",
-    setWebdavUrl: vi.fn(),
-    webdavUsername: "",
-    setWebdavUsername: vi.fn(),
-    webdavPassword: "",
-    setWebdavPassword: vi.fn(),
-    webdavAutoSync: false,
-    setWebdavAutoSync: vi.fn(),
-    webdavSyncOnStartup: true,
-    setWebdavSyncOnStartup: vi.fn(),
-    webdavSyncOnSave: false,
-    setWebdavSyncOnSave: vi.fn(),
-    webdavIncrementalSync: true,
-    setWebdavIncrementalSync: vi.fn(),
-    webdavAutoSyncInterval: 0,
-    setWebdavAutoSyncInterval: vi.fn(),
-    webdavIncludeImages: true,
-    setWebdavIncludeImages: vi.fn(),
-    webdavEncryptionEnabled: false,
-    setWebdavEncryptionEnabled: vi.fn(),
-    webdavEncryptionPassword: "",
-    setWebdavEncryptionPassword: vi.fn(),
     syncProvider: "manual",
     setSyncProvider: vi.fn(),
     selfHostedSyncEnabled: false,
@@ -161,36 +123,6 @@ function createSettingsState() {
     setSelfHostedSyncOnStartup: vi.fn(),
     setSelfHostedSyncOnStartupDelay: vi.fn(),
     setSelfHostedAutoSyncInterval: vi.fn(),
-    s3StorageEnabled: false,
-    setS3StorageEnabled: vi.fn(),
-    s3Endpoint: "",
-    setS3Endpoint: vi.fn(),
-    s3Region: "",
-    setS3Region: vi.fn(),
-    s3Bucket: "",
-    setS3Bucket: vi.fn(),
-    s3AccessKeyId: "",
-    setS3AccessKeyId: vi.fn(),
-    s3SecretAccessKey: "",
-    setS3SecretAccessKey: vi.fn(),
-    s3BackupPrefix: "",
-    setS3BackupPrefix: vi.fn(),
-    s3SyncOnStartup: false,
-    setS3SyncOnStartup: vi.fn(),
-    s3SyncOnStartupDelay: 10,
-    setS3SyncOnStartupDelay: vi.fn(),
-    s3AutoSyncInterval: 0,
-    setS3AutoSyncInterval: vi.fn(),
-    s3SyncOnSave: false,
-    setS3SyncOnSave: vi.fn(),
-    s3IncludeImages: true,
-    setS3IncludeImages: vi.fn(),
-    s3IncrementalSync: true,
-    setS3IncrementalSync: vi.fn(),
-    s3EncryptionEnabled: false,
-    setS3EncryptionEnabled: vi.fn(),
-    s3EncryptionPassword: "",
-    setS3EncryptionPassword: vi.fn(),
     isSyncVerified: false,
     setIsSyncVerified: vi.fn(),
   };
@@ -800,11 +732,9 @@ describe("DataSettings", { timeout: 15_000 }, () => {
     );
   });
 
-  it("lets users choose one active sync source while keeping multiple backup targets enabled", async () => {
+  it("lets users choose one active sync source while keeping self-hosted target enabled", async () => {
     const settingsState = createSettingsState();
     settingsState.selfHostedSyncEnabled = true;
-    settingsState.webdavEnabled = true;
-    settingsState.s3StorageEnabled = true;
     settingsState.syncProvider = "manual";
     useSettingsStoreMock.mockReturnValue(settingsState);
 
@@ -816,236 +746,10 @@ describe("DataSettings", { timeout: 15_000 }, () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Manual only" }));
     fireEvent.click(
-      screen.getByRole("button", { name: "WebDAV" }),
+      screen.getByRole("button", { name: "Self-Hosted PromptHub" }),
     );
 
-    expect(settingsState.setSyncProvider).toHaveBeenCalledWith("webdav");
-  });
-
-  it("shows inactive sync-source guidance when a backup target is enabled but not selected", async () => {
-    const settingsState = createSettingsState();
-    settingsState.webdavEnabled = true;
-    settingsState.syncProvider = "s3";
-    useSettingsStoreMock.mockReturnValue(settingsState);
-
-    await act(async () => {
-      await renderWithI18n(<DataSettings activeSubsection="webdav" />, {
-        language: "en",
-      });
-    });
-
-    expect(
-      screen.getByText(
-        "This target stays available for manual backup and restore, but automatic sync only runs for the current sync source.",
-      ),
-    ).toBeInTheDocument();
-  });
-
-  it("keeps WebDAV fields visible but disabled until sync is enabled", async () => {
-    await act(async () => {
-      await renderWithI18n(<DataSettings activeSubsection="webdav" />, {
-        language: "en",
-      });
-    });
-
-    const urlInput = screen.getByPlaceholderText("https://dav.example.com/path");
-    const usernameInput = screen.getByPlaceholderText("Username");
-    const passwordInput = screen.getByPlaceholderText("Password");
-    const testConnectionButton = screen.getByRole("button", {
-      name: "Test Connection",
-    });
-
-    expect(urlInput).toBeDisabled();
-    expect(usernameInput).toBeDisabled();
-    expect(passwordInput).toBeDisabled();
-    expect(testConnectionButton).toBeDisabled();
-
-    fireEvent.click(testConnectionButton);
-    expect(runWebDAVConnectionCheck).not.toHaveBeenCalled();
-  });
-
-  it("keeps S3 fields visible but disabled until storage is enabled", async () => {
-    await act(async () => {
-      await renderWithI18n(<DataSettings activeSubsection="s3" />, {
-        language: "en",
-      });
-    });
-
-    expect(screen.getByPlaceholderText("https://s3.example.com")).toBeDisabled();
-    expect(screen.getByPlaceholderText("us-east-1")).toBeDisabled();
-    expect(screen.getByPlaceholderText("prompthub-backups")).toBeDisabled();
-    expect(screen.getByPlaceholderText("Access Key ID")).toBeDisabled();
-    expect(screen.getByPlaceholderText("Secret Access Key")).toBeDisabled();
-    expect(screen.getByPlaceholderText("/prompthub")).toBeDisabled();
-    expect(
-      screen.getByRole("button", { name: "Test Connection" }),
-    ).toBeDisabled();
-  });
-
-  it("enables WebDAV sync-on-save once WebDAV is enabled", async () => {
-    const settingsState = createSettingsState();
-    settingsState.webdavEnabled = true;
-    useSettingsStoreMock.mockReturnValue(settingsState);
-
-    await act(async () => {
-      await renderWithI18n(<DataSettings activeSubsection="webdav" />, {
-        language: "en",
-      });
-    });
-
-    expect(
-      screen.getByText(
-        "Attempt sync when data is saved. Note: frequent syncing may affect performance and battery.",
-      ),
-    ).toBeInTheDocument();
-
-    const syncOnSaveLabel = screen.getByText("Sync on Save (Experimental)");
-    const syncOnSaveButton = syncOnSaveLabel
-      .closest("div")
-      ?.parentElement?.querySelector("button");
-    expect(syncOnSaveButton).not.toBeDisabled();
-  });
-
-  it("enables S3 actions once storage is enabled in settings", async () => {
-    const settingsState = createSettingsState();
-    settingsState.s3StorageEnabled = true;
-    settingsState.s3Endpoint = "https://s3.example.com";
-    settingsState.s3Region = "us-east-1";
-    settingsState.s3Bucket = "prompthub-backups";
-    settingsState.s3AccessKeyId = "access";
-    settingsState.s3SecretAccessKey = "secret";
-    settingsState.isSyncVerified = true;
-    useSettingsStoreMock.mockReturnValue(settingsState);
-
-    await act(async () => {
-      await renderWithI18n(<DataSettings activeSubsection="s3" />, {
-        language: "en",
-      });
-    });
-
-    expect(screen.getByPlaceholderText("https://s3.example.com")).not.toBeDisabled();
-    expect(screen.getByRole("button", { name: "Test Connection" })).not.toBeDisabled();
-    expect(screen.getByRole("button", { name: "Back up to remote" })).not.toBeDisabled();
-    expect(screen.getByRole("button", { name: "Update from remote" })).not.toBeDisabled();
-  });
-
-  it("runs S3 connection checks from the settings panel", async () => {
-    const settingsState = createSettingsState();
-    settingsState.s3StorageEnabled = true;
-    settingsState.s3Endpoint = "https://s3.example.com";
-    settingsState.s3Region = "us-east-1";
-    settingsState.s3Bucket = "prompthub-backups";
-    settingsState.s3AccessKeyId = "access";
-    settingsState.s3SecretAccessKey = "secret";
-    useSettingsStoreMock.mockReturnValue(settingsState);
-    vi.mocked(runS3ConnectionCheck).mockResolvedValue({
-      success: true,
-      message: "Connection successful",
-    });
-
-    await act(async () => {
-      await renderWithI18n(<DataSettings activeSubsection="s3" />, {
-        language: "en",
-      });
-    });
-
-    fireEvent.click(screen.getByRole("button", { name: "Test Connection" }));
-
-    await waitFor(() => {
-      expect(runS3ConnectionCheck).toHaveBeenCalledWith({
-        endpoint: "https://s3.example.com",
-        region: "us-east-1",
-        bucket: "prompthub-backups",
-        accessKeyId: "access",
-        secretAccessKey: "secret",
-        backupPrefix: "",
-      });
-    });
-  });
-
-  it("runs S3 uploads from the settings panel", async () => {
-    const settingsState = createSettingsState();
-    settingsState.s3StorageEnabled = true;
-    settingsState.s3Endpoint = "https://s3.example.com";
-    settingsState.s3Region = "us-east-1";
-    settingsState.s3Bucket = "prompthub-backups";
-    settingsState.s3AccessKeyId = "access";
-    settingsState.s3SecretAccessKey = "secret";
-    settingsState.isSyncVerified = true;
-    useSettingsStoreMock.mockReturnValue(settingsState);
-    vi.mocked(runS3Upload).mockResolvedValue({
-      success: true,
-      message: "Upload successful",
-      localChanged: false,
-    });
-
-    await act(async () => {
-      await renderWithI18n(<DataSettings activeSubsection="s3" />, {
-        language: "en",
-      });
-    });
-
-    fireEvent.click(screen.getByRole("button", { name: "Back up to remote" }));
-
-    await waitFor(() => {
-      expect(runS3Upload).toHaveBeenCalledWith({
-        config: {
-          endpoint: "https://s3.example.com",
-          region: "us-east-1",
-          bucket: "prompthub-backups",
-          accessKeyId: "access",
-          secretAccessKey: "secret",
-          backupPrefix: "",
-        },
-        options: {
-          includeImages: true,
-          incrementalSync: true,
-          encryptionPassword: undefined,
-        },
-      });
-    });
-  });
-
-  it("runs S3 downloads from the settings panel", async () => {
-    const settingsState = createSettingsState();
-    settingsState.s3StorageEnabled = true;
-    settingsState.s3Endpoint = "https://s3.example.com";
-    settingsState.s3Region = "us-east-1";
-    settingsState.s3Bucket = "prompthub-backups";
-    settingsState.s3AccessKeyId = "access";
-    settingsState.s3SecretAccessKey = "secret";
-    settingsState.isSyncVerified = true;
-    useSettingsStoreMock.mockReturnValue(settingsState);
-    vi.mocked(runS3Download).mockResolvedValue({
-      success: true,
-      message: "Download successful",
-      localChanged: true,
-    });
-
-    await act(async () => {
-      await renderWithI18n(<DataSettings activeSubsection="s3" />, {
-        language: "en",
-      });
-    });
-
-    fireEvent.click(screen.getByRole("button", { name: "Update from remote" }));
-
-    await waitFor(() => {
-      expect(runS3Download).toHaveBeenCalledWith({
-        config: {
-          endpoint: "https://s3.example.com",
-          region: "us-east-1",
-          bucket: "prompthub-backups",
-          accessKeyId: "access",
-          secretAccessKey: "secret",
-          backupPrefix: "",
-        },
-        options: {
-          incrementalSync: true,
-          encryptionPassword: undefined,
-        },
-      });
-    });
+    expect(settingsState.setSyncProvider).toHaveBeenCalledWith("self-hosted");
   });
 
   it("includes rules in selective export by default", async () => {
@@ -1367,10 +1071,10 @@ describe("DataSettings", { timeout: 15_000 }, () => {
     const getLocalAccounts = vi.fn().mockResolvedValue(["user_a"]);
     const switchAccount = vi.fn().mockResolvedValue({ success: true });
     const getSettings = vi.fn().mockResolvedValue({
-      syncProvider: "webdav",
-      webdavUsername: "user_a",
-      webdavUrl: "https://example.com/dav",
-      sync: { provider: "webdav" }
+      syncProvider: "self-hosted",
+      selfHostedSyncUsername: "user_a",
+      selfHostedSyncUrl: "https://example.com/api",
+      sync: { provider: "self-hosted" }
     });
     
     const originalReload = window.location.reload;

@@ -323,7 +323,7 @@ function deriveModelRouteDefaultsFromScenarios(
 }
 
 function normalizeSyncProvider(value: unknown): SyncProviderKind {
-  if (value === "webdav" || value === "self-hosted" || value === "s3") {
+  if (value === "self-hosted") {
     return value;
   }
 
@@ -354,29 +354,11 @@ function inferLegacySyncProvider(
   const activeProviders: SyncProviderKind[] = [];
 
   if (
-    state.webdavEnabled &&
-    (state.webdavSyncOnStartup ||
-      (state.webdavAutoSyncInterval ?? 0) > 0 ||
-      state.webdavSyncOnSave)
-  ) {
-    activeProviders.push("webdav");
-  }
-
-  if (
     state.selfHostedSyncEnabled &&
     (state.selfHostedSyncOnStartup ||
       (state.selfHostedAutoSyncInterval ?? 0) > 0)
   ) {
     activeProviders.push("self-hosted");
-  }
-
-  if (
-    state.s3StorageEnabled &&
-    (state.s3SyncOnStartup ||
-      (state.s3AutoSyncInterval ?? 0) > 0 ||
-      state.s3SyncOnSave)
-  ) {
-    activeProviders.push("s3");
   }
 
   return activeProviders.length === 1 ? activeProviders[0] : "manual";
@@ -386,18 +368,10 @@ function clampSyncProvider(
   provider: SyncProviderKind,
   state: Pick<
     SettingsState,
-    "webdavEnabled" | "selfHostedSyncEnabled" | "s3StorageEnabled"
+    "selfHostedSyncEnabled"
   >,
 ): SyncProviderKind {
-  if (provider === "webdav" && !state.webdavEnabled) {
-    return "manual";
-  }
-
   if (provider === "self-hosted" && !state.selfHostedSyncEnabled) {
-    return "manual";
-  }
-
-  if (provider === "s3" && !state.s3StorageEnabled) {
     return "manual";
   }
 
@@ -711,19 +685,6 @@ interface SettingsState {
   // accessible to other apps, but it is readable on disk. Consider migrating
   // sensitive fields (webdavPassword, webdavEncryptionPassword, s3SecretAccessKey, aiApiKey) to
   // the main process using Electron's safeStorage API for at-rest encryption.
-  webdavEnabled: boolean;
-  webdavUrl: string;
-  webdavUsername: string;
-  webdavPassword: string;
-  webdavAutoSync: boolean; // Legacy compatibility, equivalent to webdavSyncOnStartup
-  webdavSyncOnStartup: boolean; // Auto sync once after startup
-  webdavSyncOnStartupDelay: number; // Delay seconds after startup (0-60)
-  webdavAutoSyncInterval: number; // Auto sync interval (minutes, 0=disabled)
-  webdavSyncOnSave: boolean; // Sync on save (experimental)
-  webdavIncludeImages: boolean; // Whether to include images
-  webdavIncrementalSync: boolean; // Whether to use incremental sync
-  webdavEncryptionEnabled: boolean; // Whether to enable encryption (experimental)
-  webdavEncryptionPassword: string; // Encryption password
   selfHostedSyncEnabled: boolean;
   selfHostedSyncUrl: string;
   selfHostedSyncUsername: string;
@@ -731,21 +692,6 @@ interface SettingsState {
   selfHostedSyncOnStartup: boolean;
   selfHostedSyncOnStartupDelay: number;
   selfHostedAutoSyncInterval: number;
-  s3StorageEnabled: boolean;
-  s3Endpoint: string;
-  s3Region: string;
-  s3Bucket: string;
-  s3AccessKeyId: string;
-  s3SecretAccessKey: string;
-  s3BackupPrefix: string;
-  s3SyncOnStartup: boolean;
-  s3SyncOnStartupDelay: number;
-  s3AutoSyncInterval: number;
-  s3SyncOnSave: boolean;
-  s3IncludeImages: boolean;
-  s3IncrementalSync: boolean;
-  s3EncryptionEnabled: boolean;
-  s3EncryptionPassword: string;
   syncProvider: SyncProviderKind;
 
   // Update settings
@@ -837,19 +783,6 @@ interface SettingsState {
   deletePromptTagCatalogEntry: (tag: string) => void;
   setLanguage: (lang: string) => void;
   setDataPath: (path: string) => void;
-  setWebdavEnabled: (enabled: boolean) => void;
-  setWebdavUrl: (url: string) => void;
-  setWebdavUsername: (username: string) => void;
-  setWebdavPassword: (password: string) => void;
-  setWebdavAutoSync: (enabled: boolean) => void;
-  setWebdavSyncOnStartup: (enabled: boolean) => void;
-  setWebdavSyncOnStartupDelay: (delay: number) => void;
-  setWebdavAutoSyncInterval: (interval: number) => void;
-  setWebdavSyncOnSave: (enabled: boolean) => void;
-  setWebdavIncludeImages: (enabled: boolean) => void;
-  setWebdavIncrementalSync: (enabled: boolean) => void;
-  setWebdavEncryptionEnabled: (enabled: boolean) => void;
-  setWebdavEncryptionPassword: (password: string) => void;
   setSelfHostedSyncEnabled: (enabled: boolean) => void;
   setSelfHostedSyncUrl: (url: string) => void;
   setSelfHostedSyncUsername: (username: string) => void;
@@ -857,21 +790,6 @@ interface SettingsState {
   setSelfHostedSyncOnStartup: (enabled: boolean) => void;
   setSelfHostedSyncOnStartupDelay: (delay: number) => void;
   setSelfHostedAutoSyncInterval: (interval: number) => void;
-  setS3StorageEnabled: (enabled: boolean) => void;
-  setS3Endpoint: (endpoint: string) => void;
-  setS3Region: (region: string) => void;
-  setS3Bucket: (bucket: string) => void;
-  setS3AccessKeyId: (accessKeyId: string) => void;
-  setS3SecretAccessKey: (secretAccessKey: string) => void;
-  setS3BackupPrefix: (prefix: string) => void;
-  setS3SyncOnStartup: (enabled: boolean) => void;
-  setS3SyncOnStartupDelay: (delay: number) => void;
-  setS3AutoSyncInterval: (interval: number) => void;
-  setS3SyncOnSave: (enabled: boolean) => void;
-  setS3IncludeImages: (enabled: boolean) => void;
-  setS3IncrementalSync: (enabled: boolean) => void;
-  setS3EncryptionEnabled: (enabled: boolean) => void;
-  setS3EncryptionPassword: (password: string) => void;
   setSyncProvider: (provider: SyncProviderKind) => void;
   setAutoCheckUpdate: (enabled: boolean) => void;
   setUseUpdateMirror: (enabled: boolean) => void;
@@ -1062,15 +980,9 @@ function attachProviderIdsToAIModels(
 
 async function computeAccountId(state: any): Promise<string | null> {
   let rawId = "";
-  if (state.syncProvider === "webdav") {
-    if (!state.webdavUsername) return null;
-    rawId = state.webdavUsername;
-  } else if (state.syncProvider === "self-hosted") {
+  if (state.syncProvider === "self-hosted") {
     if (!state.selfHostedSyncUsername) return null;
     rawId = state.selfHostedSyncUsername;
-  } else if (state.syncProvider === "s3") {
-    if (!state.s3AccessKeyId) return null;
-    rawId = state.s3AccessKeyId;
   } else {
     return null;
   }
@@ -1110,59 +1022,6 @@ export async function loadSettingsFromMainProcess(): Promise<void> {
   const githubToken = sanitizeGithubToken(settings.githubToken ?? "");
 
   // Resolve sync configurations and credentials from loaded settings falling back to state
-  const webdavEnabled =
-    typeof settings.webdavEnabled === "boolean"
-      ? settings.webdavEnabled
-      : state.webdavEnabled;
-  const webdavUrl =
-    typeof settings.webdavUrl === "string"
-      ? settings.webdavUrl
-      : state.webdavUrl;
-  const webdavUsername =
-    typeof settings.webdavUsername === "string"
-      ? settings.webdavUsername
-      : state.webdavUsername;
-  const webdavPassword =
-    typeof settings.webdavPassword === "string"
-      ? settings.webdavPassword
-      : state.webdavPassword;
-  const webdavAutoSync =
-    typeof settings.webdavAutoSync === "boolean"
-      ? settings.webdavAutoSync
-      : state.webdavAutoSync;
-  const webdavSyncOnStartup =
-    typeof settings.webdavSyncOnStartup === "boolean"
-      ? settings.webdavSyncOnStartup
-      : state.webdavSyncOnStartup;
-  const webdavSyncOnStartupDelay =
-    typeof settings.webdavSyncOnStartupDelay === "number"
-      ? settings.webdavSyncOnStartupDelay
-      : state.webdavSyncOnStartupDelay;
-  const webdavAutoSyncInterval =
-    typeof settings.webdavAutoSyncInterval === "number"
-      ? settings.webdavAutoSyncInterval
-      : state.webdavAutoSyncInterval;
-  const webdavSyncOnSave =
-    typeof settings.webdavSyncOnSave === "boolean"
-      ? settings.webdavSyncOnSave
-      : state.webdavSyncOnSave;
-  const webdavIncludeImages =
-    typeof settings.webdavIncludeImages === "boolean"
-      ? settings.webdavIncludeImages
-      : state.webdavIncludeImages;
-  const webdavIncrementalSync =
-    typeof settings.webdavIncrementalSync === "boolean"
-      ? settings.webdavIncrementalSync
-      : state.webdavIncrementalSync;
-  const webdavEncryptionEnabled =
-    typeof settings.webdavEncryptionEnabled === "boolean"
-      ? settings.webdavEncryptionEnabled
-      : state.webdavEncryptionEnabled;
-  const webdavEncryptionPassword =
-    typeof settings.webdavEncryptionPassword === "string"
-      ? settings.webdavEncryptionPassword
-      : state.webdavEncryptionPassword;
-
   const selfHostedSyncEnabled =
     typeof settings.selfHostedSyncEnabled === "boolean"
       ? settings.selfHostedSyncEnabled
@@ -1192,53 +1051,10 @@ export async function loadSettingsFromMainProcess(): Promise<void> {
       ? settings.selfHostedAutoSyncInterval
       : state.selfHostedAutoSyncInterval;
 
-  const s3StorageEnabled =
-    typeof settings.s3StorageEnabled === "boolean"
-      ? settings.s3StorageEnabled
-      : state.s3StorageEnabled;
-  const s3Endpoint =
-    typeof settings.s3Endpoint === "string"
-      ? settings.s3Endpoint
-      : state.s3Endpoint;
-  const s3Region =
-    typeof settings.s3Region === "string"
-      ? settings.s3Region
-      : state.s3Region;
-  const s3Bucket =
-    typeof settings.s3Bucket === "string"
-      ? settings.s3Bucket
-      : state.s3Bucket;
-  const s3AccessKeyId =
-    typeof settings.s3AccessKeyId === "string"
-      ? settings.s3AccessKeyId
-      : state.s3AccessKeyId;
-  const s3SecretAccessKey =
-    typeof settings.s3SecretAccessKey === "string"
-      ? settings.s3SecretAccessKey
-      : state.s3SecretAccessKey;
-  const s3BackupPrefix =
-    typeof settings.s3BackupPrefix === "string"
-      ? settings.s3BackupPrefix
-      : state.s3BackupPrefix;
-  const s3SyncOnStartup =
-    typeof settings.s3SyncOnStartup === "boolean"
-      ? settings.s3SyncOnStartup
-      : state.s3SyncOnStartup;
-  const s3SyncOnStartupDelay =
-    typeof settings.s3SyncOnStartupDelay === "number"
-      ? settings.s3SyncOnStartupDelay
-      : state.s3SyncOnStartupDelay;
-  const s3AutoSyncInterval =
-    typeof settings.s3AutoSyncInterval === "number"
-      ? settings.s3AutoSyncInterval
-      : state.s3AutoSyncInterval;
-
   const syncProvider = clampSyncProvider(
     normalizeSyncProvider(settings.sync?.provider),
     {
-      webdavEnabled,
       selfHostedSyncEnabled,
-      s3StorageEnabled,
     },
   );
   const normalizedCustomAgents = normalizeCustomAgents(
@@ -1298,9 +1114,7 @@ export async function loadSettingsFromMainProcess(): Promise<void> {
     if (paths) {
       const computedId = await computeAccountId({
         syncProvider,
-        webdavUsername,
         selfHostedSyncUsername,
-        s3AccessKeyId,
       });
 
       if (state.isSyncVerified && syncProvider !== "manual" && computedId) {
@@ -1354,20 +1168,6 @@ export async function loadSettingsFromMainProcess(): Promise<void> {
     isSyncVerified,
     syncProvider,
 
-    webdavEnabled,
-    webdavUrl,
-    webdavUsername,
-    webdavPassword,
-    webdavAutoSync,
-    webdavSyncOnStartup,
-    webdavSyncOnStartupDelay,
-    webdavAutoSyncInterval,
-    webdavSyncOnSave,
-    webdavIncludeImages,
-    webdavIncrementalSync,
-    webdavEncryptionEnabled,
-    webdavEncryptionPassword,
-
     selfHostedSyncEnabled,
     selfHostedSyncUrl,
     selfHostedSyncUsername,
@@ -1375,17 +1175,6 @@ export async function loadSettingsFromMainProcess(): Promise<void> {
     selfHostedSyncOnStartup,
     selfHostedSyncOnStartupDelay,
     selfHostedAutoSyncInterval,
-
-    s3StorageEnabled,
-    s3Endpoint,
-    s3Region,
-    s3Bucket,
-    s3AccessKeyId,
-    s3SecretAccessKey,
-    s3BackupPrefix,
-    s3SyncOnStartup,
-    s3SyncOnStartupDelay,
-    s3AutoSyncInterval,
 
     aiProvider,
     aiApiProtocol,
@@ -1486,19 +1275,6 @@ export const useSettingsStore = create<SettingsState>()(
         promptTagCatalog: [],
         language: normalizeLanguage(i18n.language),
         dataPath: "",
-        webdavEnabled: false,
-        webdavUrl: "",
-        webdavUsername: "",
-        webdavPassword: "",
-        webdavAutoSync: false,
-        webdavSyncOnStartup: true,
-        webdavSyncOnStartupDelay: 10,
-        webdavAutoSyncInterval: 0,
-        webdavSyncOnSave: false,
-        webdavIncludeImages: true,
-        webdavIncrementalSync: true,
-        webdavEncryptionEnabled: false,
-        webdavEncryptionPassword: "",
         selfHostedSyncEnabled: false,
         selfHostedSyncUrl: "",
         selfHostedSyncUsername: "",
@@ -1506,21 +1282,6 @@ export const useSettingsStore = create<SettingsState>()(
         selfHostedSyncOnStartup: false,
         selfHostedSyncOnStartupDelay: 10,
         selfHostedAutoSyncInterval: 0,
-        s3StorageEnabled: false,
-        s3Endpoint: "",
-        s3Region: "",
-        s3Bucket: "",
-        s3AccessKeyId: "",
-        s3SecretAccessKey: "",
-        s3BackupPrefix: "",
-        s3SyncOnStartup: false,
-        s3SyncOnStartupDelay: 10,
-        s3AutoSyncInterval: 0,
-        s3SyncOnSave: false,
-        s3IncludeImages: true,
-        s3IncrementalSync: true,
-        s3EncryptionEnabled: false,
-        s3EncryptionPassword: "",
         syncProvider: "manual",
         autoCheckUpdate: true,
         useUpdateMirror: false,
@@ -1832,68 +1593,11 @@ export const useSettingsStore = create<SettingsState>()(
           changeLanguage(normalized);
         },
         setDataPath: (path) => setTouched({ dataPath: path }),
-        setWebdavEnabled: (enabled) => {
-          const current = get();
-          const nextSyncProvider = enabled
-            ? current.syncProvider
-            : clampSyncProvider(current.syncProvider, {
-                ...current,
-                webdavEnabled: enabled,
-              });
-          setTouched({
-            webdavEnabled: enabled,
-            syncProvider: nextSyncProvider,
-          });
-          syncSettingsToMain({
-            sync: buildMainProcessSyncSettings(nextSyncProvider),
-          });
-          if (!enabled) {
-            set({ isSyncVerified: false });
-            if (typeof window !== "undefined" && window.api?.database?.switchAccount) {
-              void window.api.database.switchAccount(null).then(() => {
-                window.location.reload();
-              });
-            }
-          }
-        },
-        setWebdavUrl: (url) => {
-          setTouched({ webdavUrl: url });
-          set({ isSyncVerified: false });
-        },
-        setWebdavUsername: (username) => {
-          setTouched({ webdavUsername: username });
-          set({ isSyncVerified: false });
-        },
-        setWebdavPassword: (password) => {
-          setTouched({ webdavPassword: password });
-          set({ isSyncVerified: false });
-        },
-        setWebdavAutoSync: (enabled) =>
-          setTouched({ webdavAutoSync: enabled, webdavSyncOnStartup: enabled }),
-        setWebdavSyncOnStartup: (enabled) =>
-          setTouched({ webdavSyncOnStartup: enabled }),
-        setWebdavSyncOnStartupDelay: (delay) =>
-          setTouched({
-            webdavSyncOnStartupDelay: Math.max(0, Math.min(60, delay)),
-          }),
-        setWebdavAutoSyncInterval: (interval) =>
-          setTouched({ webdavAutoSyncInterval: Math.max(0, interval) }),
-        setWebdavSyncOnSave: (enabled) =>
-          setTouched({ webdavSyncOnSave: enabled }),
-        setWebdavIncludeImages: (enabled) =>
-          setTouched({ webdavIncludeImages: enabled }),
-        setWebdavIncrementalSync: (enabled) =>
-          setTouched({ webdavIncrementalSync: enabled }),
-        setWebdavEncryptionEnabled: (enabled) =>
-          setTouched({ webdavEncryptionEnabled: enabled }),
-        setWebdavEncryptionPassword: (password) =>
-          setTouched({ webdavEncryptionPassword: password }),
         setSelfHostedSyncEnabled: (enabled) => {
           const current = get();
           const nextSyncProvider = enabled
             ? current.syncProvider
             : clampSyncProvider(current.syncProvider, {
-                ...current,
                 selfHostedSyncEnabled: enabled,
               });
           setTouched({
@@ -1932,71 +1636,7 @@ export const useSettingsStore = create<SettingsState>()(
           }),
         setSelfHostedAutoSyncInterval: (interval) =>
           setTouched({ selfHostedAutoSyncInterval: Math.max(0, interval) }),
-        setS3StorageEnabled: (enabled) => {
-          const current = get();
-          const nextSyncProvider = enabled
-            ? current.syncProvider
-            : clampSyncProvider(current.syncProvider, {
-                ...current,
-                s3StorageEnabled: enabled,
-              });
-          setTouched({
-            s3StorageEnabled: enabled,
-            syncProvider: nextSyncProvider,
-          });
-          syncSettingsToMain({
-            sync: buildMainProcessSyncSettings(nextSyncProvider),
-          });
-          if (!enabled) {
-            set({ isSyncVerified: false });
-            if (typeof window !== "undefined" && window.api?.database?.switchAccount) {
-              void window.api.database.switchAccount(null).then(() => {
-                window.location.reload();
-              });
-            }
-          }
-        },
-        setS3Endpoint: (endpoint) => {
-          setTouched({ s3Endpoint: endpoint });
-          set({ isSyncVerified: false });
-        },
-        setS3Region: (region) => {
-          setTouched({ s3Region: region });
-          set({ isSyncVerified: false });
-        },
-        setS3Bucket: (bucket) => {
-          setTouched({ s3Bucket: bucket });
-          set({ isSyncVerified: false });
-        },
-        setS3AccessKeyId: (accessKeyId) => {
-          setTouched({ s3AccessKeyId: accessKeyId });
-          set({ isSyncVerified: false });
-        },
-        setS3SecretAccessKey: (secretAccessKey) => {
-          setTouched({ s3SecretAccessKey: secretAccessKey });
-          set({ isSyncVerified: false });
-        },
-        setS3BackupPrefix: (prefix) => {
-          setTouched({ s3BackupPrefix: prefix });
-          set({ isSyncVerified: false });
-        },
-        setS3SyncOnStartup: (enabled) =>
-          setTouched({ s3SyncOnStartup: enabled }),
-        setS3SyncOnStartupDelay: (delay) =>
-          setTouched({
-            s3SyncOnStartupDelay: Math.max(0, Math.min(60, delay)),
-          }),
-        setS3AutoSyncInterval: (interval) =>
-          setTouched({ s3AutoSyncInterval: Math.max(0, interval) }),
-        setS3SyncOnSave: (enabled) => setTouched({ s3SyncOnSave: enabled }),
-        setS3IncludeImages: (enabled) =>
-          setTouched({ s3IncludeImages: enabled }),
-        setS3IncrementalSync: (enabled) =>
-          setTouched({ s3IncrementalSync: enabled }),
-        setS3EncryptionEnabled: (enabled) =>
-          setTouched({ s3EncryptionEnabled: enabled }),
-        setS3EncryptionPassword: (password) =>
-          setTouched({ s3EncryptionPassword: password }),
+
         setSyncProvider: (provider) => {
           const normalized = clampSyncProvider(provider, get());
           setTouched({ syncProvider: normalized });
@@ -2782,9 +2422,7 @@ export const useSettingsStore = create<SettingsState>()(
         next.syncProvider = clampSyncProvider(
           normalizeSyncProvider(next.syncProvider),
           {
-            webdavEnabled: next.webdavEnabled === true,
             selfHostedSyncEnabled: next.selfHostedSyncEnabled === true,
-            s3StorageEnabled: next.s3StorageEnabled === true,
           },
         );
 
@@ -3112,9 +2750,7 @@ export const useSettingsStore = create<SettingsState>()(
           next.syncProvider = clampSyncProvider(
             normalizeSyncProvider(next.syncProvider),
             {
-              webdavEnabled: next.webdavEnabled === true,
               selfHostedSyncEnabled: next.selfHostedSyncEnabled === true,
-              s3StorageEnabled: next.s3StorageEnabled === true,
             },
           );
         }
@@ -3153,9 +2789,7 @@ export const useSettingsStore = create<SettingsState>()(
         const hydratedSyncProvider = clampSyncProvider(
           normalizeSyncProvider(state?.syncProvider),
           {
-            webdavEnabled: state?.webdavEnabled === true,
             selfHostedSyncEnabled: state?.selfHostedSyncEnabled === true,
-            s3StorageEnabled: state?.s3StorageEnabled === true,
           },
         );
 

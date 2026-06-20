@@ -2,14 +2,6 @@ import {
   downloadSelectiveExport,
 } from "./database-backup";
 import {
-  autoSync,
-  downloadFromWebDAV,
-  testConnection as testWebDAVConnection,
-  uploadToWebDAV,
-  type SyncResult,
-  type WebDAVSyncOptions,
-} from "./webdav";
-import {
   type ManualBackupStatus,
   recordManualBackup,
 } from "./backup-status";
@@ -22,39 +14,15 @@ import {
   type SelfHostedSyncConfig,
   type SelfHostedSyncSummary,
 } from "./self-hosted-sync";
-import {
-  autoSync as autoSyncS3,
-  downloadFromS3,
-  testConnection as testS3Connection,
-  uploadToS3,
-  type S3SyncConfig,
-  type S3SyncOptions,
-} from "./s3-sync";
 
 export interface FullExportBackupOptions {
   currentVersion?: string;
   recordManualBackup?: boolean;
 }
 
-export interface WebDAVSyncConfig {
-  url: string;
-  username: string;
-  password: string;
-}
-
-export interface WebDAVManualSyncOptions {
-  config: WebDAVSyncConfig;
-  options?: WebDAVSyncOptions;
-}
-
 export interface SelfHostedPullOptions {
   config: SelfHostedSyncConfig;
   options?: PullFromSelfHostedOptions;
-}
-
-export interface S3ManualSyncOptions {
-  config: S3SyncConfig;
-  options?: S3SyncOptions;
 }
 
 export type AutoSyncReason = "startup" | "startup-resume" | "interval";
@@ -107,29 +75,7 @@ export async function runPreUpgradeBackup(
   return recordManualBackup(currentVersion);
 }
 
-export async function runWebDAVConnectionCheck(
-  config: WebDAVSyncConfig,
-): Promise<SyncResult> {
-  return testWebDAVConnection(config);
-}
 
-export async function runWebDAVUpload(
-  input: WebDAVManualSyncOptions,
-): Promise<SyncResult> {
-  return uploadToWebDAV(input.config, input.options);
-}
-
-export async function runWebDAVDownload(
-  input: WebDAVManualSyncOptions,
-): Promise<SyncResult> {
-  return downloadFromWebDAV(input.config, input.options);
-}
-
-export async function runWebDAVAutoSync(
-  input: WebDAVManualSyncOptions,
-): Promise<SyncResult> {
-  return autoSync(input.config, input.options);
-}
 
 export async function runSelfHostedConnectionCheck(
   config: SelfHostedSyncConfig,
@@ -180,26 +126,4 @@ export async function runSelfHostedAutoSync(
   }
 }
 
-export async function runS3ConnectionCheck(
-  config: S3SyncConfig,
-): Promise<SyncResult> {
-  return testS3Connection(config);
-}
 
-export async function runS3Upload(
-  input: S3ManualSyncOptions,
-): Promise<SyncResult> {
-  return uploadToS3(input.config, input.options);
-}
-
-export async function runS3Download(
-  input: S3ManualSyncOptions,
-): Promise<SyncResult> {
-  return downloadFromS3(input.config, input.options);
-}
-
-export async function runS3AutoSync(
-  input: S3ManualSyncOptions,
-): Promise<SyncResult> {
-  return autoSyncS3(input.config, input.options);
-}

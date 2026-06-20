@@ -1,33 +1,17 @@
 import {
-  hasValidS3Config,
   hasValidSelfHostedConfig,
-  hasValidWebDAVConfig,
 } from "./app-background";
 
-type SyncProviderKind = "manual" | "webdav" | "self-hosted" | "s3";
+type SyncProviderKind = "manual" | "self-hosted";
 
 export interface PeriodicAutoSyncSettings {
   syncProvider?: SyncProviderKind;
-  webdavEnabled: boolean;
-  webdavUrl: string;
-  webdavUsername: string;
-  webdavPassword: string;
-  webdavSyncOnStartup: boolean;
-  webdavAutoSyncInterval: number;
   selfHostedSyncEnabled: boolean;
   selfHostedSyncUrl: string;
   selfHostedSyncUsername: string;
   selfHostedSyncPassword: string;
   selfHostedSyncOnStartup: boolean;
   selfHostedAutoSyncInterval: number;
-  s3StorageEnabled: boolean;
-  s3Endpoint: string;
-  s3Region: string;
-  s3Bucket: string;
-  s3AccessKeyId: string;
-  s3SecretAccessKey: string;
-  s3SyncOnStartup: boolean;
-  s3AutoSyncInterval: number;
 }
 
 type PeriodicProvider = Exclude<SyncProviderKind, "manual">;
@@ -45,8 +29,6 @@ interface PeriodicAutoSyncControllerOptions {
       previous: PeriodicAutoSyncSettings,
     ) => void,
   ) => () => void;
-  runWebDAV: () => void;
-  runS3: () => void;
   runSelfHosted: () => void;
   setIntervalFn?: typeof setInterval;
   clearIntervalFn?: typeof clearInterval;
@@ -61,28 +43,6 @@ export interface PeriodicAutoSyncController {
 function selectPeriodicAutoSync(
   settings: PeriodicAutoSyncSettings,
 ): PeriodicAutoSyncSelection | null {
-  if (
-    settings.syncProvider === "webdav" &&
-    settings.webdavAutoSyncInterval > 0 &&
-    hasValidWebDAVConfig(settings)
-  ) {
-    return {
-      provider: "webdav",
-      intervalMinutes: settings.webdavAutoSyncInterval,
-    };
-  }
-
-  if (
-    settings.syncProvider === "s3" &&
-    settings.s3AutoSyncInterval > 0 &&
-    hasValidS3Config(settings)
-  ) {
-    return {
-      provider: "s3",
-      intervalMinutes: settings.s3AutoSyncInterval,
-    };
-  }
-
   if (
     settings.syncProvider === "self-hosted" &&
     settings.selfHostedAutoSyncInterval > 0 &&
@@ -109,16 +69,6 @@ function runSelectedProvider(
   selection: PeriodicAutoSyncSelection,
   options: PeriodicAutoSyncControllerOptions,
 ): void {
-  if (selection.provider === "webdav") {
-    options.runWebDAV();
-    return;
-  }
-
-  if (selection.provider === "s3") {
-    options.runS3();
-    return;
-  }
-
   options.runSelfHosted();
 }
 
