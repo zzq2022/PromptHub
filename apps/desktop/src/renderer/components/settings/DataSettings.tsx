@@ -237,6 +237,7 @@ export function DataSettings({
     skillsDir: string;
     backupsDir: string;
     logsDir: string;
+    activeAccountId: string | null;
   }>(null);
   const [dataPathActionLoading, setDataPathActionLoading] = useState(false);
   const [cacheSize, setCacheSize] = useState<number | null>(null);
@@ -245,6 +246,29 @@ export function DataSettings({
   const localBackupImportController = useBackupImportController();
   const effectiveBackupImportController =
     backupImportController ?? localBackupImportController;
+
+  const [localAccounts, setLocalAccounts] = useState<string[]>([]);
+  const [loadingLocalAccounts, setLoadingLocalAccounts] = useState(false);
+
+  useEffect(() => {
+    if (webRuntime) {
+      return;
+    }
+    if (runtimePaths && runtimePaths.activeAccountId === null) {
+      setLoadingLocalAccounts(true);
+      void window.api?.database?.getLocalAccounts?.()
+        .then((accounts) => {
+          if (accounts) {
+            setLocalAccounts(accounts);
+          }
+        })
+        .finally(() => {
+          setLoadingLocalAccounts(false);
+        });
+    } else {
+      setLocalAccounts([]);
+    }
+  }, [webRuntime, runtimePaths?.activeAccountId]);
 
   useEffect(() => {
     void window.electron?.getCacheSize?.().then((res) => setCacheSize(res.size));
@@ -1151,6 +1175,24 @@ export function DataSettings({
                           const accountId = settings.selfHostedSyncUsername.trim().replace(/@/g, "_").replace(/[\\/:*?"<>|]/g, "_");
 
                           await window.api.database.switchAccount(accountId);
+                          await window.api.settings.set({
+                            selfHostedSyncEnabled: true,
+                            selfHostedSyncUrl: settings.selfHostedSyncUrl,
+                            selfHostedSyncUsername: settings.selfHostedSyncUsername,
+                            selfHostedSyncPassword: settings.selfHostedSyncPassword,
+                            selfHostedSyncOnStartup: settings.selfHostedSyncOnStartup,
+                            selfHostedSyncOnStartupDelay: settings.selfHostedSyncOnStartupDelay,
+                            selfHostedAutoSyncInterval: settings.selfHostedAutoSyncInterval,
+                            syncProvider: "self-hosted",
+                            sync: {
+                              enabled: true,
+                              provider: "self-hosted",
+                              autoSync: settings.selfHostedSyncOnStartup,
+                              username: settings.selfHostedSyncUsername,
+                              password: settings.selfHostedSyncPassword,
+                              endpoint: settings.selfHostedSyncUrl,
+                            }
+                          });
                           settings.setIsSyncVerified(true);
 
                           showToast(
@@ -1476,6 +1518,30 @@ export function DataSettings({
                           const accountId = settings.webdavUsername.trim().replace(/@/g, "_").replace(/[\\/:*?"<>|]/g, "_");
 
                           await window.api.database.switchAccount(accountId);
+                          await window.api.settings.set({
+                             webdavEnabled: true,
+                             webdavUrl: settings.webdavUrl,
+                             webdavUsername: settings.webdavUsername,
+                             webdavPassword: settings.webdavPassword,
+                             webdavAutoSync: settings.webdavAutoSync,
+                             webdavSyncOnStartup: settings.webdavSyncOnStartup,
+                             webdavSyncOnStartupDelay: settings.webdavSyncOnStartupDelay,
+                             webdavAutoSyncInterval: settings.webdavAutoSyncInterval,
+                             webdavSyncOnSave: settings.webdavSyncOnSave,
+                             webdavIncludeImages: settings.webdavIncludeImages,
+                             webdavIncrementalSync: settings.webdavIncrementalSync,
+                             webdavEncryptionEnabled: settings.webdavEncryptionEnabled,
+                             webdavEncryptionPassword: settings.webdavEncryptionPassword,
+                             syncProvider: "webdav",
+                             sync: {
+                               enabled: true,
+                               provider: "webdav",
+                               autoSync: settings.webdavAutoSync,
+                               username: settings.webdavUsername,
+                               password: settings.webdavPassword,
+                               endpoint: settings.webdavUrl,
+                             }
+                           });
                           settings.setIsSyncVerified(true);
                           showToast(t("toast.connectionSuccess"), "success");
                           setTimeout(() => {
@@ -1913,6 +1979,27 @@ export function DataSettings({
                       const accountId = settings.s3AccessKeyId.trim().replace(/@/g, "_").replace(/[\\/:*?"<>|]/g, "_");
 
                       await window.api.database.switchAccount(accountId);
+                      await window.api.settings.set({
+                        s3StorageEnabled: true,
+                        s3Endpoint: settings.s3Endpoint,
+                        s3Region: settings.s3Region,
+                        s3Bucket: settings.s3Bucket,
+                        s3AccessKeyId: settings.s3AccessKeyId,
+                        s3SecretAccessKey: settings.s3SecretAccessKey,
+                        s3BackupPrefix: settings.s3BackupPrefix,
+                        s3SyncOnStartup: settings.s3SyncOnStartup,
+                        s3SyncOnStartupDelay: settings.s3SyncOnStartupDelay,
+                        s3AutoSyncInterval: settings.s3AutoSyncInterval,
+                        syncProvider: "s3",
+                        sync: {
+                          enabled: true,
+                          provider: "s3",
+                          autoSync: settings.s3SyncOnStartup,
+                          username: settings.s3AccessKeyId,
+                          password: settings.s3SecretAccessKey,
+                          endpoint: settings.s3Endpoint,
+                        }
+                      });
                       settings.setIsSyncVerified(true);
                       showToast(result.message, "success");
                       setTimeout(() => {
@@ -2505,7 +2592,164 @@ export function DataSettings({
         ) : null}
 
         {!webRuntime && activeSubsection === "local" ? (
-          <DataSettingsSection title={t("settings.dbInfo", "数据目录")}>
+          <>
+            <DataSettingsSection title={t("settings.currentAccountTitle", "当前本地账户")}>
+              <div className="p-5 space-y-4">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-foreground">
+                      {t("settings.currentAccount", "当前登录账户")}
+                    </p>
+                    <div className="text-xs text-muted-foreground pt-1">
+                      {runtimePaths?.activeAccountId ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-foreground">
+                          <CloudIcon className="w-3.5 h-3.5" />
+                          {t("settings.cloudAccount", "云端同步账户")}: {runtimePaths.activeAccountId}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground">
+                          <FolderIcon className="w-3.5 h-3.5" />
+                          {t("settings.guestAccount", "本地访客账户 (离线)")}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  {runtimePaths?.activeAccountId ? (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const confirmed = window.confirm(
+                          t(
+                            "settings.confirmLogoutToGuest",
+                            "确认注销当前账户并切回本地访客账户吗？这将会安全断开当前账户的数据连接，并重载到本地离线访客环境。"
+                          )
+                        );
+                        if (confirmed) {
+                          // Reset sync verification status, set provider to manual and disable sync targets
+                          settings.setIsSyncVerified(false);
+                          settings.setSyncProvider("manual");
+                          if (settings.webdavEnabled) {
+                            settings.setWebdavEnabled(false);
+                          }
+                          if (settings.selfHostedSyncEnabled) {
+                            settings.setSelfHostedSyncEnabled(false);
+                          }
+                          if (settings.s3StorageEnabled) {
+                            settings.setS3StorageEnabled(false);
+                          }
+
+                          if (window.api?.database?.switchAccount) {
+                            await window.api.database.switchAccount(null);
+                            window.location.reload();
+                          }
+                        }
+                      }}
+                      className="h-8 px-3 rounded-lg border border-red-200 bg-red-50 text-xs font-medium text-red-600 hover:bg-red-100 transition-colors dark:border-red-900/30 dark:bg-red-950/20 dark:text-red-400 dark:hover:bg-red-950/30"
+                    >
+                      {t("settings.logoutToGuest", "注销并切回访客")}
+                    </button>
+                  ) : null}
+                </div>
+                <div className="rounded-lg border border-border bg-muted/20 p-3.5">
+                  <p className="text-xs font-medium text-foreground mb-1">
+                    {t("settings.currentDirectory", "物理隔离数据根路径")}
+                  </p>
+                  <p className="font-mono text-xs text-muted-foreground break-all">
+                    {runtimePaths?.userDataPath || normalizedDataPath}
+                  </p>
+                </div>
+
+                {!runtimePaths?.activeAccountId && localAccounts.length > 0 ? (
+                  <div className="pt-4 border-t border-border space-y-3">
+                    <p className="text-xs font-medium text-foreground">
+                      {t("settings.detectedLocalAccounts", "本机已缓存的云端账户")}
+                    </p>
+                    <div className="space-y-2">
+                      {localAccounts.map((accountId) => (
+                        <div
+                          key={accountId}
+                          className="flex items-center justify-between gap-4 rounded-lg border border-border bg-card p-3 shadow-sm hover:shadow-md transition-shadow"
+                        >
+                          <div className="flex items-center gap-2">
+                            <CloudIcon className="w-4 h-4 text-primary" />
+                            <span className="text-sm font-medium text-foreground">
+                              {accountId}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              const confirmed = window.confirm(
+                                t(
+                                  "settings.confirmLoadAccountData",
+                                  "确认切换并载入账户“{{accountId}}”的本地数据吗？"
+                                ).replace("{{accountId}}", accountId)
+                              );
+                              if (confirmed) {
+                                if (window.api?.database?.switchAccount) {
+                                  await window.api.database.switchAccount(accountId);
+                                  const newSettings = await window.api.settings.get();
+                                  
+                                  let syncProvider = newSettings.sync?.provider || newSettings.syncProvider;
+                                  if (!syncProvider || syncProvider === "manual") {
+                                    syncProvider = "self-hosted";
+                                  }
+
+                                  const updatedSettings: any = {
+                                    syncProvider,
+                                    sync: {
+                                      enabled: true,
+                                      provider: syncProvider,
+                                      username: accountId,
+                                    }
+                                  };
+
+                                  if (syncProvider === "self-hosted") {
+                                    updatedSettings.selfHostedSyncEnabled = true;
+                                    updatedSettings.selfHostedSyncUsername = accountId;
+                                    if (!newSettings.selfHostedSyncUrl && settings.selfHostedSyncUrl) {
+                                      updatedSettings.selfHostedSyncUrl = settings.selfHostedSyncUrl;
+                                    }
+                                  } else if (syncProvider === "webdav") {
+                                    updatedSettings.webdavEnabled = true;
+                                    updatedSettings.webdavUsername = accountId;
+                                    if (!newSettings.webdavUrl && settings.webdavUrl) {
+                                      updatedSettings.webdavUrl = settings.webdavUrl;
+                                    }
+                                  } else if (syncProvider === "s3") {
+                                    updatedSettings.s3StorageEnabled = true;
+                                    updatedSettings.s3AccessKeyId = accountId;
+                                    if (!newSettings.s3Endpoint && settings.s3Endpoint) {
+                                      updatedSettings.s3Endpoint = settings.s3Endpoint;
+                                    }
+                                  }
+
+                                  await window.api.settings.set(updatedSettings);
+
+                                  useSettingsStore.setState({
+                                    ...newSettings,
+                                    ...updatedSettings,
+                                    isSyncVerified: true,
+                                    syncProvider: syncProvider,
+                                  });
+                                  
+                                  window.location.reload();
+                                }
+                              }
+                            }}
+                            className="h-8 px-3 rounded-lg bg-primary text-white text-xs font-medium hover:bg-primary/90 transition-colors"
+                          >
+                            {t("settings.loadAccountData", "载入此账号数据")}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            </DataSettingsSection>
+
+            <DataSettingsSection title={t("settings.dbInfo", "数据目录")}>
             <div className="divide-y divide-border">
               {normalizedDataPath ? (
                 <>
@@ -2605,6 +2849,7 @@ export function DataSettings({
               )}
             </div>
           </DataSettingsSection>
+          </>
         ) : null}
 
         {!webRuntime && activeSubsection === "backup" ? (

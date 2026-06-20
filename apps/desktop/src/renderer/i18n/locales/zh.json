@@ -443,6 +443,15 @@
     "parentHint": "最多支持 {{depth}} 层嵌套"
   },
   "settings": {
+    "currentAccountTitle": "当前本地账户",
+    "currentAccount": "当前登录账户",
+    "cloudAccount": "云端同步账户",
+    "guestAccount": "本地访客账户 (离线)",
+    "confirmLogoutToGuest": "确认注销当前账户并切回本地访客账户吗？这将会安全断开当前账户的数据连接，并重载到本地离线访客环境。",
+    "logoutToGuest": "注销并切回访客",
+    "detectedLocalAccounts": "本机已缓存的云端账户",
+    "confirmLoadAccountData": "确认切换并载入账户“{{accountId}}”的本地数据吗？",
+    "loadAccountData": "载入此账号数据",
     "developer": "开发者选项",
     "debugMode": "调试模式",
     "debugModeDesc": "启用控制台调试 (支持 Ctrl+Shift+I / Cmd+Option+I 唤起)",

@@ -62,7 +62,8 @@ sequenceDiagram
   - 检查当前 Store 中的 `isSyncVerified`。
   - 若为 `false`：
     - 将“立即推送本地数据”、“从云端拉取覆盖”、“远程备份”等按钮设为 `disabled`。
-    - 在按钮旁边展示 subtle 提示信息或 Tooltip（例如：“请先测试并保存数据同步设置以启用此功能”）。
+    - 在“数据同步”或“常规设置”中增加一个“当前本地账户”的显示栏，直观展示当前数据存放在 Guest 还是特定的云端账号目录。
+- 增加一个“注销并切换回访客”或“切换本地其他账户”的快捷按钮，用户点击后可以直接切换，而不需要重新输入 WebDAV 配置并测试连接。
 
 ### 4.3 主进程 IPC 与数据库连接层 (`main/database/index.ts`)
 - 暴露 `database:switch-account`：
@@ -70,3 +71,11 @@ sequenceDiagram
   - 更新 `lastActiveAccountId` 配置并写回。
   - 调用 `initDatabase()` 重启数据库及运行 Schema 迁移。
   - 返回成功状态。
+
+### 4.4 渲染端“当前账户信息与切换”面板 (`renderer/components/settings/DataSettings.tsx`)
+- 在“数据目录”(`activeSubsection === "local"`) 子标签页的顶部，增加【当前本地账户】配置面板。
+- 展示当前处于【云端同步账户 (如 zzq02)】还是【本地访客账户 (离线)】。
+- 展示当前账户对应的物理隔离数据根路径（`runtimePaths.userDataPath`）。
+- 若当前为已登录的云端同步账户，提供【注销并切回访客】的按钮：
+  - 点击时弹出确认对话框。
+  - 确认后，调用 `window.api.database.switchAccount(null)` 切回访客隔离环境，并重载窗口 `window.location.reload()`。

@@ -611,6 +611,7 @@ describe("skill ui integration", () => {
 
     expect(installRegistrySkill).toHaveBeenCalledWith(
       expect.objectContaining({ slug: "local-writer" }),
+      undefined,
     );
 
     cleanup();
@@ -640,7 +641,11 @@ describe("skill ui integration", () => {
 
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "Check update" }));
-      fireEvent.click(screen.getByRole("button", { name: "Update" }));
+    });
+
+    const updateBtn = await screen.findByRole("button", { name: "Update" });
+    await act(async () => {
+      fireEvent.click(updateBtn);
     });
 
     expect(updateRegistrySkill).toHaveBeenCalledWith("local-writer", {

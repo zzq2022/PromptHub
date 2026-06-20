@@ -21,12 +21,17 @@ import {
   runWebDAVConnectionCheck,
 } from "../../../src/renderer/services/backup-orchestrator";
 
-const useSettingsStoreMock = vi.fn();
+const useSettingsStoreMock = Object.assign(vi.fn(), { setState: vi.fn() });
 const useToastMock = vi.fn();
 const useSkillStoreMock = vi.fn();
 
 vi.mock("../../../src/renderer/stores/settings.store", () => ({
-  useSettingsStore: () => useSettingsStoreMock(),
+  useSettingsStore: Object.assign(
+    () => useSettingsStoreMock(),
+    {
+      setState: (...args: any[]) => useSettingsStoreMock.setState(...args),
+    }
+  ),
 }));
 
 vi.mock("../../../src/renderer/components/ui/Toast", () => ({
@@ -186,6 +191,8 @@ function createSettingsState() {
     setS3EncryptionEnabled: vi.fn(),
     s3EncryptionPassword: "",
     setS3EncryptionPassword: vi.fn(),
+    isSyncVerified: false,
+    setIsSyncVerified: vi.fn(),
   };
 }
 
@@ -208,12 +215,30 @@ describe("DataSettings", { timeout: 15_000 }, () => {
         security: {
           status: vi.fn().mockResolvedValue({ configured: false }),
         },
+        database: {
+          switchAccount: vi.fn().mockResolvedValue({ success: true }),
+        },
+        settings: {
+          set: vi.fn().mockResolvedValue(true),
+          get: vi.fn().mockResolvedValue({}),
+        },
       },
       electron: {
         getDataPathStatus: vi.fn().mockResolvedValue({
           configuredPath: "/next/data",
           currentPath: "/actual/data",
           needsRestart: true,
+        }),
+        getRuntimePaths: vi.fn().mockResolvedValue({
+          userDataPath: "/actual/data",
+          dataDir: "/actual/data/data",
+          databasePath: "/actual/data/data/prompthub.db",
+          promptsDir: "/actual/data/data/prompts",
+          rulesDir: "/actual/data/data/rules",
+          skillsDir: "/actual/data/data/skills",
+          backupsDir: "/actual/data/backups",
+          logsDir: "/actual/data/logs",
+          activeAccountId: null,
         }),
       },
     });
@@ -889,6 +914,7 @@ describe("DataSettings", { timeout: 15_000 }, () => {
     settingsState.s3Bucket = "prompthub-backups";
     settingsState.s3AccessKeyId = "access";
     settingsState.s3SecretAccessKey = "secret";
+    settingsState.isSyncVerified = true;
     useSettingsStoreMock.mockReturnValue(settingsState);
 
     await act(async () => {
@@ -945,6 +971,7 @@ describe("DataSettings", { timeout: 15_000 }, () => {
     settingsState.s3Bucket = "prompthub-backups";
     settingsState.s3AccessKeyId = "access";
     settingsState.s3SecretAccessKey = "secret";
+    settingsState.isSyncVerified = true;
     useSettingsStoreMock.mockReturnValue(settingsState);
     vi.mocked(runS3Upload).mockResolvedValue({
       success: true,
@@ -987,6 +1014,7 @@ describe("DataSettings", { timeout: 15_000 }, () => {
     settingsState.s3Bucket = "prompthub-backups";
     settingsState.s3AccessKeyId = "access";
     settingsState.s3SecretAccessKey = "secret";
+    settingsState.isSyncVerified = true;
     useSettingsStoreMock.mockReturnValue(settingsState);
     vi.mocked(runS3Download).mockResolvedValue({
       success: true,
@@ -1266,4 +1294,154 @@ describe("DataSettings", { timeout: 15_000 }, () => {
       "success",
     );
   }, 10000);
+
+  it("displays current account status and switches back to guest", async () => {
+    const switchAccount = vi.fn().mockResolvedValue({ success: true });
+    const originalReload = window.location.reload;
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: { reload: vi.fn() },
+    });
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    
+    installWindowMocks({
+      api: {
+        security: {
+          status: vi.fn().mockResolvedValue({ configured: false }),
+        },
+        database: {
+          switchAccount,
+        },
+      },
+      electron: {
+        getDataPathStatus: vi.fn().mockResolvedValue({
+          configuredPath: null,
+          currentPath: "/actual/data",
+          needsRestart: false,
+        }),
+        getRuntimePaths: vi.fn().mockResolvedValue({
+          userDataPath: "/actual/data/users/zzq02",
+          dataDir: "/actual/data/users/zzq02/data",
+          databasePath: "/actual/data/users/zzq02/data/prompthub.db",
+          promptsDir: "/actual/data/users/zzq02/data/prompts",
+          rulesDir: "/actual/data/users/zzq02/data/rules",
+          skillsDir: "/actual/data/users/zzq02/data/skills",
+          backupsDir: "/actual/data/users/zzq02/backups",
+          logsDir: "/actual/data/users/zzq02/logs",
+          activeAccountId: "zzq02",
+        }),
+      },
+    });
+
+    await act(async () => {
+      await renderWithI18n(<DataSettings activeSubsection="local" />, {
+        language: "zh",
+      });
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("当前本地账户")).toBeInTheDocument();
+    });
+
+    expect(screen.getByText(/云端同步账户.*zzq02/)).toBeInTheDocument();
+    expect(screen.getAllByText("/actual/data/users/zzq02").length).toBeGreaterThanOrEqual(1);
+
+    const logoutBtn = screen.getByRole("button", { name: "注销并切回访客" });
+    expect(logoutBtn).toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.click(logoutBtn);
+    });
+
+    await waitFor(() => {
+      expect(switchAccount).toHaveBeenCalledWith(null);
+    });
+
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: { reload: originalReload },
+    });
+  });
+
+  it("scans and displays local accounts in guest mode, and loads a selected account", async () => {
+    const getLocalAccounts = vi.fn().mockResolvedValue(["user_a"]);
+    const switchAccount = vi.fn().mockResolvedValue({ success: true });
+    const getSettings = vi.fn().mockResolvedValue({
+      syncProvider: "webdav",
+      webdavUsername: "user_a",
+      webdavUrl: "https://example.com/dav",
+      sync: { provider: "webdav" }
+    });
+    
+    const originalReload = window.location.reload;
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: { reload: vi.fn() },
+    });
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+
+    installWindowMocks({
+      api: {
+        security: {
+          status: vi.fn().mockResolvedValue({ configured: false }),
+        },
+        database: {
+          getLocalAccounts,
+          switchAccount,
+        },
+        settings: {
+          get: getSettings,
+          set: vi.fn().mockResolvedValue(true),
+        },
+      },
+      electron: {
+        getDataPathStatus: vi.fn().mockResolvedValue({
+          configuredPath: null,
+          currentPath: "/actual/data",
+          needsRestart: false,
+        }),
+        getRuntimePaths: vi.fn().mockResolvedValue({
+          userDataPath: "/actual/data/users/guest",
+          dataDir: "/actual/data/users/guest/data",
+          databasePath: "/actual/data/users/guest/data/prompthub.db",
+          promptsDir: "/actual/data/users/guest/data/prompts",
+          rulesDir: "/actual/data/users/guest/data/rules",
+          skillsDir: "/actual/data/users/guest/data/skills",
+          backupsDir: "/actual/data/users/guest/backups",
+          logsDir: "/actual/data/users/guest/logs",
+          activeAccountId: null,
+        }),
+      },
+    });
+
+    await act(async () => {
+      await renderWithI18n(<DataSettings activeSubsection="local" />, {
+        language: "zh",
+      });
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("本机已缓存的云端账户")).toBeInTheDocument();
+    });
+
+    expect(screen.getByText("user_a")).toBeInTheDocument();
+    const loadBtn = screen.getByRole("button", { name: "载入此账号数据" });
+    expect(loadBtn).toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.click(loadBtn);
+    });
+
+    await waitFor(() => {
+      expect(switchAccount).toHaveBeenCalledWith("user_a");
+    });
+    expect(getSettings).toHaveBeenCalled();
+    expect(useSettingsStoreMock.setState).toHaveBeenCalled();
+    expect(window.location.reload).toHaveBeenCalled();
+
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: { reload: originalReload },
+    });
+  });
 });

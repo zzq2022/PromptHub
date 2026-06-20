@@ -1108,9 +1108,138 @@ export async function loadSettingsFromMainProcess(): Promise<void> {
       ? settings.minimizeOnLaunch
       : state.minimizeOnLaunch;
   const githubToken = sanitizeGithubToken(settings.githubToken ?? "");
+
+  // Resolve sync configurations and credentials from loaded settings falling back to state
+  const webdavEnabled =
+    typeof settings.webdavEnabled === "boolean"
+      ? settings.webdavEnabled
+      : state.webdavEnabled;
+  const webdavUrl =
+    typeof settings.webdavUrl === "string"
+      ? settings.webdavUrl
+      : state.webdavUrl;
+  const webdavUsername =
+    typeof settings.webdavUsername === "string"
+      ? settings.webdavUsername
+      : state.webdavUsername;
+  const webdavPassword =
+    typeof settings.webdavPassword === "string"
+      ? settings.webdavPassword
+      : state.webdavPassword;
+  const webdavAutoSync =
+    typeof settings.webdavAutoSync === "boolean"
+      ? settings.webdavAutoSync
+      : state.webdavAutoSync;
+  const webdavSyncOnStartup =
+    typeof settings.webdavSyncOnStartup === "boolean"
+      ? settings.webdavSyncOnStartup
+      : state.webdavSyncOnStartup;
+  const webdavSyncOnStartupDelay =
+    typeof settings.webdavSyncOnStartupDelay === "number"
+      ? settings.webdavSyncOnStartupDelay
+      : state.webdavSyncOnStartupDelay;
+  const webdavAutoSyncInterval =
+    typeof settings.webdavAutoSyncInterval === "number"
+      ? settings.webdavAutoSyncInterval
+      : state.webdavAutoSyncInterval;
+  const webdavSyncOnSave =
+    typeof settings.webdavSyncOnSave === "boolean"
+      ? settings.webdavSyncOnSave
+      : state.webdavSyncOnSave;
+  const webdavIncludeImages =
+    typeof settings.webdavIncludeImages === "boolean"
+      ? settings.webdavIncludeImages
+      : state.webdavIncludeImages;
+  const webdavIncrementalSync =
+    typeof settings.webdavIncrementalSync === "boolean"
+      ? settings.webdavIncrementalSync
+      : state.webdavIncrementalSync;
+  const webdavEncryptionEnabled =
+    typeof settings.webdavEncryptionEnabled === "boolean"
+      ? settings.webdavEncryptionEnabled
+      : state.webdavEncryptionEnabled;
+  const webdavEncryptionPassword =
+    typeof settings.webdavEncryptionPassword === "string"
+      ? settings.webdavEncryptionPassword
+      : state.webdavEncryptionPassword;
+
+  const selfHostedSyncEnabled =
+    typeof settings.selfHostedSyncEnabled === "boolean"
+      ? settings.selfHostedSyncEnabled
+      : state.selfHostedSyncEnabled;
+  const selfHostedSyncUrl =
+    typeof settings.selfHostedSyncUrl === "string"
+      ? settings.selfHostedSyncUrl
+      : state.selfHostedSyncUrl;
+  const selfHostedSyncUsername =
+    typeof settings.selfHostedSyncUsername === "string"
+      ? settings.selfHostedSyncUsername
+      : state.selfHostedSyncUsername;
+  const selfHostedSyncPassword =
+    typeof settings.selfHostedSyncPassword === "string"
+      ? settings.selfHostedSyncPassword
+      : state.selfHostedSyncPassword;
+  const selfHostedSyncOnStartup =
+    typeof settings.selfHostedSyncOnStartup === "boolean"
+      ? settings.selfHostedSyncOnStartup
+      : state.selfHostedSyncOnStartup;
+  const selfHostedSyncOnStartupDelay =
+    typeof settings.selfHostedSyncOnStartupDelay === "number"
+      ? settings.selfHostedSyncOnStartupDelay
+      : state.selfHostedSyncOnStartupDelay;
+  const selfHostedAutoSyncInterval =
+    typeof settings.selfHostedAutoSyncInterval === "number"
+      ? settings.selfHostedAutoSyncInterval
+      : state.selfHostedAutoSyncInterval;
+
+  const s3StorageEnabled =
+    typeof settings.s3StorageEnabled === "boolean"
+      ? settings.s3StorageEnabled
+      : state.s3StorageEnabled;
+  const s3Endpoint =
+    typeof settings.s3Endpoint === "string"
+      ? settings.s3Endpoint
+      : state.s3Endpoint;
+  const s3Region =
+    typeof settings.s3Region === "string"
+      ? settings.s3Region
+      : state.s3Region;
+  const s3Bucket =
+    typeof settings.s3Bucket === "string"
+      ? settings.s3Bucket
+      : state.s3Bucket;
+  const s3AccessKeyId =
+    typeof settings.s3AccessKeyId === "string"
+      ? settings.s3AccessKeyId
+      : state.s3AccessKeyId;
+  const s3SecretAccessKey =
+    typeof settings.s3SecretAccessKey === "string"
+      ? settings.s3SecretAccessKey
+      : state.s3SecretAccessKey;
+  const s3BackupPrefix =
+    typeof settings.s3BackupPrefix === "string"
+      ? settings.s3BackupPrefix
+      : state.s3BackupPrefix;
+  const s3SyncOnStartup =
+    typeof settings.s3SyncOnStartup === "boolean"
+      ? settings.s3SyncOnStartup
+      : state.s3SyncOnStartup;
+  const s3SyncOnStartupDelay =
+    typeof settings.s3SyncOnStartupDelay === "number"
+      ? settings.s3SyncOnStartupDelay
+      : state.s3SyncOnStartupDelay;
+  const s3AutoSyncInterval =
+    typeof settings.s3AutoSyncInterval === "number"
+      ? settings.s3AutoSyncInterval
+      : state.s3AutoSyncInterval;
+
   const syncProvider = clampSyncProvider(
     normalizeSyncProvider(settings.sync?.provider),
-    state,
+    {
+      webdavEnabled,
+      selfHostedSyncEnabled,
+      s3StorageEnabled,
+    },
   );
   const normalizedCustomAgents = normalizeCustomAgents(
     settings.customAgents ?? state.customAgents,
@@ -1167,9 +1296,14 @@ export async function loadSettingsFromMainProcess(): Promise<void> {
   try {
     const paths = await window.electron?.getRuntimePaths?.();
     if (paths) {
-      const computedId = await computeAccountId(state);
+      const computedId = await computeAccountId({
+        syncProvider,
+        webdavUsername,
+        selfHostedSyncUsername,
+        s3AccessKeyId,
+      });
 
-      if (state.isSyncVerified && state.syncProvider !== "manual" && computedId) {
+      if (state.isSyncVerified && syncProvider !== "manual" && computedId) {
         // Renderer says we are verified and have a valid provider.
         // If main process is not on the correct computed account ID, switch it!
         if (paths.activeAccountId !== computedId) {
@@ -1219,6 +1353,40 @@ export async function loadSettingsFromMainProcess(): Promise<void> {
     githubToken,
     isSyncVerified,
     syncProvider,
+
+    webdavEnabled,
+    webdavUrl,
+    webdavUsername,
+    webdavPassword,
+    webdavAutoSync,
+    webdavSyncOnStartup,
+    webdavSyncOnStartupDelay,
+    webdavAutoSyncInterval,
+    webdavSyncOnSave,
+    webdavIncludeImages,
+    webdavIncrementalSync,
+    webdavEncryptionEnabled,
+    webdavEncryptionPassword,
+
+    selfHostedSyncEnabled,
+    selfHostedSyncUrl,
+    selfHostedSyncUsername,
+    selfHostedSyncPassword,
+    selfHostedSyncOnStartup,
+    selfHostedSyncOnStartupDelay,
+    selfHostedAutoSyncInterval,
+
+    s3StorageEnabled,
+    s3Endpoint,
+    s3Region,
+    s3Bucket,
+    s3AccessKeyId,
+    s3SecretAccessKey,
+    s3BackupPrefix,
+    s3SyncOnStartup,
+    s3SyncOnStartupDelay,
+    s3AutoSyncInterval,
+
     aiProvider,
     aiApiProtocol,
     aiApiKey:

@@ -86,6 +86,8 @@ const api = {
   database: {
     switchAccount: (accountId: string | null) =>
       ipcRenderer.invoke("database:switch-account", accountId),
+    getLocalAccounts: () =>
+      ipcRenderer.invoke("database:get-local-accounts") as Promise<string[]>,
   },
 
   // Security

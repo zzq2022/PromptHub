@@ -440,6 +440,15 @@
     "versionShowLess": "Einklappen"
   },
   "settings": {
+    "currentAccountTitle": "Aktuelles lokales Konto",
+    "currentAccount": "Aktuell angemeldetes Konto",
+    "cloudAccount": "Cloud-Synchronisationskonto",
+    "guestAccount": "Lokales Gastkonto (Offline)",
+    "confirmLogoutToGuest": "Möchten Sie wirklich vom aktuellen Konto abmelden und zum lokalen Gastkonto zurückkehren? Dadurch wird die Verbindung zu den aktuellen Kontodaten sicher getrennt und die lokale Offline-Gastumgebung neu geladen.",
+    "logoutToGuest": "Abmelden und zu Gast wechseln",
+    "detectedLocalAccounts": "Auf diesem Computer zwischengespeicherte Cloud-Konten",
+    "confirmLoadAccountData": "Möchten Sie wirklich zum Konto „{{accountId}}“ wechseln und dessen lokale Daten laden?",
+    "loadAccountData": "Kontodaten laden",
     "developer": "Entwickleroptionen",
     "debugMode": "Debug-Modus",
     "debugModeDesc": "Konsolen-Debugging aktivieren (Unterstützt Ctrl+Shift+I / Cmd+Option+I)",

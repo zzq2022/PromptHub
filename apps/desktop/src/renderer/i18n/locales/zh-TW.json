@@ -440,6 +440,15 @@
     "versionShowLess": "收起"
   },
   "settings": {
+    "currentAccountTitle": "當前本地帳戶",
+    "currentAccount": "當前登入帳戶",
+    "cloudAccount": "雲端同步帳戶",
+    "guestAccount": "本地訪客帳戶 (離線)",
+    "confirmLogoutToGuest": "確認註銷當前帳戶並切回本地訪客帳戶嗎？這將會安全斷開當前帳戶的數據連接，並重載到本地離線訪客環境。",
+    "logoutToGuest": "註銷並切回訪客",
+    "detectedLocalAccounts": "本機已快取的雲端帳戶",
+    "confirmLoadAccountData": "確認切換並載入帳戶「{{accountId}}」的本地數據嗎？",
+    "loadAccountData": "載入此帳戶數據",
     "developer": "開發者選項",
     "debugMode": "調試模式",
     "debugModeDesc": "啟用控制台調試 (支持 Ctrl+Shift+I / Cmd+Option+I 喚起)",

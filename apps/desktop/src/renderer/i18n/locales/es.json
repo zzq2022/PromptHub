@@ -440,6 +440,15 @@
     "versionShowLess": "Colapsar"
   },
   "settings": {
+    "currentAccountTitle": "Cuenta local actual",
+    "currentAccount": "Cuenta conectada actual",
+    "cloudAccount": "Cuenta de sincronización en la nube",
+    "guestAccount": "Cuenta de invitado local (fuera de línea)",
+    "confirmLogoutToGuest": "¿Está seguro de que desea cerrar la sesión de la cuenta actual y volver a la cuenta de invitado local? Esto desconectará de forma segura los datos de la cuenta actual y recargará el entorno de invitado fuera de línea local.",
+    "logoutToGuest": "Cerrar sesión e ir a invitado",
+    "detectedLocalAccounts": "Cuentas en la nube almacenadas en caché en esta máquina",
+    "confirmLoadAccountData": "¿Está seguro de que desea cambiar y cargar los datos locales para la cuenta \"{{accountId}}\"?",
+    "loadAccountData": "Cargar datos de cuenta",
     "developer": "Opciones de desarrollador",
     "debugMode": "Modo de depuración",
     "debugModeDesc": "Habilitar depuración de consola (Soporta Ctrl+Shift+I / Cmd+Option+I)",

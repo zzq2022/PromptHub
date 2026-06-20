@@ -440,6 +440,15 @@
     "versionShowLess": "折りたたむ"
   },
   "settings": {
+    "currentAccountTitle": "現在のローカルアカウント",
+    "currentAccount": "現在ログイン中のアカウント",
+    "cloudAccount": "クラウド同期アカウント",
+    "guestAccount": "ローカルゲストアカウント (オフライン)",
+    "confirmLogoutToGuest": "現在のアカウントからログアウトし、ローカルゲストアカウントに戻りますか？これにより、現在のアカウントデータが安全に切断され、ローカルオフラインゲスト環境が再読み込みされます。",
+    "logoutToGuest": "ログアウトしてゲストに戻る",
+    "detectedLocalAccounts": "このマシンでキャッシュされたクラウド アカウント",
+    "confirmLoadAccountData": "アカウント「{{accountId}}」のローカルデータを切り替えて読み込みますか？",
+    "loadAccountData": "アカウントデータを読み込む",
     "developer": "開発者オプション",
     "debugMode": "デバッグモード",
     "debugModeDesc": "コンソールデバッグを有効にする (Ctrl+Shift+I / Cmd+Option+I)",

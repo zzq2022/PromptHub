@@ -14,7 +14,6 @@
   2. 调用 `setActiveAccountId(accountId)` 刷新路径。
   3. 重新调用 `initDatabase()` 对新路径的数据库执行创建 and Schema 迁移。
   4. 触发工作区的后台重新扫描。
-
 ### 3. 前端联动、同步验证与 UI 状态锁定
 - [ ] 3.1 扩展前端设置相关状态，支持 `isSyncVerified` 验证状态的管理。
 - [ ] 3.2 在前端 WebDAV “测试连接”及“保存”配置逻辑中：
@@ -22,6 +21,7 @@
   - 清理/注销配置时，触发 `database:switch-account(null)` 切换回系统用户名数据环境（如 `Administrator`）。
 - [ ] 3.3 修改前端“数据同步”与“备份与恢复”设置面板的按钮（推送、拉取、远程备份等）：
   - 当 `isSyncVerified` 为 `false` 时，禁用（`disabled`）这些操作按钮，并展示提示文案（如“请先在同步设置中通过测试连接”）。
+- [ ] 3.4 在设置页面“数据目录”(`activeSubsection === "local"`) 顶部，增加【当前本地账户】配置面板，展示账户状态、数据隔离目录，并支持一键注销切回访客（Guest）。
 
 ---
 

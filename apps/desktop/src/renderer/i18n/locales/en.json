@@ -442,6 +442,15 @@
     "parentHint": "Maximum {{depth}} levels of nesting"
   },
   "settings": {
+    "currentAccountTitle": "Current Local Account",
+    "currentAccount": "Current Logged-in Account",
+    "cloudAccount": "Cloud Sync Account",
+    "guestAccount": "Local Guest Account (Offline)",
+    "confirmLogoutToGuest": "Are you sure you want to log out of the current account and switch back to the local guest account? This will safely disconnect current account data and reload the local offline guest environment.",
+    "logoutToGuest": "Log out to Guest",
+    "detectedLocalAccounts": "Cached Cloud Accounts on this Machine",
+    "confirmLoadAccountData": "Are you sure you want to switch to and load local data for account \"{{accountId}}\"?",
+    "loadAccountData": "Load Account Data",
     "developer": "Developer Options",
     "debugMode": "Debug Mode",
     "debugModeDesc": "Enable console debugging (Supports Ctrl+Shift+I / Cmd+Option+I)",

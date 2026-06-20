@@ -62,6 +62,10 @@ import {
   getConfigDir,
   setActiveAccountId,
   getActiveAccountId,
+  getBaseUserDataPath,
+  getOSUsername,
+  getUserDataPath,
+  getLogsDir,
 } from "./runtime-paths";
 import { PromptDB } from "./database/prompt";
 import { FolderDB } from "./database/folder";
@@ -544,6 +548,37 @@ ipcMain.handle("database:switch-account", async (_event, accountId: string | nul
   }
 });
 
+ipcMain.handle("database:get-local-accounts", async () => {
+  try {
+    const baseDir = getBaseUserDataPath();
+    const usersDir = path.join(baseDir, "users");
+    if (!fs.existsSync(usersDir)) {
+      return [];
+    }
+
+    const folders = fs.readdirSync(usersDir);
+    const accounts: string[] = [];
+
+    for (const folder of folders) {
+      // 过滤掉 Guest 目录 (当前系统名) 和当前活跃账户
+      if (folder === getOSUsername() || folder === getActiveAccountId()) {
+        continue;
+      }
+
+      // 校验该目录下是否存在有效的数据库文件
+      const dbPath = path.join(usersDir, folder, "data", "prompthub.db");
+      const legacyDbPath = path.join(usersDir, folder, "prompthub.db");
+      if (fs.existsSync(dbPath) || fs.existsSync(legacyDbPath)) {
+        accounts.push(folder);
+      }
+    }
+    return accounts;
+  } catch (error) {
+    console.error("[database] Failed to scan local accounts:", error);
+    return [];
+  }
+});
+
 // Configure minimize-to-tray behavior
 // 设置最小化到托盘
 ipcMain.on("app:setMinimizeToTray", (_event, enabled: boolean) => {
@@ -556,14 +591,14 @@ ipcMain.on("app:setMinimizeToTray", (_event, enabled: boolean) => {
 });
 
 ipcMain.handle(IPC_CHANNELS.APP_GET_RUNTIME_PATHS, async () => ({
-  userDataPath: app.getPath("userData"),
+  userDataPath: getUserDataPath(),
   dataDir: getDataDir(),
   databasePath: getDatabasePath(),
   promptsDir: getPromptsWorkspaceDir(),
   rulesDir: getRulesDir(),
   skillsDir: getSkillsDir(),
-  backupsDir: path.join(app.getPath("userData"), "backups"),
-  logsDir: path.join(app.getPath("userData"), "logs"),
+  backupsDir: path.join(getUserDataPath(), "backups"),
+  logsDir: getLogsDir(),
   activeAccountId: getActiveAccountId(),
 }));
 

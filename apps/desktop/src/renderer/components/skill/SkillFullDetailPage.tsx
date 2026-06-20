@@ -1801,7 +1801,7 @@ export function SkillFullDetailPage({
                       ""
                     }
                     symlinkTargetPath={
-                      projectContext?.scannedSkill.installMode === "symlink"
+                      projectContext?.scannedSkill?.installMode === "symlink"
                         ? projectContext.scannedSkill.symlinkTargetPath
                         : undefined
                     }

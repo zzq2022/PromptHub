@@ -440,6 +440,15 @@
     "versionShowLess": "Réduire"
   },
   "settings": {
+    "currentAccountTitle": "Compte local actuel",
+    "currentAccount": "Compte actuellement connecté",
+    "cloudAccount": "Compte de synchronisation cloud",
+    "guestAccount": "Compte invité local (hors ligne)",
+    "confirmLogoutToGuest": "Êtes-vous sûr de vouloir vous déconnecter du compte actuel et revenir au compte invité local ? Cela déconnectera en toute sécurité les données du compte actuel et rechargera l'environnement invité hors ligne local.",
+    "logoutToGuest": "Se déconnecter vers invité",
+    "detectedLocalAccounts": "Comptes cloud mis en cache sur cette machine",
+    "confirmLoadAccountData": "Êtes-vous sûr de vouloir basculer et charger les données locales du compte « {{accountId}} » ?",
+    "loadAccountData": "Charger les données du compte",
     "developer": "Options pour les développeurs",
     "debugMode": "Mode débogage",
     "debugModeDesc": "Activer le débogage de la console (Supporte Ctrl+Shift+I / Cmd+Option+I)",
