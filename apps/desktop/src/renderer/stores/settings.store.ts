@@ -1060,6 +1060,32 @@ function attachProviderIdsToAIModels(
   });
 }
 
+async function computeAccountId(state: any): Promise<string | null> {
+  let str = "";
+  if (state.syncProvider === "webdav") {
+    if (!state.webdavUrl || !state.webdavUsername) return null;
+    str = `${state.webdavUrl.trim()}:${state.webdavUsername.trim()}`;
+  } else if (state.syncProvider === "self-hosted") {
+    if (!state.selfHostedSyncUrl || !state.selfHostedSyncUsername) return null;
+    str = `${state.selfHostedSyncUrl.trim()}:${state.selfHostedSyncUsername.trim()}`;
+  } else if (state.syncProvider === "s3") {
+    if (!state.s3Endpoint || !state.s3AccessKeyId) return null;
+    str = `${state.s3Endpoint.trim()}:${state.s3AccessKeyId.trim()}`;
+  } else {
+    return null;
+  }
+
+  try {
+    const msgUint8 = new TextEncoder().encode(str);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", msgUint8);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 16);
+  } catch (err) {
+    console.error("Failed to compute account hash:", err);
+    return null;
+  }
+}
+
 export async function loadSettingsFromMainProcess(): Promise<void> {
   if (typeof window === "undefined") {
     return;
@@ -1148,8 +1174,38 @@ export async function loadSettingsFromMainProcess(): Promise<void> {
   let isSyncVerified = false;
   try {
     const paths = await window.electron?.getRuntimePaths?.();
-    if (paths && paths.activeAccountId) {
-      isSyncVerified = true;
+    if (paths) {
+      const computedId = await computeAccountId(state);
+
+      if (state.isSyncVerified && state.syncProvider !== "manual" && computedId) {
+        // Renderer says we are verified and have a valid provider.
+        // If main process is not on the correct computed account ID, switch it!
+        if (paths.activeAccountId !== computedId) {
+          console.log(`[Settings] Mismatch: switching main process to computed account ID: ${computedId}`);
+          if (window.api?.database?.switchAccount) {
+            await window.api.database.switchAccount(computedId);
+            if (typeof process === "undefined" || (process.env.NODE_ENV !== "test" && !process.env.VITEST)) {
+              window.location.reload();
+              return;
+            }
+          }
+        }
+        isSyncVerified = true;
+      } else {
+        // Renderer says we are NOT verified or sync is manual.
+        // If main process has any activeAccountId, switch it back to null (guest/offline)!
+        if (paths.activeAccountId !== null) {
+          console.log("[Settings] Mismatch: renderer is unverified/manual, but main process has activeAccountId. Switching to guest.");
+          if (window.api?.database?.switchAccount) {
+            await window.api.database.switchAccount(null);
+            if (typeof process === "undefined" || (process.env.NODE_ENV !== "test" && !process.env.VITEST)) {
+              window.location.reload();
+              return;
+            }
+          }
+        }
+        isSyncVerified = false;
+      }
     }
   } catch (error) {
     console.warn("Failed to get runtime paths for active account:", error);

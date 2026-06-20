@@ -449,6 +449,14 @@ function previewFromSqlite(dbPath: string): RecoveryPreviewResult {
   let candidateDb: DatabaseAdapter | null = null;
 
   try {
+    const lockDir = `${dbPath}.lock`;
+    if (fs.existsSync(lockDir)) {
+      try {
+        fs.rmSync(lockDir, { recursive: true, force: true });
+      } catch (err) {
+        console.warn(`[Recovery] Failed to clear lock ${lockDir} during preview:`, err);
+      }
+    }
     candidateDb = new DatabaseAdapter(dbPath, { readOnly: true });
     candidateDb.pragma("foreign_keys = OFF");
 

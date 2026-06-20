@@ -203,6 +203,14 @@ export function detectRecoverableDatabases(
 
         // Skip empty/tiny SQLite files unless there is renderer storage data.
         if (stat.size >= 4096) {
+          const lockDir = `${dbFile}.lock`;
+          if (fs.existsSync(lockDir)) {
+            try {
+              fs.rmSync(lockDir, { recursive: true, force: true });
+            } catch (err) {
+              console.warn(`[Recovery] Failed to clear lock ${lockDir} during scan:`, err);
+            }
+          }
           candidateDb = new DatabaseAdapter(dbFile, { readOnly: true });
           candidateDb.pragma("foreign_keys = OFF");
 
@@ -311,6 +319,14 @@ export function detectRecoverableDatabaseFiles(
     let candidateDb: DatabaseAdapter.Database | null = null;
 
     try {
+      const lockDir = `${candidateFile}.lock`;
+      if (fs.existsSync(lockDir)) {
+        try {
+          fs.rmSync(lockDir, { recursive: true, force: true });
+        } catch (err) {
+          console.warn(`[Recovery] Failed to clear lock ${lockDir} during file scan:`, err);
+        }
+      }
       candidateDb = new DatabaseAdapter(candidateFile, { readOnly: true });
       candidateDb.pragma("foreign_keys = OFF");
 
