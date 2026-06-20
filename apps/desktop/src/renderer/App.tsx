@@ -22,9 +22,7 @@ import {
   migrateLegacyIndexedDbToMainProcess,
 } from "./services/database";
 import { ImportedPromptData } from "./components/prompt/ImportPromptModal";
-import {
-  runSelfHostedAutoSync as executeSelfHostedAutoSync,
-} from "./services/backup-orchestrator";
+import { runSelfHostedAutoSync as executeSelfHostedAutoSync } from "./services/backup-orchestrator";
 import {
   hasValidSelfHostedConfig,
   shouldRunBackgroundUpdateCheck,

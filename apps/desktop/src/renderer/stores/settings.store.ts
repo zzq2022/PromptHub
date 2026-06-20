@@ -67,7 +67,7 @@ const DEFAULT_BACKGROUND_IMAGE_OPACITY = 1;
 const DEFAULT_BACKGROUND_IMAGE_BLUR = 0;
 const LEGACY_BACKGROUND_IMAGE_BLUR_DEFAULT = 14;
 const LOCAL_IMAGE_PROTOCOL_PREFIX = "local-image://";
-export const DESKTOP_HOME_MODULES = ["prompt", "skill", "rules"] as const;
+export const DESKTOP_HOME_MODULES = ["prompt", "skill", "rules", "projects"] as const;
 export type DesktopHomeModule = (typeof DESKTOP_HOME_MODULES)[number];
 const createProjectRecordId = (): string =>
   `project_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
@@ -366,10 +366,7 @@ function inferLegacySyncProvider(
 
 function clampSyncProvider(
   provider: SyncProviderKind,
-  state: Pick<
-    SettingsState,
-    "selfHostedSyncEnabled"
-  >,
+  state: Pick<SettingsState, "selfHostedSyncEnabled">,
 ): SyncProviderKind {
   if (provider === "self-hosted" && !state.selfHostedSyncEnabled) {
     return "manual";
@@ -737,6 +734,12 @@ interface SettingsState {
     string,
     ProjectSkillImportPreferences
   >;
+  /**
+   * Global default target folder for project skill distribution.
+   * Each entry is an absolute path pattern like `{{rootPath}}/.agents/skills`.
+   * The placeholder `{{rootPath}}` is resolved to the project's rootPath at runtime.
+   */
+  defaultProjectDeployTargetPath: string;
 
   builtinAgentOverrides: Record<string, BuiltinAgentOverrideConfig>;
   customPlatformRootPaths: Record<string, string>;
@@ -847,6 +850,7 @@ interface SettingsState {
   addCustomSkillScanPath: (path: string) => void;
   removeCustomSkillScanPath: (path: string) => void;
   setProjectSkillImportModePreference: (method: "copy" | "symlink") => void;
+  setDefaultProjectDeployTargetPath: (path: string) => void;
   setProjectSkillImportPreferences: (
     projectId: string,
     preferences: ProjectSkillImportPreferences,
@@ -947,9 +951,7 @@ function findMatchingAIProvider(
   );
 }
 
-function buildAISettingsSyncPayload(
-  state: SettingsState,
-): Partial<Settings> {
+function buildAISettingsSyncPayload(state: SettingsState): Partial<Settings> {
   return {
     aiProvider: state.aiProvider,
     aiApiProtocol: state.aiApiProtocol,
@@ -987,7 +989,10 @@ async function computeAccountId(state: any): Promise<string | null> {
     return null;
   }
 
-  return rawId.trim().replace(/@/g, "_").replace(/[\\/:*?"<>|]/g, "_");
+  return rawId
+    .trim()
+    .replace(/@/g, "_")
+    .replace(/[\\/:*?"<>|]/g, "_");
 }
 
 export async function loadSettingsFromMainProcess(): Promise<void> {
@@ -1101,7 +1106,9 @@ export async function loadSettingsFromMainProcess(): Promise<void> {
       ? aiSettings.aiProvider
       : state.aiProvider;
   const aiApiUrl =
-    typeof aiSettings.aiApiUrl === "string" ? aiSettings.aiApiUrl : state.aiApiUrl;
+    typeof aiSettings.aiApiUrl === "string"
+      ? aiSettings.aiApiUrl
+      : state.aiApiUrl;
   const aiApiProtocol = normalizeAIProtocol(
     aiSettings.aiApiProtocol ?? state.aiApiProtocol,
     aiProvider,
@@ -1121,10 +1128,15 @@ export async function loadSettingsFromMainProcess(): Promise<void> {
         // Renderer says we are verified and have a valid provider.
         // If main process is not on the correct computed account ID, switch it!
         if (paths.activeAccountId !== computedId) {
-          console.log(`[Settings] Mismatch: switching main process to computed account ID: ${computedId}`);
+          console.log(
+            `[Settings] Mismatch: switching main process to computed account ID: ${computedId}`,
+          );
           if (window.api?.database?.switchAccount) {
             await window.api.database.switchAccount(computedId);
-            if (typeof process === "undefined" || (process.env.NODE_ENV !== "test" && !process.env.VITEST)) {
+            if (
+              typeof process === "undefined" ||
+              (process.env.NODE_ENV !== "test" && !process.env.VITEST)
+            ) {
               window.location.reload();
               return;
             }
@@ -1135,10 +1147,15 @@ export async function loadSettingsFromMainProcess(): Promise<void> {
         // Renderer says we are NOT verified or sync is manual.
         // If main process has any activeAccountId, switch it back to null (guest/offline)!
         if (paths.activeAccountId !== null) {
-          console.log("[Settings] Mismatch: renderer is unverified/manual, but main process has activeAccountId. Switching to guest.");
+          console.log(
+            "[Settings] Mismatch: renderer is unverified/manual, but main process has activeAccountId. Switching to guest.",
+          );
           if (window.api?.database?.switchAccount) {
             await window.api.database.switchAccount(null);
-            if (typeof process === "undefined" || (process.env.NODE_ENV !== "test" && !process.env.VITEST)) {
+            if (
+              typeof process === "undefined" ||
+              (process.env.NODE_ENV !== "test" && !process.env.VITEST)
+            ) {
               window.location.reload();
               return;
             }
@@ -1184,7 +1201,9 @@ export async function loadSettingsFromMainProcess(): Promise<void> {
         : state.aiApiKey,
     aiApiUrl,
     aiModel:
-      typeof aiSettings.aiModel === "string" ? aiSettings.aiModel : state.aiModel,
+      typeof aiSettings.aiModel === "string"
+        ? aiSettings.aiModel
+        : state.aiModel,
     aiProviders,
     aiModels,
     modelRouteDefaults,
@@ -1312,6 +1331,7 @@ export const useSettingsStore = create<SettingsState>()(
         skillProjects: [],
         projectSkillImportModePreference: "copy" as const,
         projectSkillImportPreferencesByProjectId: {},
+        defaultProjectDeployTargetPath: ".agents/skills",
         builtinAgentOverrides: {},
         customPlatformRootPaths: {},
         disabledPlatformIds: [],
@@ -1609,7 +1629,10 @@ export const useSettingsStore = create<SettingsState>()(
           });
           if (!enabled) {
             set({ isSyncVerified: false });
-            if (typeof window !== "undefined" && window.api?.database?.switchAccount) {
+            if (
+              typeof window !== "undefined" &&
+              window.api?.database?.switchAccount
+            ) {
               void window.api.database.switchAccount(null).then(() => {
                 window.location.reload();
               });
@@ -1797,7 +1820,9 @@ export const useSettingsStore = create<SettingsState>()(
               (provider) => provider.id !== id,
             ),
             aiModels: get().aiModels.map((model) =>
-              model.providerId === id ? { ...model, providerId: undefined } : model,
+              model.providerId === id
+                ? { ...model, providerId: undefined }
+                : model,
             ),
           });
         },
@@ -2115,6 +2140,13 @@ export const useSettingsStore = create<SettingsState>()(
           }
 
           setTouched({ projectSkillImportModePreference: method });
+        },
+        setDefaultProjectDeployTargetPath: (path) => {
+          const normalized = path.trim();
+          if (get().defaultProjectDeployTargetPath === normalized) {
+            return;
+          }
+          setTouched({ defaultProjectDeployTargetPath: normalized });
         },
         setProjectSkillImportPreferences: (projectId, preferences) => {
           const normalizedProjectId = projectId.trim();

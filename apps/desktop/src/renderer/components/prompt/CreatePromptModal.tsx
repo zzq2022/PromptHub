@@ -29,7 +29,10 @@ import {
 } from "./prompt-modal-utils";
 import { usePromptMediaManager } from "./usePromptMediaManager";
 import { usePromptNativeFullscreen } from "./usePromptNativeFullscreen";
-import { resolveLocalImageSrc, resolveLocalVideoSrc } from "../../utils/media-url";
+import {
+  resolveLocalImageSrc,
+  resolveLocalVideoSrc,
+} from "../../utils/media-url";
 
 interface CreatePromptModalProps {
   isOpen: boolean;
@@ -550,7 +553,7 @@ export function CreatePromptModal({
                 <ChevronDownIcon className="w-4 h-4 text-muted-foreground" />
               ) : (
                 <ChevronRightIcon className="w-4 h-4 text-muted-foreground" />
-                )}
+              )}
               <span>{t("prompt.moreSettings", "More Settings")}</span>
               {!showAttributes && (
                 <span className="text-xs text-muted-foreground ml-2 font-normal truncate max-w-[400px]">
@@ -843,7 +846,6 @@ export function CreatePromptModal({
                     className="w-full min-h-[80px] px-4 py-3 rounded-xl bg-muted/50 border-0 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:bg-background transition-all duration-base resize-none"
                   />
                 </div>
-
               </div>
             )}
           </div>
@@ -934,7 +936,6 @@ export function CreatePromptModal({
               </div>
             )}
           </div>
-
         </div>
       </Modal>
       <UnsavedChangesDialog

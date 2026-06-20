@@ -1,11 +1,18 @@
-import type { Folder, Prompt, PromptVersion, RuleBackupRecord } from "@prompthub/shared/types";
+import type {
+  Folder,
+  Prompt,
+  PromptVersion,
+  RuleBackupRecord,
+} from "@prompthub/shared/types";
 import type {
   Skill,
   SkillFileSnapshot,
   SkillVersion,
 } from "@prompthub/shared/types/skill";
 
-function normalizeSkillSafetyReport<T extends { safetyReport?: unknown }>(value: T): T {
+function normalizeSkillSafetyReport<T extends { safetyReport?: unknown }>(
+  value: T,
+): T {
   if (!value.safetyReport || typeof value.safetyReport !== "object") {
     return value;
   }
@@ -79,9 +86,12 @@ export function normalizeImportedBackup(
   backup: Partial<DatabaseBackup> | null | undefined,
 ): DatabaseBackup {
   // Support web backup format which uses "promptVersions" instead of "versions"
-  const versions = Array.isArray(backup?.versions) && backup.versions.length > 0
-    ? backup.versions
-    : Array.isArray((backup as any)?.promptVersions) ? (backup as any).promptVersions : [];
+  const versions =
+    Array.isArray(backup?.versions) && backup.versions.length > 0
+      ? backup.versions
+      : Array.isArray((backup as any)?.promptVersions)
+        ? (backup as any).promptVersions
+        : [];
 
   return {
     version:
@@ -199,8 +209,7 @@ function hasSkillFileSnapshotShape(value: unknown): boolean {
   }
 
   return (
-    typeof value.relativePath === "string" &&
-    typeof value.content === "string"
+    typeof value.relativePath === "string" && typeof value.content === "string"
   );
 }
 
@@ -303,8 +312,14 @@ export function hasAnySkipped(stats: ImportSkippedStats): boolean {
 }
 
 function validateImportedBackupShape(backup: DatabaseBackup): void {
-  if (!Array.isArray(backup.prompts) || !Array.isArray(backup.folders) || !Array.isArray(backup.versions)) {
-    throw new Error("Invalid PromptHub backup: prompts, folders, and versions must be arrays.");
+  if (
+    !Array.isArray(backup.prompts) ||
+    !Array.isArray(backup.folders) ||
+    !Array.isArray(backup.versions)
+  ) {
+    throw new Error(
+      "Invalid PromptHub backup: prompts, folders, and versions must be arrays.",
+    );
   }
 
   if (!backup.prompts.every(hasPromptShape)) {
@@ -327,14 +342,21 @@ function validateImportedBackupShape(backup: DatabaseBackup): void {
     throw new Error("Invalid PromptHub backup: skills payload is malformed.");
   }
 
-  if (backup.skillVersions && !backup.skillVersions.every(hasSkillVersionShape)) {
-    throw new Error("Invalid PromptHub backup: skill versions payload is malformed.");
+  if (
+    backup.skillVersions &&
+    !backup.skillVersions.every(hasSkillVersionShape)
+  ) {
+    throw new Error(
+      "Invalid PromptHub backup: skill versions payload is malformed.",
+    );
   }
 
   if (backup.skillFiles) {
     for (const files of Object.values(backup.skillFiles)) {
       if (!Array.isArray(files) || !files.every(hasSkillFileSnapshotShape)) {
-        throw new Error("Invalid PromptHub backup: skill files payload is malformed.");
+        throw new Error(
+          "Invalid PromptHub backup: skill files payload is malformed.",
+        );
       }
     }
   }
@@ -358,15 +380,15 @@ function validateImportedBackupShape(backup: DatabaseBackup): void {
  * 数据。同步维护引用完整性：被丢 prompt 对应的 version 一并丢弃；被丢 skill
  * 对应的 version / files 一并丢弃。
  */
-export function sanitizeImportedBackup(
-  raw: DatabaseBackup,
-): ParsedBackup {
+export function sanitizeImportedBackup(raw: DatabaseBackup): ParsedBackup {
   const skipped = createEmptySkippedStats();
 
   const originalFoldersLen = raw.folders.length;
   const structurallyValidFolders = raw.folders.filter(hasFolderShape);
   skipped.folders = originalFoldersLen - structurallyValidFolders.length;
-  const validFolderIds = new Set(structurallyValidFolders.map((folder) => folder.id));
+  const validFolderIds = new Set(
+    structurallyValidFolders.map((folder) => folder.id),
+  );
   const validFolders = structurallyValidFolders.map((folder) => {
     if (folder.parentId && !validFolderIds.has(folder.parentId)) {
       skipped.folders += 1;
@@ -381,19 +403,17 @@ export function sanitizeImportedBackup(
   const normalizedFolderIds = new Set(validFolders.map((folder) => folder.id));
 
   const originalPromptsLen = raw.prompts.length;
-  const validPrompts = raw.prompts
-    .filter(hasPromptShape)
-    .map((prompt) => {
-      if (prompt.folderId && !normalizedFolderIds.has(prompt.folderId)) {
-        skipped.prompts += 1;
-        return {
-          ...prompt,
-          folderId: null,
-        };
-      }
+  const validPrompts = raw.prompts.filter(hasPromptShape).map((prompt) => {
+    if (prompt.folderId && !normalizedFolderIds.has(prompt.folderId)) {
+      skipped.prompts += 1;
+      return {
+        ...prompt,
+        folderId: null,
+      };
+    }
 
-      return prompt;
-    });
+    return prompt;
+  });
   skipped.prompts += originalPromptsLen - validPrompts.length;
   const validPromptIds = new Set(validPrompts.map((p) => p.id));
 
@@ -431,7 +451,8 @@ export function sanitizeImportedBackup(
           validSkillIds.has((v as unknown as { skillId: string }).skillId),
         )
       : structurallyValid;
-    skipped.skillVersions = originalSkillVersionsLen - validSkillVersions.length;
+    skipped.skillVersions =
+      originalSkillVersionsLen - validSkillVersions.length;
   }
 
   let validSkillFiles = raw.skillFiles;
@@ -477,7 +498,10 @@ function parseEnvelope(text: string): DatabaseBackup {
     throw new Error("Invalid PromptHub backup: expected a JSON object.");
   }
 
-  if (parsed.kind === "prompthub-backup" || parsed.kind === "prompthub-export") {
+  if (
+    parsed.kind === "prompthub-backup" ||
+    parsed.kind === "prompthub-export"
+  ) {
     return normalizeImportedBackup(parsed.payload as Partial<DatabaseBackup>);
   }
 

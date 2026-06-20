@@ -253,9 +253,9 @@ export function useSkillStoreRemoteSync(
   const scanLocalPreview = useSkillStore((state) => state.scanLocalPreview);
 
   const [loadingSourceId, setLoadingSourceId] = useState<string | null>(null);
-  const [loadingMoreSourceId, setLoadingMoreSourceId] = useState<
-    string | null
-  >(null);
+  const [loadingMoreSourceId, setLoadingMoreSourceId] = useState<string | null>(
+    null,
+  );
   const remoteStoreEntriesRef = useRef(remoteStoreEntries);
   const storeCategoryRef = useRef(storeCategory);
   const storeSearchQueryRef = useRef(storeSearchQuery);
@@ -559,28 +559,28 @@ export function useSkillStoreRemoteSync(
     [scanLocalPreview],
   );
 
-  const loadSkillsShIndex = useCallback(async (
-    filterKey: string,
-  ): Promise<SkillsShIndexCache> => {
-    const normalizedFilterKey = normalizeSkillsShFilterKey(filterKey);
-    const cached = skillsShIndexCacheRef.current.get(normalizedFilterKey);
-    if (cached) {
-      return cached;
-    }
+  const loadSkillsShIndex = useCallback(
+    async (filterKey: string): Promise<SkillsShIndexCache> => {
+      const normalizedFilterKey = normalizeSkillsShFilterKey(filterKey);
+      const cached = skillsShIndexCacheRef.current.get(normalizedFilterKey);
+      if (cached) {
+        return cached;
+      }
 
-    const leaderboardHtml =
-      await window.api.skill.fetchRemoteContent(
+      const leaderboardHtml = await window.api.skill.fetchRemoteContent(
         getSkillsShIndexUrl(normalizedFilterKey),
       );
-    const nextCache = {
-      entries: parseSkillsShLeaderboard(leaderboardHtml, {
-        limit: Number.MAX_SAFE_INTEGER,
-      }),
-      totalCount: parseSkillsShTotalCount(leaderboardHtml),
-    };
-    skillsShIndexCacheRef.current.set(normalizedFilterKey, nextCache);
-    return nextCache;
-  }, []);
+      const nextCache = {
+        entries: parseSkillsShLeaderboard(leaderboardHtml, {
+          limit: Number.MAX_SAFE_INTEGER,
+        }),
+        totalCount: parseSkillsShTotalCount(leaderboardHtml),
+      };
+      skillsShIndexCacheRef.current.set(normalizedFilterKey, nextCache);
+      return nextCache;
+    },
+    [],
+  );
 
   const loadSkillsShDetail = useCallback(
     async (entry: SkillsShLeaderboardEntry): Promise<RegistrySkill | null> => {
@@ -641,7 +641,9 @@ export function useSkillStoreRemoteSync(
         : indexedResultCount;
       return {
         currentCursor: offset > 0 ? String(offset) : null,
-        matchedCount: normalizedSearchQuery ? filteredEntries.length : undefined,
+        matchedCount: normalizedSearchQuery
+          ? filteredEntries.length
+          : undefined,
         pageCount: Math.max(
           1,
           Math.ceil(resultCount / PRECONFIGURED_STORE_PAGE_SIZE),
@@ -692,26 +694,34 @@ export function useSkillStoreRemoteSync(
     ): Promise<StoreLoadResult> => {
       const page = cursor ? Math.max(1, Number(cursor)) : 1;
       const normalizedSearchQuery = searchQuery.trim();
-      
+
       const baseUrl = isWebRuntime()
         ? ""
-        : (useSettingsStore.getState().selfHostedSyncUrl?.trim().replace(/\/+$/, "") || "http://localhost:3000");
+        : useSettingsStore
+            .getState()
+            .selfHostedSyncUrl?.trim()
+            .replace(/\/+$/, "") || "http://localhost:3000";
 
       let data: any;
       if (normalizedSearchQuery) {
-        const params = new URLSearchParams({ q: normalizedSearchQuery, page: String(page) });
-        const res = await fetch(`${baseUrl}/api/skillhub/public/search?${params}`);
-        if (!res.ok) throw new Error('Search failed');
+        const params = new URLSearchParams({
+          q: normalizedSearchQuery,
+          page: String(page),
+        });
+        const res = await fetch(
+          `${baseUrl}/api/skillhub/public/search?${params}`,
+        );
+        if (!res.ok) throw new Error("Search failed");
         data = (await res.json()).data;
       } else {
         const res = await fetch(`${baseUrl}/api/skillhub/public?page=${page}`);
-        if (!res.ok) throw new Error('Failed to load skills');
+        if (!res.ok) throw new Error("Failed to load skills");
         data = (await res.json()).data;
       }
 
       const skills: RegistrySkill[] = (data.items || []).map((item: any) => {
         const slug = item.slug || item.id;
-        const description = item.description || '';
+        const description = item.description || "";
         const detailUrl = isWebRuntime()
           ? `/api/skillhub/public/${item.id}`
           : `${baseUrl}/api/skillhub/public/${item.id}`;
@@ -720,15 +730,15 @@ export function useSkillStoreRemoteSync(
           name: item.name,
           install_name: item.name,
           source_id: `skillhub:${item.id}`,
-          source_label: 'SkillHub 社区',
+          source_label: "SkillHub 社区",
           description,
           category: inferCategory(slug, description),
-          author: item.author || 'Community',
+          author: item.author || "Community",
           source_url: detailUrl,
           content_url: detailUrl,
           tags: item.tags || [],
-          version: item.version || '1.0.0',
-          content: '',
+          version: item.version || "1.0.0",
+          content: "",
         };
       });
 
@@ -779,9 +789,9 @@ export function useSkillStoreRemoteSync(
           ? cachedEntry?.nextCursor
           : pageDirection === "previous"
             ? source.type === "clawhub"
-              ? cachedEntry?.cursorHistory?.[
+              ? (cachedEntry?.cursorHistory?.[
                   Math.max(0, (cachedEntry.cursorHistory.length ?? 1) - 2)
-                ] ?? null
+                ] ?? null)
               : getPreviousOffsetCursor(
                   cachedEntry?.currentCursor,
                   PRECONFIGURED_STORE_PAGE_SIZE,

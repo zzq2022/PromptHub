@@ -90,9 +90,9 @@ export function AdminSkillReview() {
                       ID: {skill.id}{skill.registrySlug ? ` (${skill.registrySlug})` : ''}
                     </div>
                   </td>
-                  <td>{skill.author || skill.ownerUsername || '—'}</td>
+                  <td>{skill.ownerUsername || skill.author || '—'}</td>
                   <td className="admin-table-desc">{skill.description || '—'}</td>
-                  <td>{new Date(skill.createdAt).toLocaleDateString()}</td>
+                  <td>{new Date(skill.createdAt).toLocaleString()}</td>
                   <td className="admin-table-actions">
                     <button
                       className="admin-btn admin-btn-approve"

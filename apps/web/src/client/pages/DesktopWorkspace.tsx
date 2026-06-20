@@ -1,4 +1,6 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import DesktopApp from '@desktop-renderer-app';
 import { ToastProvider } from '@desktop-toast-provider';
 import { installDesktopBridge } from '../desktop/install-bridge';
@@ -37,7 +39,10 @@ function detectClientPlatform(userAgent: string): string {
 }
 
 export function DesktopWorkspacePage() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
   const { user, registrationAllowed, isInitialized, logout } = useAuth();
+  const isAdmin = user?.role === 'admin';
 
   installDesktopBridge();
 
@@ -89,7 +94,34 @@ export function DesktopWorkspacePage() {
 
   return (
     <ToastProvider>
-      <DesktopApp />
+      <div className="workspace-web-wrapper">
+        <nav className="workspace-topbar">
+          <span className="workspace-topbar-brand">PromptHub</span>
+          <div className="workspace-topbar-right">
+            <a href="/skillhub" className="workspace-topbar-link">
+              {t('workspace.skillHub', 'SkillHub')}
+            </a>
+            {isAdmin && (
+              <button
+                className="workspace-topbar-link workspace-topbar-admin"
+                onClick={() => navigate('/admin')}
+              >
+                {t('workspace.adminPanel', 'Admin Panel')}
+              </button>
+            )}
+            <span className="workspace-topbar-user">{user?.username ?? ''}</span>
+            <button
+              className="workspace-topbar-link"
+              onClick={() => { void logout(); window.location.assign('/login'); }}
+            >
+              {t('common.logout', 'Logout')}
+            </button>
+          </div>
+        </nav>
+        <div className="workspace-app-container">
+          <DesktopApp />
+        </div>
+      </div>
     </ToastProvider>
   );
 }

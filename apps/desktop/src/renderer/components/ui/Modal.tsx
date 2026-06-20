@@ -108,7 +108,9 @@ export function Modal({
       <div
         className={clsx(
           "absolute inset-0 bg-background/60 backdrop-blur-md transition-opacity",
-          isAnimating ? "duration-base ease-enter opacity-100" : "duration-quick ease-exit opacity-0",
+          isAnimating
+            ? "duration-base ease-enter opacity-100"
+            : "duration-quick ease-exit opacity-0",
         )}
         onClick={closeOnBackdrop ? onClose : undefined}
       />

@@ -4,7 +4,10 @@ export function normalizeProjectPathForComparison(value: string): string {
   return value.replace(/\\/g, "/").replace(/\/+$/, "").toLowerCase();
 }
 
-export function getProjectTargetSkillPath(targetDir: string, skillName: string): string {
+export function getProjectTargetSkillPath(
+  targetDir: string,
+  skillName: string,
+): string {
   const normalizedTarget = targetDir.replace(/[\\/]+$/, "");
   return `${normalizedTarget}/${skillName}`;
 }
@@ -33,7 +36,8 @@ export function getMissingProjectTargetDirs(
   targetDirs: string[],
 ): string[] {
   return targetDirs.filter(
-    (targetDir) => !isProjectSkillDeployedToTarget(scannedSkills, skillName, targetDir),
+    (targetDir) =>
+      !isProjectSkillDeployedToTarget(scannedSkills, skillName, targetDir),
   );
 }
 
@@ -50,7 +54,9 @@ export function getDeployedProjectSkillTargets(
   const expectedName = skillName.trim().toLowerCase();
   const expectedTargetPaths = new Map(
     targetDirs.map((targetDir) => [
-      normalizeProjectPathForComparison(getProjectTargetSkillPath(targetDir, skillName)),
+      normalizeProjectPathForComparison(
+        getProjectTargetSkillPath(targetDir, skillName),
+      ),
       targetDir,
     ]),
   );
@@ -99,7 +105,10 @@ export function getDeployableProjectTargetDirs(
   );
 }
 
-export function getProjectDeployTargets(project: SkillProject): string[] {
+export function getProjectDeployTargets(
+  project: SkillProject,
+  globalDefaultTargetPath?: string,
+): string[] {
   const configured = Array.isArray(project.deployTargets)
     ? project.deployTargets.filter(
         (entry) => typeof entry === "string" && entry.trim().length > 0,
@@ -111,5 +120,10 @@ export function getProjectDeployTargets(project: SkillProject): string[] {
   }
 
   const normalizedRoot = project.rootPath.replace(/[\\/]+$/, "");
-  return normalizedRoot ? [`${normalizedRoot}/.agents/skills`] : [];
+  if (!normalizedRoot) {
+    return [];
+  }
+
+  const defaultPath = globalDefaultTargetPath?.trim() ?? ".agents/skills";
+  return [`${normalizedRoot}/${defaultPath}`];
 }

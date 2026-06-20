@@ -15,8 +15,10 @@ export const promptApi = {
   get: (id: string) => ipcRenderer.invoke(IPC_CHANNELS.PROMPT_GET, id),
   getAll: () => ipcRenderer.invoke(IPC_CHANNELS.PROMPT_GET_ALL),
   getAllTags: () => ipcRenderer.invoke(IPC_CHANNELS.PROMPT_GET_ALL_TAGS),
-  renameTag: (oldTag: string, newTag: string) => ipcRenderer.invoke(IPC_CHANNELS.PROMPT_RENAME_TAG, oldTag, newTag),
-  deleteTag: (tag: string) => ipcRenderer.invoke(IPC_CHANNELS.PROMPT_DELETE_TAG, tag),
+  renameTag: (oldTag: string, newTag: string) =>
+    ipcRenderer.invoke(IPC_CHANNELS.PROMPT_RENAME_TAG, oldTag, newTag),
+  deleteTag: (tag: string) =>
+    ipcRenderer.invoke(IPC_CHANNELS.PROMPT_DELETE_TAG, tag),
   update: (id: string, data: UpdatePromptDTO) =>
     ipcRenderer.invoke(IPC_CHANNELS.PROMPT_UPDATE, id, data),
   delete: (id: string) => ipcRenderer.invoke(IPC_CHANNELS.PROMPT_DELETE, id),
@@ -41,5 +43,10 @@ export const promptApi = {
     versions: PromptVersion[];
   }) => ipcRenderer.invoke(IPC_CHANNELS.PROMPT_MIGRATE_IDB_BATCH, payload),
   move: (promptId: string, newParentId: string | null, newOrder: number) =>
-    ipcRenderer.invoke(IPC_CHANNELS.PROMPT_MOVE, promptId, newParentId, newOrder),
+    ipcRenderer.invoke(
+      IPC_CHANNELS.PROMPT_MOVE,
+      promptId,
+      newParentId,
+      newOrder,
+    ),
 };

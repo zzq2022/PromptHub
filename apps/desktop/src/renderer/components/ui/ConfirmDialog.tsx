@@ -1,6 +1,6 @@
-import { ReactNode, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
-import { AlertTriangleIcon, Loader2 } from 'lucide-react';
+import { ReactNode, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
+import { AlertTriangleIcon, Loader2 } from "lucide-react";
 
 interface ConfirmDialogProps {
   isOpen: boolean;
@@ -10,7 +10,7 @@ interface ConfirmDialogProps {
   message: string | ReactNode;
   confirmText?: string;
   cancelText?: string;
-  variant?: 'default' | 'destructive';
+  variant?: "default" | "destructive";
   isLoading?: boolean;
 }
 
@@ -20,9 +20,9 @@ export function ConfirmDialog({
   onConfirm,
   title,
   message,
-  confirmText = 'Confirm',
-  cancelText = 'Cancel',
-  variant = 'default',
+  confirmText = "Confirm",
+  cancelText = "Cancel",
+  variant = "default",
   isLoading = false,
 }: ConfirmDialogProps) {
   const confirmButtonRef = useRef<HTMLButtonElement>(null);
@@ -41,17 +41,17 @@ export function ConfirmDialog({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isOpen) return;
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         e.preventDefault();
         onClose();
-      } else if (e.key === 'Enter') {
+      } else if (e.key === "Enter") {
         e.preventDefault();
         onConfirm();
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose, onConfirm]);
 
   if (!isOpen) return null;
@@ -70,7 +70,7 @@ export function ConfirmDialog({
       <div className="relative app-wallpaper-panel-strong rounded-xl shadow-2xl border border-border w-full max-w-sm p-6 animate-in fade-in zoom-in-95 duration-base">
         {/* Icon */}
         {/* 图标 */}
-        {variant === 'destructive' && (
+        {variant === "destructive" && (
           <div className="flex justify-center mb-4">
             <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
               <AlertTriangleIcon className="w-6 h-6 text-red-600 dark:text-red-400" />
@@ -106,9 +106,9 @@ export function ConfirmDialog({
             onClick={onConfirm}
             disabled={isLoading}
             className={`flex-1 h-10 px-4 rounded-lg text-white text-sm font-medium transition-colors disabled:opacity-60 flex items-center justify-center gap-2 ${
-              variant === 'destructive'
-                ? 'bg-red-600 hover:bg-red-700'
-                : 'bg-primary hover:bg-primary/90'
+              variant === "destructive"
+                ? "bg-red-600 hover:bg-red-700"
+                : "bg-primary hover:bg-primary/90"
             }`}
           >
             {isLoading && <Loader2 className="w-4 h-4 animate-spin shrink-0" />}

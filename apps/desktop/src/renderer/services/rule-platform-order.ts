@@ -14,7 +14,11 @@ export function getOrderedGlobalRuleFiles(
   const ordered: RuleFileDescriptor[] = [];
 
   const pushPlatform = (platformId: string) => {
-    if (!platformId || seenPlatformIds.has(platformId) || !isRulePlatformId(platformId)) {
+    if (
+      !platformId ||
+      seenPlatformIds.has(platformId) ||
+      !isRulePlatformId(platformId)
+    ) {
       return;
     }
     seenPlatformIds.add(platformId);

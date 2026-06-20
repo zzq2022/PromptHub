@@ -6,7 +6,11 @@ import { isLikelyLocalSource } from "./skill-store-source";
 type BadgeSource = Partial<
   Pick<
     RegistrySkill,
-    "source_url" | "store_url" | "source_label" | "source_branch" | "source_directory"
+    | "source_url"
+    | "store_url"
+    | "source_label"
+    | "source_branch"
+    | "source_directory"
   >
 > &
   Partial<Pick<Skill, "is_builtin">>;
@@ -62,7 +66,10 @@ function isDevBranch(branch?: string): boolean {
 
 function getOfficialRepoLabel(skill: BadgeSource): string | null {
   const candidates = [skill.source_label, skill.source_url]
-    .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+    .filter(
+      (value): value is string =>
+        typeof value === "string" && value.trim().length > 0,
+    )
     .map((value) => value.trim().toLowerCase());
 
   for (const candidate of candidates) {
@@ -83,7 +90,10 @@ function inferSourceTone(skill: BadgeSource): SkillVariantBadge["tone"] {
     return "official";
   }
 
-  if (typeof skill.store_url === "string" && skill.store_url.includes("skills.sh")) {
+  if (
+    typeof skill.store_url === "string" &&
+    skill.store_url.includes("skills.sh")
+  ) {
     return "community";
   }
 
@@ -96,8 +106,10 @@ function inferSourceTone(skill: BadgeSource): SkillVariantBadge["tone"] {
   }
 
   if (
-    (typeof skill.source_url === "string" && isLikelyLocalSource(skill.source_url)) ||
-    (typeof skill.source_label === "string" && isLikelyLocalSource(skill.source_label))
+    (typeof skill.source_url === "string" &&
+      isLikelyLocalSource(skill.source_url)) ||
+    (typeof skill.source_label === "string" &&
+      isLikelyLocalSource(skill.source_label))
   ) {
     return "local";
   }
@@ -122,9 +134,10 @@ function getSourceBadge(skill: BadgeSource, t: TFunction): SkillVariantBadge {
   };
 }
 
-function extractBranchAndDirectoryFromUrl(
-  sourceUrl?: string,
-): { branch?: string; directory?: string } {
+function extractBranchAndDirectoryFromUrl(sourceUrl?: string): {
+  branch?: string;
+  directory?: string;
+} {
   if (!sourceUrl || isLikelyLocalSource(sourceUrl)) {
     return {};
   }
@@ -136,9 +149,10 @@ function extractBranchAndDirectoryFromUrl(
 
   return {
     branch: decodeURIComponent(treeMatch[1] || "").trim() || undefined,
-    directory: decodeURIComponent(treeMatch[2] || "")
-      .trim()
-      .replace(/^\/+|\/+$/g, "") || undefined,
+    directory:
+      decodeURIComponent(treeMatch[2] || "")
+        .trim()
+        .replace(/^\/+|\/+$/g, "") || undefined,
   };
 }
 
@@ -175,8 +189,9 @@ export function buildSkillVariantBadges(
   options?: BuildBadgeOptions,
 ): SkillVariantBadge[] {
   const badges: SkillVariantBadge[] = [];
-  const { branch: inferredBranch } =
-    extractBranchAndDirectoryFromUrl(skill.source_url);
+  const { branch: inferredBranch } = extractBranchAndDirectoryFromUrl(
+    skill.source_url,
+  );
   const branch = skill.source_branch?.trim() || inferredBranch;
 
   badges.push(getSourceBadge(skill, t));
@@ -202,7 +217,9 @@ export function buildSkillVariantBadges(
   return badges;
 }
 
-export function inferSkillVariantSourceDebugLabel(skill: BadgeSource): string | null {
+export function inferSkillVariantSourceDebugLabel(
+  skill: BadgeSource,
+): string | null {
   if (skill.source_label?.trim()) {
     return skill.source_label.trim();
   }

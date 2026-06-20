@@ -1,6 +1,6 @@
-import { useState, useCallback, memo, useEffect, useMemo, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Prompt } from '@prompthub/shared/types';
+import { useState, useCallback, memo, useEffect, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
+import { Prompt } from "@prompthub/shared/types";
 import {
   XIcon,
   StarIcon,
@@ -14,12 +14,12 @@ import {
   SparklesIcon,
   BracesIcon,
   ChevronDownIcon,
-  ChevronRightIcon
-} from 'lucide-react';
-import { useVirtualizer } from '@tanstack/react-virtual';
-import { useFolderStore } from '../../stores/folder.store';
-import { usePromptStore } from '../../stores/prompt.store';
-import { Reveal } from '../ui/motion';
+  ChevronRightIcon,
+} from "lucide-react";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { useFolderStore } from "../../stores/folder.store";
+import { usePromptStore } from "../../stores/prompt.store";
+import { Reveal } from "../ui/motion";
 
 interface PromptKanbanViewProps {
   prompts: Prompt[];
@@ -46,7 +46,7 @@ function extractVariables(text: string): string[] {
   const matches: string[] = [];
   let match;
   while ((match = regex.exec(text)) !== null) {
-    const varName = match[1].split(':')[0].trim();
+    const varName = match[1].split(":")[0].trim();
     if (!matches.includes(varName)) {
       matches.push(varName);
     }
@@ -55,225 +55,268 @@ function extractVariables(text: string): string[] {
 }
 
 // Kanban Card Component
-const KanbanCard = memo(({
-  prompt,
-  isPinned,
-  isExpanded,
-  onPin,
-  onUnpin,
-  onExpand,
-  onCollapse,
-  onCopy,
-  onEdit,
-  onAiTest,
-  onToggleFavorite,
-  onViewDetail,
-  folderName,
-}: {
-  prompt: Prompt;
-  isPinned: boolean;
-  isExpanded: boolean;
-  onPin: () => void;
-  onUnpin: () => void;
-  onExpand: () => void;
-  onCollapse: () => void;
-  onCopy: () => void;
-  onEdit: () => void;
-  onAiTest: () => void;
-  onToggleFavorite: () => void;
-  onViewDetail: () => void;
-  folderName: string;
-}) => {
-  const { t } = useTranslation();
-  
-  const allVariables = [
-    ...extractVariables(prompt.systemPrompt || ''),
-    ...extractVariables(prompt.userPrompt),
-  ].filter((v, i, arr) => arr.indexOf(v) === i);
+const KanbanCard = memo(
+  ({
+    prompt,
+    isPinned,
+    isExpanded,
+    onPin,
+    onUnpin,
+    onExpand,
+    onCollapse,
+    onCopy,
+    onEdit,
+    onAiTest,
+    onToggleFavorite,
+    onViewDetail,
+    folderName,
+  }: {
+    prompt: Prompt;
+    isPinned: boolean;
+    isExpanded: boolean;
+    onPin: () => void;
+    onUnpin: () => void;
+    onExpand: () => void;
+    onCollapse: () => void;
+    onCopy: () => void;
+    onEdit: () => void;
+    onAiTest: () => void;
+    onToggleFavorite: () => void;
+    onViewDetail: () => void;
+    folderName: string;
+  }) => {
+    const { t } = useTranslation();
 
-  // Fixed heights for alignment:
-  // - Pinned expanded: 500px
-  // - Pinned normal: 320px (fixed, not max-h, for alignment)
-  // - Unpinned: 280px
-  const cardHeightClass = isExpanded 
-    ? 'h-[500px]' 
-    : isPinned 
-      ? 'h-[320px]' 
-      : 'h-[280px]';
+    const allVariables = [
+      ...extractVariables(prompt.systemPrompt || ""),
+      ...extractVariables(prompt.userPrompt),
+    ].filter((v, i, arr) => arr.indexOf(v) === i);
 
-  return (
-    <div
-      className={`
+    // Fixed heights for alignment:
+    // - Pinned expanded: 500px
+    // - Pinned normal: 320px (fixed, not max-h, for alignment)
+    // - Unpinned: 280px
+    const cardHeightClass = isExpanded
+      ? "h-[500px]"
+      : isPinned
+        ? "h-[320px]"
+        : "h-[280px]";
+
+    return (
+      <div
+        className={`
         group relative flex flex-col app-wallpaper-panel rounded-xl border transition-all duration-smooth
-        ${isPinned 
-          ? 'border-primary/50 shadow-lg shadow-primary/10 ring-2 ring-primary/20' 
-          : 'border-border hover:border-primary/30 hover:shadow-md'
+        ${
+          isPinned
+            ? "border-primary/50 shadow-lg shadow-primary/10 ring-2 ring-primary/20"
+            : "border-border hover:border-primary/30 hover:shadow-md"
         }
         ${cardHeightClass} overflow-hidden
       `}
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-border/50 app-wallpaper-surface flex-shrink-0">
-        <div className="flex items-center gap-2 flex-1 min-w-0">
-          {/* Title */}
-          <h3 
-            className="font-semibold text-sm truncate cursor-pointer hover:text-primary transition-colors"
-            onClick={onViewDetail}
-            title={prompt.title}
-          >
-            {prompt.title}
-          </h3>
-          
-          {/* Favorite star */}
-          {prompt.isFavorite && (
-            <StarIcon className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400 flex-shrink-0" />
-          )}
-        </div>
-
-        {/* Actions */}
-        <div className="flex items-center gap-1 flex-shrink-0">
-          {isPinned ? (
-            <>
-              <button
-                onClick={isExpanded ? onCollapse : onExpand}
-                className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-                title={isExpanded ? t('common.collapse', '收起') : t('common.expand', '展开')}
-              >
-                {isExpanded ? <MinimizeIcon className="w-3.5 h-3.5" /> : <MaximizeIcon className="w-3.5 h-3.5" />}
-              </button>
-              <button
-                onClick={onUnpin}
-                className="p-1 rounded-md text-primary hover:text-primary/80 hover:bg-primary/10 transition-colors"
-                title={t('prompt.unpin', '取消固定')}
-              >
-                <XIcon className="w-3.5 h-3.5" />
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={onPin}
-              className="p-1 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors opacity-0 group-hover:opacity-100"
-              title={t('prompt.pin', '固定')}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-border/50 app-wallpaper-surface flex-shrink-0">
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            {/* Title */}
+            <h3
+              className="font-semibold text-sm truncate cursor-pointer hover:text-primary transition-colors"
+              onClick={onViewDetail}
+              title={prompt.title}
             >
-              <PinIcon className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
-      </div>
+              {prompt.title}
+            </h3>
 
-      {/* Content - flex-1 to fill remaining space */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-3">
-        {/* Description */}
-        {prompt.description && (
-          <p className="text-xs text-muted-foreground line-clamp-2">
-            {prompt.description}
-          </p>
-        )}
-
-        {/* Variables */}
-        {allVariables.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            <BracesIcon className="w-3 h-3 text-muted-foreground mt-0.5" />
-            {allVariables.slice(0, isPinned ? 10 : 5).map(v => (
-              <span key={v} className="text-[10px] px-1.5 py-0.5 rounded bg-accent text-accent-foreground font-mono">
-                {`{{${v}}}`}
-              </span>
-            ))}
-            {allVariables.length > (isPinned ? 10 : 5) && (
-              <span className="text-[10px] text-muted-foreground">+{allVariables.length - (isPinned ? 10 : 5)}</span>
+            {/* Favorite star */}
+            {prompt.isFavorite && (
+              <StarIcon className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400 flex-shrink-0" />
             )}
           </div>
-        )}
 
-        {/* System Prompt Preview */}
-        {prompt.systemPrompt && (
+          {/* Actions */}
+          <div className="flex items-center gap-1 flex-shrink-0">
+            {isPinned ? (
+              <>
+                <button
+                  onClick={isExpanded ? onCollapse : onExpand}
+                  className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                  title={
+                    isExpanded
+                      ? t("common.collapse", "收起")
+                      : t("common.expand", "展开")
+                  }
+                >
+                  {isExpanded ? (
+                    <MinimizeIcon className="w-3.5 h-3.5" />
+                  ) : (
+                    <MaximizeIcon className="w-3.5 h-3.5" />
+                  )}
+                </button>
+                <button
+                  onClick={onUnpin}
+                  className="p-1 rounded-md text-primary hover:text-primary/80 hover:bg-primary/10 transition-colors"
+                  title={t("prompt.unpin", "取消固定")}
+                >
+                  <XIcon className="w-3.5 h-3.5" />
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={onPin}
+                className="p-1 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors opacity-0 group-hover:opacity-100"
+                title={t("prompt.pin", "固定")}
+              >
+                <PinIcon className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Content - flex-1 to fill remaining space */}
+        <div className="flex-1 overflow-y-auto p-3 space-y-3">
+          {/* Description */}
+          {prompt.description && (
+            <p className="text-xs text-muted-foreground line-clamp-2">
+              {prompt.description}
+            </p>
+          )}
+
+          {/* Variables */}
+          {allVariables.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              <BracesIcon className="w-3 h-3 text-muted-foreground mt-0.5" />
+              {allVariables.slice(0, isPinned ? 10 : 5).map((v) => (
+                <span
+                  key={v}
+                  className="text-[10px] px-1.5 py-0.5 rounded bg-accent text-accent-foreground font-mono"
+                >
+                  {`{{${v}}}`}
+                </span>
+              ))}
+              {allVariables.length > (isPinned ? 10 : 5) && (
+                <span className="text-[10px] text-muted-foreground">
+                  +{allVariables.length - (isPinned ? 10 : 5)}
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* System Prompt Preview */}
+          {prompt.systemPrompt && (
+            <div className="space-y-1">
+              <div className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                <SparklesIcon className="w-3 h-3" />
+                System Prompt
+              </div>
+              <div
+                className={`text-xs text-foreground/80 app-wallpaper-surface rounded-lg p-2 border border-border/70 ${isExpanded ? "" : "line-clamp-4"}`}
+              >
+                {prompt.systemPrompt}
+              </div>
+            </div>
+          )}
+
+          {/* User Prompt Preview */}
           <div className="space-y-1">
             <div className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-              <SparklesIcon className="w-3 h-3" />
-              System Prompt
+              User Prompt
             </div>
-            <div className={`text-xs text-foreground/80 app-wallpaper-surface rounded-lg p-2 border border-border/70 ${isExpanded ? '' : 'line-clamp-4'}`}>
-              {prompt.systemPrompt}
+            <div
+              className={`text-xs text-foreground/80 app-wallpaper-surface rounded-lg p-2 border border-border/70 ${isExpanded ? "" : isPinned ? "line-clamp-6" : "line-clamp-3"}`}
+            >
+              {prompt.userPrompt}
             </div>
           </div>
-        )}
 
-        {/* User Prompt Preview */}
-        <div className="space-y-1">
-          <div className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-            User Prompt
-          </div>
-          <div className={`text-xs text-foreground/80 app-wallpaper-surface rounded-lg p-2 border border-border/70 ${isExpanded ? '' : isPinned ? 'line-clamp-6' : 'line-clamp-3'}`}>
-            {prompt.userPrompt}
-          </div>
+          {/* Tags */}
+          {prompt.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {prompt.tags.slice(0, 5).map((tag) => (
+                <span
+                  key={tag}
+                  className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary"
+                >
+                  #{tag}
+                </span>
+              ))}
+              {prompt.tags.length > 5 && (
+                <span className="text-[10px] text-muted-foreground">
+                  +{prompt.tags.length - 5}
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Tags */}
-        {prompt.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {prompt.tags.slice(0, 5).map(tag => (
-              <span key={tag} className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">
-                #{tag}
-              </span>
-            ))}
-            {prompt.tags.length > 5 && (
-              <span className="text-[10px] text-muted-foreground">+{prompt.tags.length - 5}</span>
-            )}
+        {/* Footer - fixed at bottom */}
+        <div className="flex items-center justify-between gap-2 px-3 py-2 border-t border-border/50 bg-muted/20 flex-shrink-0">
+          {/* Meta info */}
+          <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+            <div className="flex items-center gap-1">
+              <FolderIcon className="w-3 h-3" />
+              <span className="truncate max-w-[80px]">{folderName}</span>
+            </div>
+            <span>•</span>
+            <span>{new Date(prompt.updatedAt).toLocaleDateString()}</span>
           </div>
-        )}
-      </div>
 
-      {/* Footer - fixed at bottom */}
-      <div className="flex items-center justify-between gap-2 px-3 py-2 border-t border-border/50 bg-muted/20 flex-shrink-0">
-        {/* Meta info */}
-        <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+          {/* Quick actions */}
           <div className="flex items-center gap-1">
-            <FolderIcon className="w-3 h-3" />
-            <span className="truncate max-w-[80px]">{folderName}</span>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleFavorite();
+              }}
+              className={`p-1 rounded-md transition-colors ${
+                prompt.isFavorite
+                  ? "text-yellow-400 hover:bg-yellow-400/10"
+                  : "text-muted-foreground hover:text-foreground hover:bg-accent"
+              }`}
+              title={
+                prompt.isFavorite
+                  ? t("prompt.unfavorite", "取消收藏")
+                  : t("prompt.favorite", "收藏")
+              }
+            >
+              <StarIcon
+                className={`w-3.5 h-3.5 ${prompt.isFavorite ? "fill-current" : ""}`}
+              />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onCopy();
+              }}
+              className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+              title={t("prompt.copy", "复制")}
+            >
+              <CopyIcon className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit();
+              }}
+              className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+              title={t("prompt.edit", "编辑")}
+            >
+              <EditIcon className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onAiTest();
+              }}
+              className="p-1 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+              title={t("prompt.aiTest", "AI 测试")}
+            >
+              <PlayIcon className="w-3.5 h-3.5" />
+            </button>
           </div>
-          <span>•</span>
-          <span>{new Date(prompt.updatedAt).toLocaleDateString()}</span>
-        </div>
-
-        {/* Quick actions */}
-        <div className="flex items-center gap-1">
-          <button
-            onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
-            className={`p-1 rounded-md transition-colors ${
-              prompt.isFavorite 
-                ? 'text-yellow-400 hover:bg-yellow-400/10' 
-                : 'text-muted-foreground hover:text-foreground hover:bg-accent'
-            }`}
-            title={prompt.isFavorite ? t('prompt.unfavorite', '取消收藏') : t('prompt.favorite', '收藏')}
-          >
-            <StarIcon className={`w-3.5 h-3.5 ${prompt.isFavorite ? 'fill-current' : ''}`} />
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); onCopy(); }}
-            className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-            title={t('prompt.copy', '复制')}
-          >
-            <CopyIcon className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); onEdit(); }}
-            className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-            title={t('prompt.edit', '编辑')}
-          >
-            <EditIcon className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); onAiTest(); }}
-            className="p-1 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
-            title={t('prompt.aiTest', 'AI 测试')}
-          >
-            <PlayIcon className="w-3.5 h-3.5" />
-          </button>
         </div>
       </div>
-    </div>
-  );
-});
+    );
+  },
+);
 
 export function PromptKanbanView({
   prompts,
@@ -289,14 +332,15 @@ export function PromptKanbanView({
   onContextMenu,
 }: PromptKanbanViewProps) {
   const { t } = useTranslation();
-  const folders = useFolderStore(state => state.folders);
-  const kanbanColumns = usePromptStore(state => state.kanbanColumns);
-  const uncategorizedLabel = t('folder.uncategorized', '未分类');
-  
+  const folders = useFolderStore((state) => state.folders);
+  const kanbanColumns = usePromptStore((state) => state.kanbanColumns);
+  const uncategorizedLabel = t("folder.uncategorized", "未分类");
+
   // State for pinned cards
   const [pinnedCards, setPinnedCards] = useState<PinnedCard[]>([]);
   // State for collapsing the entire pinned section
-  const [isPinnedSectionCollapsed, setIsPinnedSectionCollapsed] = useState(false);
+  const [isPinnedSectionCollapsed, setIsPinnedSectionCollapsed] =
+    useState(false);
 
   const folderNameMap = useMemo(
     () => new Map(folders.map((folder) => [folder.id, folder.name])),
@@ -316,7 +360,7 @@ export function PromptKanbanView({
   );
 
   const handlePin = useCallback((promptId: string) => {
-    setPinnedCards(prev => {
+    setPinnedCards((prev) => {
       // Max 4 pinned cards
       if (prev.length >= 4) {
         return [...prev.slice(1), { promptId, isExpanded: false }];
@@ -326,28 +370,32 @@ export function PromptKanbanView({
   }, []);
 
   const handleUnpin = useCallback((promptId: string) => {
-    setPinnedCards(prev => prev.filter(p => p.promptId !== promptId));
+    setPinnedCards((prev) => prev.filter((p) => p.promptId !== promptId));
   }, []);
 
   const handleExpand = useCallback((promptId: string) => {
-    setPinnedCards(prev => prev.map(p => 
-      p.promptId === promptId ? { ...p, isExpanded: true } : p
-    ));
+    setPinnedCards((prev) =>
+      prev.map((p) =>
+        p.promptId === promptId ? { ...p, isExpanded: true } : p,
+      ),
+    );
   }, []);
 
   const handleCollapse = useCallback((promptId: string) => {
-    setPinnedCards(prev => prev.map(p => 
-      p.promptId === promptId ? { ...p, isExpanded: false } : p
-    ));
+    setPinnedCards((prev) =>
+      prev.map((p) =>
+        p.promptId === promptId ? { ...p, isExpanded: false } : p,
+      ),
+    );
   }, []);
 
   // Quick actions for pinned cards
   const handleExpandAll = useCallback(() => {
-    setPinnedCards(prev => prev.map(p => ({ ...p, isExpanded: true })));
+    setPinnedCards((prev) => prev.map((p) => ({ ...p, isExpanded: true })));
   }, []);
 
   const handleCollapseAll = useCallback(() => {
-    setPinnedCards(prev => prev.map(p => ({ ...p, isExpanded: false })));
+    setPinnedCards((prev) => prev.map((p) => ({ ...p, isExpanded: false })));
   }, []);
 
   const handleUnpinAll = useCallback(() => {
@@ -377,7 +425,7 @@ export function PromptKanbanView({
     return (
       <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
         <SparklesIcon className="w-16 h-16 mb-4 opacity-20" />
-        <p>{t('prompt.noPrompts', '暂无 Prompt')}</p>
+        <p>{t("prompt.noPrompts", "暂无 Prompt")}</p>
       </div>
     );
   }
@@ -390,7 +438,9 @@ export function PromptKanbanView({
           {/* Header - always visible */}
           <div className="flex items-center justify-between px-4 py-2">
             <button
-              onClick={() => setIsPinnedSectionCollapsed(!isPinnedSectionCollapsed)}
+              onClick={() =>
+                setIsPinnedSectionCollapsed(!isPinnedSectionCollapsed)
+              }
               className="flex items-center gap-2 hover:text-primary transition-colors"
             >
               {isPinnedSectionCollapsed ? (
@@ -400,43 +450,62 @@ export function PromptKanbanView({
               )}
               <PinIcon className="w-4 h-4 text-primary" />
               <span className="text-sm font-medium text-foreground">
-                {t('prompt.pinnedPrompts', '固定的 Prompt')} ({pinnedPrompts.length})
+                {t("prompt.pinnedPrompts", "固定的 Prompt")} (
+                {pinnedPrompts.length})
               </span>
             </button>
             {/* Quick actions */}
             <div className="flex items-center gap-1">
               {!isPinnedSectionCollapsed && (
                 <button
-                  onClick={hasExpandedCards ? handleCollapseAll : handleExpandAll}
+                  onClick={
+                    hasExpandedCards ? handleCollapseAll : handleExpandAll
+                  }
                   className="px-2 py-1 text-xs rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-                  title={hasExpandedCards ? t('prompt.collapseAll', '全部收起') : t('prompt.expandAll', '全部展开')}
+                  title={
+                    hasExpandedCards
+                      ? t("prompt.collapseAll", "全部收起")
+                      : t("prompt.expandAll", "全部展开")
+                  }
                 >
                   {hasExpandedCards ? (
-                    <><MinimizeIcon className="w-3 h-3 inline mr-1" />{t('prompt.collapseAll', '全部收起')}</>
+                    <>
+                      <MinimizeIcon className="w-3 h-3 inline mr-1" />
+                      {t("prompt.collapseAll", "全部收起")}
+                    </>
                   ) : (
-                    <><MaximizeIcon className="w-3 h-3 inline mr-1" />{t('prompt.expandAll', '全部展开')}</>
+                    <>
+                      <MaximizeIcon className="w-3 h-3 inline mr-1" />
+                      {t("prompt.expandAll", "全部展开")}
+                    </>
                   )}
                 </button>
               )}
               <button
                 onClick={handleUnpinAll}
                 className="px-2 py-1 text-xs rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                title={t('prompt.unpinAll', '全部取消固定')}
+                title={t("prompt.unpinAll", "全部取消固定")}
               >
-                <XIcon className="w-3 h-3 inline mr-1" />{t('prompt.unpinAll', '清空')}
+                <XIcon className="w-3 h-3 inline mr-1" />
+                {t("prompt.unpinAll", "清空")}
               </button>
             </div>
           </div>
           {/* Pinned cards - collapsible */}
           {!isPinnedSectionCollapsed && (
             <div className="px-4 pb-4">
-              <div className={`grid gap-4 ${
-                pinnedPrompts.length === 1 ? 'grid-cols-1' :
-                pinnedPrompts.length === 2 ? 'grid-cols-1 sm:grid-cols-2' :
-                pinnedPrompts.length === 3 ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3' :
-                'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
-              }`}>
-                {pinnedPrompts.map(prompt => {
+              <div
+                className={`grid gap-4 ${
+                  pinnedPrompts.length === 1
+                    ? "grid-cols-1"
+                    : pinnedPrompts.length === 2
+                      ? "grid-cols-1 sm:grid-cols-2"
+                      : pinnedPrompts.length === 3
+                        ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3"
+                        : "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+                }`}
+              >
+                {pinnedPrompts.map((prompt) => {
                   const cardState = pinnedCardStateMap.get(prompt.id);
                   return (
                     <Reveal
@@ -458,7 +527,12 @@ export function PromptKanbanView({
                         onAiTest={() => onAiTest(prompt)}
                         onToggleFavorite={() => onToggleFavorite(prompt.id)}
                         onViewDetail={() => onViewDetail(prompt)}
-                        folderName={prompt.folderId ? (folderNameMap.get(prompt.folderId) || uncategorizedLabel) : uncategorizedLabel}
+                        folderName={
+                          prompt.folderId
+                            ? folderNameMap.get(prompt.folderId) ||
+                              uncategorizedLabel
+                            : uncategorizedLabel
+                        }
                       />
                     </Reveal>
                   );
@@ -501,7 +575,9 @@ const KANBAN_BOTTOM_GUTTER = 80; // pb-20
 
 function getKanbanColumns(preference: 2 | 3 | 4, width: number): number {
   if (width <= 0) return 1;
-  const raw = Math.floor((width + KANBAN_GAP_PX) / (KANBAN_TARGET_COLUMN_WIDTH + KANBAN_GAP_PX));
+  const raw = Math.floor(
+    (width + KANBAN_GAP_PX) / (KANBAN_TARGET_COLUMN_WIDTH + KANBAN_GAP_PX),
+  );
   return Math.max(1, Math.min(preference, raw));
 }
 
@@ -553,7 +629,7 @@ function UnpinnedKanbanGrid({
       setContainerWidth(Math.max(0, node.clientWidth - KANBAN_PADDING_PX * 2));
     };
     update();
-    if (typeof ResizeObserver === 'undefined') return;
+    if (typeof ResizeObserver === "undefined") return;
     const observer = new ResizeObserver(update);
     observer.observe(node);
     return () => {
@@ -562,7 +638,11 @@ function UnpinnedKanbanGrid({
   }, []);
 
   const columns = useMemo(
-    () => Math.max(1, getKanbanColumns(kanbanColumnPreference, containerWidth || 1)),
+    () =>
+      Math.max(
+        1,
+        getKanbanColumns(kanbanColumnPreference, containerWidth || 1),
+      ),
     [kanbanColumnPreference, containerWidth],
   );
   const rowCount = useMemo(
@@ -577,7 +657,9 @@ function UnpinnedKanbanGrid({
     overscan: 4,
     getItemKey: (rowIndex) => {
       const firstPromptId = prompts[rowIndex * columns]?.id;
-      return firstPromptId ? `${firstPromptId}__${columns}` : `row-${rowIndex}-${columns}`;
+      return firstPromptId
+        ? `${firstPromptId}__${columns}`
+        : `row-${rowIndex}-${columns}`;
     },
   });
 
@@ -588,7 +670,7 @@ function UnpinnedKanbanGrid({
     <div ref={scrollRef} className="flex-1 overflow-y-auto">
       <div
         style={{
-          position: 'relative',
+          position: "relative",
           height: `${totalHeight + KANBAN_BOTTOM_GUTTER}px`,
           paddingLeft: `${KANBAN_PADDING_PX}px`,
           paddingRight: `${KANBAN_PADDING_PX}px`,
@@ -605,7 +687,7 @@ function UnpinnedKanbanGrid({
               data-index={virtualRow.index}
               ref={rowVirtualizer.measureElement}
               style={{
-                position: 'absolute',
+                position: "absolute",
                 top: 0,
                 left: KANBAN_PADDING_PX,
                 right: KANBAN_PADDING_PX,
@@ -639,7 +721,8 @@ function UnpinnedKanbanGrid({
                       onViewDetail={() => onViewDetail(prompt)}
                       folderName={
                         prompt.folderId
-                          ? folderNameMap.get(prompt.folderId) || uncategorizedLabel
+                          ? folderNameMap.get(prompt.folderId) ||
+                            uncategorizedLabel
                           : uncategorizedLabel
                       }
                     />

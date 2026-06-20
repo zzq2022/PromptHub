@@ -67,7 +67,11 @@ function ensureDir(targetPath: string): void {
   fs.mkdirSync(targetPath, { recursive: true });
 }
 
-function assertPathWithinRoot(rootPath: string, targetPath: string, label: string): void {
+function assertPathWithinRoot(
+  rootPath: string,
+  targetPath: string,
+  label: string,
+): void {
   const resolvedRoot = path.resolve(rootPath);
   const resolvedTarget = path.resolve(targetPath);
   if (
@@ -111,7 +115,10 @@ function ensureSameFileContents(sourcePath: string, targetPath: string): void {
   }
 }
 
-function areFilesByteIdentical(sourcePath: string, targetPath: string): boolean {
+function areFilesByteIdentical(
+  sourcePath: string,
+  targetPath: string,
+): boolean {
   if (!fs.existsSync(sourcePath) || !fs.existsSync(targetPath)) {
     return false;
   }
@@ -331,7 +338,8 @@ function writeMarker(
   backupId: string | null,
 ): string {
   const dbLayoutVersion =
-    movedEntries.includes("prompthub.db") && !failedEntries.includes("prompthub.db")
+    movedEntries.includes("prompthub.db") &&
+    !failedEntries.includes("prompthub.db")
       ? "0.5.7"
       : undefined;
   const markerPath = getMarkerPath(userDataPath);
@@ -355,7 +363,9 @@ function readMarker(userDataPath: string): Partial<LayoutMarkerRecord> | null {
   }
 
   try {
-    return JSON.parse(fs.readFileSync(markerPath, "utf8")) as Partial<LayoutMarkerRecord>;
+    return JSON.parse(
+      fs.readFileSync(markerPath, "utf8"),
+    ) as Partial<LayoutMarkerRecord>;
   } catch {
     return null;
   }
@@ -435,10 +445,17 @@ export async function migrateLegacyDataLayout(
   const previousMarker = readMarker(resolvedUserDataPath);
   const residualEntries = detectResidualLegacyEntries(resolvedUserDataPath);
   const legacyEntries =
-    previousMarker !== null ? residualEntries : detectLegacyEntries(resolvedUserDataPath);
-  const previousDbMigrationComplete = previousMarker?.dbLayoutVersion === "0.5.7";
+    previousMarker !== null
+      ? residualEntries
+      : detectLegacyEntries(resolvedUserDataPath);
+  const previousDbMigrationComplete =
+    previousMarker?.dbLayoutVersion === "0.5.7";
 
-  if (previousMarker !== null && legacyEntries.length === 0 && previousDbMigrationComplete) {
+  if (
+    previousMarker !== null &&
+    legacyEntries.length === 0 &&
+    previousDbMigrationComplete
+  ) {
     return {
       status: "already-migrated",
       backupId: null,
@@ -508,7 +525,10 @@ export async function migrateLegacyDataLayout(
       //
       // 单条目失败：记录日志并继续。部分迁移优于崩溃。
       // 失败时源目录得到保留，数据安全。失败条目会写入标记供 UI 展示警告。
-      console.error(`[data-layout-migration] Failed to move "${entryName}":`, err);
+      console.error(
+        `[data-layout-migration] Failed to move "${entryName}":`,
+        err,
+      );
       failedEntries.push(entryName);
     }
   }

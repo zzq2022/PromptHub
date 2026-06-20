@@ -50,10 +50,7 @@ export function buildSkillSyncUpdateFromRepo(
   const update: UpdateSkillParams = {};
   let changed = false;
 
-  if (
-    sanitized.name !== undefined &&
-    sanitized.name !== skill.name
-  ) {
+  if (sanitized.name !== undefined && sanitized.name !== skill.name) {
     update.name = sanitized.name;
     changed = true;
   }
@@ -102,7 +99,10 @@ export function buildSkillSyncUpdateFromRepo(
     changed = true;
   }
 
-  if (directoryFingerprint !== undefined && directoryFingerprint !== skill.directory_fingerprint) {
+  if (
+    directoryFingerprint !== undefined &&
+    directoryFingerprint !== skill.directory_fingerprint
+  ) {
     update.directory_fingerprint = directoryFingerprint;
     changed = true;
   }

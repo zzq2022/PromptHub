@@ -166,7 +166,9 @@ function isValidBackupId(backupId: string): boolean {
 }
 
 function isTransientDatabaseEntry(entryName: string): boolean {
-  return TRANSIENT_DATABASE_ENTRY_PATTERNS.some((pattern) => pattern.test(entryName));
+  return TRANSIENT_DATABASE_ENTRY_PATTERNS.some((pattern) =>
+    pattern.test(entryName),
+  );
 }
 
 function shouldCopySnapshotPath(sourcePath: string): boolean {

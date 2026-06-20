@@ -1,11 +1,6 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  SparklesIcon,
-  XIcon,
-  Loader2Icon,
-  Wand2Icon,
-} from "lucide-react";
+import { SparklesIcon, XIcon, Loader2Icon, Wand2Icon } from "lucide-react";
 import { useSettingsStore } from "../../stores/settings.store";
 import { useFolderStore } from "../../stores/folder.store";
 import { usePromptStore } from "../../stores/prompt.store";
@@ -54,7 +49,9 @@ export function QuickAddModal({
   const scenarioModelDefaults = useSettingsStore(
     (state) => state.scenarioModelDefaults,
   );
-  const modelRouteDefaults = useSettingsStore((state) => state.modelRouteDefaults);
+  const modelRouteDefaults = useSettingsStore(
+    (state) => state.modelRouteDefaults,
+  );
   const aiProvider = useSettingsStore((state) => state.aiProvider);
   const aiApiProtocol = useSettingsStore((state) => state.aiApiProtocol);
   const aiApiKey = useSettingsStore((state) => state.aiApiKey);
@@ -64,9 +61,9 @@ export function QuickAddModal({
 
   const [promptText, setPromptText] = useState("");
   const [mode, setMode] = useState<QuickAddMode>("analyze");
-  const [selectedPromptType, setSelectedPromptType] = useState<"text" | "image">(
-    defaultPromptType || "text",
-  );
+  const [selectedPromptType, setSelectedPromptType] = useState<
+    "text" | "image"
+  >(defaultPromptType || "text");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFolderId, setSelectedFolderId] = useState<string | undefined>(
     undefined,
@@ -137,8 +134,11 @@ export function QuickAddModal({
     setIsSubmitting(true);
 
     const folderNames = folders.map((f) => f.name).join(", ");
-    const existingTags = [...new Set(prompts.flatMap((p) => p.tags || []))].sort();
-    const tagsString = existingTags.length > 0 ? existingTags.join(", ") : "无现有标签";
+    const existingTags = [
+      ...new Set(prompts.flatMap((p) => p.tags || [])),
+    ].sort();
+    const tagsString =
+      existingTags.length > 0 ? existingTags.join(", ") : "无现有标签";
 
     const resolveMatchedFolderId = (suggestedFolder?: string | null) => {
       if (selectedFolderId) {
@@ -328,8 +328,8 @@ export function QuickAddModal({
           <div className="space-y-2.5">
             <label className="text-sm font-medium text-muted-foreground">
               {mode === "generate"
-                  ? t("quickAdd.generatePromptRequest") || "描述你想要的 Prompt"
-                  : t("quickAdd.pastePrompt") || "粘贴你的 Prompt"}
+                ? t("quickAdd.generatePromptRequest") || "描述你想要的 Prompt"
+                : t("quickAdd.pastePrompt") || "粘贴你的 Prompt"}
               <span className="ml-1 text-destructive">*</span>
             </label>
             <textarea
@@ -338,14 +338,14 @@ export function QuickAddModal({
               onChange={(e) => setPromptText(e.target.value)}
               aria-label={
                 mode === "generate"
-                    ? t("quickAdd.generatePromptRequest") || "描述你想要的 Prompt"
-                    : t("quickAdd.pastePrompt") || "粘贴你的 Prompt"
+                  ? t("quickAdd.generatePromptRequest") || "描述你想要的 Prompt"
+                  : t("quickAdd.pastePrompt") || "粘贴你的 Prompt"
               }
               placeholder={
                 mode === "generate"
-                    ? t("quickAdd.generatePlaceholder") ||
-                      "例如：帮我生成一个用于写小红书标题的 Prompt，语气年轻、有网感，输出 10 个备选标题。"
-                    : t("quickAdd.placeholder") || "在这里粘贴你的 Prompt 内容..."
+                  ? t("quickAdd.generatePlaceholder") ||
+                    "例如：帮我生成一个用于写小红书标题的 Prompt，语气年轻、有网感，输出 10 个备选标题。"
+                  : t("quickAdd.placeholder") || "在这里粘贴你的 Prompt 内容..."
               }
               className="w-full min-h-[220px] px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground resize-y focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-sm leading-relaxed"
             />
@@ -410,7 +410,9 @@ export function QuickAddModal({
                     label: (
                       <div className="flex items-center gap-2">
                         <Wand2Icon className="w-4 h-4 shrink-0 text-primary" />
-                        <span>{t("quickAdd.smartFolder") || "AI 智能分类"}</span>
+                        <span>
+                          {t("quickAdd.smartFolder") || "AI 智能分类"}
+                        </span>
                       </div>
                     ),
                     labelText: t("quickAdd.smartFolder") || "AI 智能分类",
@@ -447,8 +449,8 @@ export function QuickAddModal({
           >
             {isSubmitting && <Loader2Icon className="w-4 h-4 animate-spin" />}
             {mode === "generate"
-                ? t("quickAdd.generateAndCreate") || "生成并创建"
-                : t("quickAdd.create") || "立即创建"}
+              ? t("quickAdd.generateAndCreate") || "生成并创建"
+              : t("quickAdd.create") || "立即创建"}
           </button>
         </div>
       </div>

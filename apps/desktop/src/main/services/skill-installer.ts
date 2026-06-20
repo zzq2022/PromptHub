@@ -37,7 +37,10 @@ import {
 import { installSkillFromSource } from "../../../../../packages/core/src/skills/install-flow";
 import { initDatabase } from "@/main/database";
 import { SkillDB } from "@/main/database/skill";
-import { readGithubTokenSetting, readSelfHostedSyncUrlSetting } from "@/main/settings/settings-readers";
+import {
+  readGithubTokenSetting,
+  readSelfHostedSyncUrlSetting,
+} from "@/main/settings/settings-readers";
 import { parseSkillMd } from "./skill-validator";
 import { sanitizeImportedSkillDraft } from "./skill-import-sanitize";
 import {
@@ -610,15 +613,13 @@ export class SkillInstaller {
       );
     }
 
-    let createdSkill:
-      | {
-          id: string;
-          name: string;
-          source_id?: string | null;
-          variant_key?: string | null;
-          local_repo_path?: string | null;
-        }
-      | null = null;
+    let createdSkill: {
+      id: string;
+      name: string;
+      source_id?: string | null;
+      variant_key?: string | null;
+      local_repo_path?: string | null;
+    } | null = null;
     let managedRepoPath: string | null = null;
 
     try {
@@ -714,7 +715,10 @@ export class SkillInstaller {
         try {
           db.delete(createdSkill.id);
         } catch (rollbackError) {
-          console.error("Failed to roll back created skill row:", rollbackError);
+          console.error(
+            "Failed to roll back created skill row:",
+            rollbackError,
+          );
         }
       }
       // Clean up
@@ -982,7 +986,9 @@ export class SkillInstaller {
       throw new Error("Remote skill package URL is required");
     }
 
-    const tempRoot = await fs.mkdtemp(path.join(this.skillsDir, ".remote-zip-"));
+    const tempRoot = await fs.mkdtemp(
+      path.join(this.skillsDir, ".remote-zip-"),
+    );
     const extractDir = path.join(tempRoot, "package");
 
     try {
@@ -1567,8 +1573,7 @@ export class SkillInstaller {
                 instructions: sanitized.instructions || instructions,
                 filePath: skillMdPath,
                 installMode: installMetadata.installMode,
-                isPromptHubManagedLink:
-                  installMetadata.isPromptHubManagedLink,
+                isPromptHubManagedLink: installMetadata.isPromptHubManagedLink,
                 localPath: skillFolderPath,
                 platforms: [platformName],
                 symlinkTargetPath: installMetadata.symlinkTargetPath,

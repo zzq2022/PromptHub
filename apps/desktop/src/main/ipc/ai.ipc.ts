@@ -6,7 +6,9 @@ import type {
   AITransportResponse,
 } from "@prompthub/shared/types";
 
-function normalizeHeaders(headers?: Record<string, string>): HeadersInit | undefined {
+function normalizeHeaders(
+  headers?: Record<string, string>,
+): HeadersInit | undefined {
   if (!headers) {
     return undefined;
   }
@@ -34,7 +36,9 @@ function toErrorResponse(error: unknown): AITransportResponse {
   };
 }
 
-async function requestToResponse(response: Response): Promise<AITransportResponse> {
+async function requestToResponse(
+  response: Response,
+): Promise<AITransportResponse> {
   return {
     ok: response.ok,
     status: response.status,
@@ -69,7 +73,10 @@ async function performRequest(request: AITransportRequest): Promise<Response> {
 export function registerAIIPC(): void {
   ipcMain.handle(
     IPC_CHANNELS.AI_HTTP_REQUEST,
-    async (_event, request: AITransportRequest): Promise<AITransportResponse> => {
+    async (
+      _event,
+      request: AITransportRequest,
+    ): Promise<AITransportResponse> => {
       try {
         const response = await performRequest(request);
         return await requestToResponse(response);
@@ -81,7 +88,10 @@ export function registerAIIPC(): void {
 
   ipcMain.handle(
     IPC_CHANNELS.AI_HTTP_STREAM,
-    async (event, request: AITransportRequest): Promise<AITransportResponse> => {
+    async (
+      event,
+      request: AITransportRequest,
+    ): Promise<AITransportResponse> => {
       try {
         const response = await performRequest(request);
         if (!response.ok || !response.body) {

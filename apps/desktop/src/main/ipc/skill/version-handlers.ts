@@ -147,9 +147,7 @@ export function registerSkillVersionHandlers({ db }: SkillIPCContext): void {
           "skill:insertVersionDirect requires version to be a non-negative finite number",
         );
       }
-      if (
-        !isValidSkillVersionCreatedAt(version.createdAt)
-      ) {
+      if (!isValidSkillVersionCreatedAt(version.createdAt)) {
         throw new Error(
           "skill:insertVersionDirect requires createdAt to be a valid ISO date string or finite timestamp",
         );

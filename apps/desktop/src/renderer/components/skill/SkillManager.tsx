@@ -270,7 +270,9 @@ export function SkillManager() {
     ? storedSkillListPageSize
     : DEFAULT_SKILL_LIST_PAGE_SIZE;
   const runtimeCapabilities = getRuntimeCapabilities();
-  const [publishingSkillIds, setPublishingSkillIds] = useState<Set<string>>(new Set());
+  const [publishingSkillIds, setPublishingSkillIds] = useState<Set<string>>(
+    new Set(),
+  );
 
   const handlePublishToSkillHub = useCallback(
     async (skillId: string) => {
@@ -286,7 +288,7 @@ export function SkillManager() {
           delete nextEntries["skillhub"];
           return {
             skills: state.skills.map((s) =>
-              s.id === skillId ? { ...s, visibility: "shared" } : s
+              s.id === skillId ? { ...s, visibility: "shared" } : s,
             ),
             remoteStoreEntries: nextEntries,
           };

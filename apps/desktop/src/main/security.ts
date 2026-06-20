@@ -1,5 +1,5 @@
-import crypto from 'crypto';
-import type Database from './database/sqlite';
+import crypto from "crypto";
+import type Database from "./database/sqlite";
 
 interface StoredMasterPassword {
   salt: string; // base64
@@ -9,8 +9,8 @@ interface StoredMasterPassword {
 let inMemoryKey: Buffer | null = null;
 let isUnlocked = false;
 
-const SETTINGS_KEY = 'master_password';
-const ALGO = 'aes-256-gcm';
+const SETTINGS_KEY = "master_password";
+const ALGO = "aes-256-gcm";
 
 function deriveKey(password: string, salt: Buffer): Buffer {
   // Use scrypt to derive 32-byte key
@@ -19,18 +19,22 @@ function deriveKey(password: string, salt: Buffer): Buffer {
 }
 
 function isStoredMasterPassword(value: unknown): value is StoredMasterPassword {
-  if (!value || typeof value !== 'object') {
+  if (!value || typeof value !== "object") {
     return false;
   }
 
   const candidate = value as Partial<StoredMasterPassword>;
-  return typeof candidate.salt === 'string' && typeof candidate.hash === 'string';
+  return (
+    typeof candidate.salt === "string" && typeof candidate.hash === "string"
+  );
 }
 
-function decodeStored(stored: StoredMasterPassword): { salt: Buffer; hash: Buffer } | null {
+function decodeStored(
+  stored: StoredMasterPassword,
+): { salt: Buffer; hash: Buffer } | null {
   try {
-    const salt = Buffer.from(stored.salt, 'base64');
-    const hash = Buffer.from(stored.hash, 'base64');
+    const salt = Buffer.from(stored.salt, "base64");
+    const hash = Buffer.from(stored.hash, "base64");
 
     if (salt.length !== 16 || hash.length !== 32) {
       return null;
@@ -45,23 +49,23 @@ function decodeStored(stored: StoredMasterPassword): { salt: Buffer; hash: Buffe
 function getStored(db: Database.Database): StoredMasterPassword | null {
   try {
     const row = db
-      .prepare('SELECT value FROM settings WHERE key = ?')
+      .prepare("SELECT value FROM settings WHERE key = ?")
       .get(SETTINGS_KEY) as { value: string } | undefined;
     if (!row) return null;
     const parsed = JSON.parse(row.value) as unknown;
     if (!isStoredMasterPassword(parsed) || !decodeStored(parsed)) {
-      console.error('Invalid stored master password payload');
+      console.error("Invalid stored master password payload");
       return null;
     }
     return parsed;
   } catch (e) {
-    console.error('Failed to read master password from settings:', e);
+    console.error("Failed to read master password from settings:", e);
     return null;
   }
 }
 
 function saveStored(db: Database.Database, stored: StoredMasterPassword) {
-  db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run(
+  db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)").run(
     SETTINGS_KEY,
     JSON.stringify(stored),
   );
@@ -79,7 +83,10 @@ export function hasMasterPasswordConfigured(db: Database.Database): boolean {
 export function setMasterPassword(db: Database.Database, password: string) {
   const salt = crypto.randomBytes(16);
   const key = deriveKey(password, salt);
-  saveStored(db, { salt: salt.toString('base64'), hash: key.toString('base64') });
+  saveStored(db, {
+    salt: salt.toString("base64"),
+    hash: key.toString("base64"),
+  });
   inMemoryKey = key;
   isUnlocked = true;
 }
@@ -159,25 +166,25 @@ export function getUnlockedKey(): Buffer | null {
 export function encryptText(plain: string, key: Buffer): string {
   const iv = crypto.randomBytes(12);
   const cipher = crypto.createCipheriv(ALGO, key, iv);
-  const enc = Buffer.concat([cipher.update(plain, 'utf8'), cipher.final()]);
+  const enc = Buffer.concat([cipher.update(plain, "utf8"), cipher.final()]);
   const tag = cipher.getAuthTag();
-  const payload = Buffer.concat([iv, tag, enc]).toString('base64');
+  const payload = Buffer.concat([iv, tag, enc]).toString("base64");
   return `ENC::${payload}`;
 }
 
 export function decryptText(data: string, key: Buffer): string | null {
-  if (!data || !data.startsWith('ENC::')) return data;
+  if (!data || !data.startsWith("ENC::")) return data;
   try {
-    const buf = Buffer.from(data.slice(5), 'base64');
+    const buf = Buffer.from(data.slice(5), "base64");
     const iv = buf.subarray(0, 12);
     const tag = buf.subarray(12, 28);
     const enc = buf.subarray(28);
     const decipher = crypto.createDecipheriv(ALGO, key, iv);
     decipher.setAuthTag(tag);
     const dec = Buffer.concat([decipher.update(enc), decipher.final()]);
-    return dec.toString('utf8');
+    return dec.toString("utf8");
   } catch (e) {
-    console.error('Decrypt failed', e);
+    console.error("Decrypt failed", e);
     return null;
   }
 }

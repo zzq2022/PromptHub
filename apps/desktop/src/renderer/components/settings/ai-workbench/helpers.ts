@@ -444,12 +444,9 @@ export function inferModelAttributes(
     "grok-3",
     "grok-4",
   ].some((keyword) => normalized.includes(keyword));
-  const hasWebSearch = [
-    "search",
-    "sonar",
-    "perplexity",
-    "grok",
-  ].some((keyword) => normalized.includes(keyword));
+  const hasWebSearch = ["search", "sonar", "perplexity", "grok"].some(
+    (keyword) => normalized.includes(keyword),
+  );
 
   return {
     type: "chat",

@@ -15,7 +15,10 @@ import {
 import { IPC_CHANNELS } from "@prompthub/shared/constants/ipc-channels";
 import path from "path";
 import fs from "fs";
-import type { RecoveryCandidate, RecoveryScanOptions } from "@prompthub/shared/types";
+import type {
+  RecoveryCandidate,
+  RecoveryScanOptions,
+} from "@prompthub/shared/types";
 import Database from "./database/sqlite";
 import { initDatabase, closeDatabase } from "./database";
 import {
@@ -68,10 +71,19 @@ import {
 } from "./runtime-paths";
 import { PromptDB } from "./database/prompt";
 import { FolderDB } from "./database/folder";
-import { bootstrapPromptWorkspace, writeRestoreMarker } from "./services/prompt-workspace";
+import {
+  bootstrapPromptWorkspace,
+  writeRestoreMarker,
+} from "./services/prompt-workspace";
 import { bootstrapRuleWorkspace } from "./services/rules-workspace";
-import { migrateLegacyDataLayout, detectResidualLegacyEntries } from "./services/data-layout-migration";
-import { createUpgradeDataSnapshot, listUpgradeBackups } from "./services/upgrade-backup";
+import {
+  migrateLegacyDataLayout,
+  detectResidualLegacyEntries,
+} from "./services/data-layout-migration";
+import {
+  createUpgradeDataSnapshot,
+  listUpgradeBackups,
+} from "./services/upgrade-backup";
 import { runUpgradeBackupStartupTasks } from "./services/upgrade-backup-startup";
 import {
   buildDirectoryRecoveryCandidate,
@@ -280,8 +292,7 @@ async function createWindow() {
     // tell us to start hidden. This also covers users who haven't yet had
     // the renderer sync their preference to the main DB.
     const shouldMinimize =
-      osRequestedHidden ||
-      (appDb ? getMinimizeOnLaunchSetting(appDb) : false);
+      osRequestedHidden || (appDb ? getMinimizeOnLaunchSetting(appDb) : false);
 
     if (!appDb && !osRequestedHidden) {
       // No database available and OS didn't request hidden — show normally.
@@ -504,48 +515,57 @@ ipcMain.handle(IPC_CHANNELS.APP_CLEAR_CACHE, async () => {
   return { success: true };
 });
 
-ipcMain.handle("database:switch-account", async (_event, accountId: string | null) => {
-  try {
-    console.log(`[database] Switching account to: ${accountId}`);
-    // 1. Close current database
-    closeDatabase();
-
-    // 2. Set new active account ID
-    setActiveAccountId(accountId);
-
-    // 3. Initialize database under the new account folder
-    const nextDb = initDatabase();
-
-    // 4. Update the global appDb reference
-    appDb = nextDb;
-
-    // 5. Re-register all DB-dependent IPC handlers with the new DB instance
-    registerAllIPC(nextDb, (newDb) => {
-      appDb = newDb;
-    });
-
-    // 6. Run bootstrap logic for workspace prompts and rules
+ipcMain.handle(
+  "database:switch-account",
+  async (_event, accountId: string | null) => {
     try {
-      await bootstrapRuleWorkspace();
-    } catch (bootstrapRuleError) {
-      console.error("[database] bootstrapRuleWorkspace failed during account switch:", bootstrapRuleError);
-    }
+      console.log(`[database] Switching account to: ${accountId}`);
+      // 1. Close current database
+      closeDatabase();
 
-    try {
-      bootstrapPromptWorkspace(new PromptDB(nextDb), new FolderDB(nextDb));
-    } catch (bootstrapPromptError) {
-      console.error("[database] bootstrapPromptWorkspace failed during account switch:", bootstrapPromptError);
-    }
+      // 2. Set new active account ID
+      setActiveAccountId(accountId);
 
-    return { success: true };
-  } catch (error) {
-    console.error("[database] Failed to switch account:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : String(error),
-    };
-  }
-});
+      // 3. Initialize database under the new account folder
+      const nextDb = initDatabase();
+
+      // 4. Update the global appDb reference
+      appDb = nextDb;
+
+      // 5. Re-register all DB-dependent IPC handlers with the new DB instance
+      registerAllIPC(nextDb, (newDb) => {
+        appDb = newDb;
+      });
+
+      // 6. Run bootstrap logic for workspace prompts and rules
+      try {
+        await bootstrapRuleWorkspace();
+      } catch (bootstrapRuleError) {
+        console.error(
+          "[database] bootstrapRuleWorkspace failed during account switch:",
+          bootstrapRuleError,
+        );
+      }
+
+      try {
+        bootstrapPromptWorkspace(new PromptDB(nextDb), new FolderDB(nextDb));
+      } catch (bootstrapPromptError) {
+        console.error(
+          "[database] bootstrapPromptWorkspace failed during account switch:",
+          bootstrapPromptError,
+        );
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error("[database] Failed to switch account:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
+  },
+);
 
 ipcMain.handle("database:get-local-accounts", async () => {
   try {
@@ -847,7 +867,8 @@ ipcMain.handle("data:getStatus", () => {
     configuredPath,
     currentPath,
     needsRestart:
-      !!resolvedConfiguredPath && resolvedConfiguredPath !== resolvedCurrentPath,
+      !!resolvedConfiguredPath &&
+      resolvedConfiguredPath !== resolvedCurrentPath,
   };
 });
 
@@ -866,141 +887,149 @@ const RECOVERY_DISMISS_MARKER = ".recovery-dismissed";
 // restart, not an infinite loop.
 let recoveryAttemptedThisSession = false;
 
-ipcMain.handle("data:checkRecovery", async (_event, options?: RecoveryScanOptions) => {
-  if (isE2E) {
-    cachedRecoveryResult = [];
-    return [];
-  }
-
-  const extraPaths = Array.isArray(options?.extraPaths)
-    ? options.extraPaths.filter(
-        (value): value is string =>
-          typeof value === "string" && value.trim().length > 0,
-      )
-    : [];
-  const ignoreDismissMarker = options?.ignoreDismissMarker === true;
-  const hasManualOverrides = ignoreDismissMarker || extraPaths.length > 0;
-
-  if (!hasManualOverrides && cachedRecoveryResult !== null) {
-    return cachedRecoveryResult;
-  }
-
-  const currentPath = app.getPath("userData");
-  const dismissMarkerPath = path.join(currentPath, RECOVERY_DISMISS_MARKER);
-  if (!ignoreDismissMarker && fs.existsSync(dismissMarkerPath)) {
-    cachedRecoveryResult = [];
-    transientRecoveryResult = null;
-    return [];
-  }
-
-  const results: RecoveryCandidate[] = [];
-  const residualCandidate = buildResidualLegacyRecoveryCandidate(currentPath);
-  if (residualCandidate) {
-    results.push(residualCandidate);
-  }
-
-  const isDbEmpty = !!appDb && isDatabaseEmpty(appDb);
-  // When the user explicitly requests a scan (ignoreDismissMarker: true) from
-  // the Settings page, always scan all candidate paths regardless of DB state.
-  // Without this, users whose DB has any data can never surface recovery candidates.
-  const shouldScanCandidates = isDbEmpty || ignoreDismissMarker;
-  const candidatePaths = getRecoveryCandidatePaths({
-    currentPath,
-    appDataPath: app.getPath("appData"),
-    homePath: app.getPath("home"),
-    exePath: process.execPath,
-    isPackaged: app.isPackaged,
-    platform: process.platform,
-  });
-  const mergedCandidatePaths = Array.from(
-    new Set([...candidatePaths, ...extraPaths].map((value) => path.resolve(value))),
-  );
-  if (shouldScanCandidates) {
-    results.push(
-      ...detectRecoverableDatabases(currentPath, mergedCandidatePaths).map((candidate) =>
-        buildDirectoryRecoveryCandidate(candidate),
-      ),
-    );
-    try {
-      const upgradeBackups = await listUpgradeBackups(currentPath);
-      if (upgradeBackups.length > 0) {
-        const detectedUpgradeCandidates = detectRecoverableDatabases(
-          currentPath,
-          upgradeBackups.map((backup) => backup.backupPath),
-        );
-        const detectedByPath = new Map(
-          detectedUpgradeCandidates.map((candidate) => [
-            path.resolve(candidate.sourcePath).toLowerCase(),
-            candidate,
-          ]),
-        );
-        for (const backup of upgradeBackups) {
-          const matched = detectedByPath.get(
-            path.resolve(backup.backupPath).toLowerCase(),
-          );
-          if (!matched) {
-            continue;
-          }
-          results.push(buildUpgradeBackupRecoveryCandidate(matched, backup));
-        }
-      }
-    } catch (error) {
-      console.warn("[Recovery] failed to inspect upgrade backup candidates:", error);
+ipcMain.handle(
+  "data:checkRecovery",
+  async (_event, options?: RecoveryScanOptions) => {
+    if (isE2E) {
+      cachedRecoveryResult = [];
+      return [];
     }
 
-    results.push(
-      ...detectRecoverableDatabaseFiles(
-        currentPath,
-        listStandaloneDatabaseBackupFiles(currentPath),
-      ).map((candidate) => buildStandaloneDbBackupCandidate(candidate)),
-    );
-  }
+    const extraPaths = Array.isArray(options?.extraPaths)
+      ? options.extraPaths.filter(
+          (value): value is string =>
+            typeof value === "string" && value.trim().length > 0,
+        )
+      : [];
+    const ignoreDismissMarker = options?.ignoreDismissMarker === true;
+    const hasManualOverrides = ignoreDismissMarker || extraPaths.length > 0;
 
-  const dedupedResults = results
-    .filter((candidate, index, array) => {
-      return (
-        array.findIndex(
-          (other) =>
-            path.resolve(other.sourcePath).toLowerCase() ===
-            path.resolve(candidate.sourcePath).toLowerCase(),
-        ) === index
-      );
-    })
-    .sort((a, b) => {
-      const timeA = a.lastModified ? new Date(a.lastModified).getTime() : 0;
-      const timeB = b.lastModified ? new Date(b.lastModified).getTime() : 0;
-      if (timeA !== timeB) {
-        return timeB - timeA;
-      }
-      if (a.promptCount !== b.promptCount) {
-        return b.promptCount - a.promptCount;
-      }
-      return b.folderCount + b.skillCount - (a.folderCount + a.skillCount);
+    if (!hasManualOverrides && cachedRecoveryResult !== null) {
+      return cachedRecoveryResult;
+    }
+
+    const currentPath = app.getPath("userData");
+    const dismissMarkerPath = path.join(currentPath, RECOVERY_DISMISS_MARKER);
+    if (!ignoreDismissMarker && fs.existsSync(dismissMarkerPath)) {
+      cachedRecoveryResult = [];
+      transientRecoveryResult = null;
+      return [];
+    }
+
+    const results: RecoveryCandidate[] = [];
+    const residualCandidate = buildResidualLegacyRecoveryCandidate(currentPath);
+    if (residualCandidate) {
+      results.push(residualCandidate);
+    }
+
+    const isDbEmpty = !!appDb && isDatabaseEmpty(appDb);
+    // When the user explicitly requests a scan (ignoreDismissMarker: true) from
+    // the Settings page, always scan all candidate paths regardless of DB state.
+    // Without this, users whose DB has any data can never surface recovery candidates.
+    const shouldScanCandidates = isDbEmpty || ignoreDismissMarker;
+    const candidatePaths = getRecoveryCandidatePaths({
+      currentPath,
+      appDataPath: app.getPath("appData"),
+      homePath: app.getPath("home"),
+      exePath: process.execPath,
+      isPackaged: app.isPackaged,
+      platform: process.platform,
     });
+    const mergedCandidatePaths = Array.from(
+      new Set(
+        [...candidatePaths, ...extraPaths].map((value) => path.resolve(value)),
+      ),
+    );
+    if (shouldScanCandidates) {
+      results.push(
+        ...detectRecoverableDatabases(currentPath, mergedCandidatePaths).map(
+          (candidate) => buildDirectoryRecoveryCandidate(candidate),
+        ),
+      );
+      try {
+        const upgradeBackups = await listUpgradeBackups(currentPath);
+        if (upgradeBackups.length > 0) {
+          const detectedUpgradeCandidates = detectRecoverableDatabases(
+            currentPath,
+            upgradeBackups.map((backup) => backup.backupPath),
+          );
+          const detectedByPath = new Map(
+            detectedUpgradeCandidates.map((candidate) => [
+              path.resolve(candidate.sourcePath).toLowerCase(),
+              candidate,
+            ]),
+          );
+          for (const backup of upgradeBackups) {
+            const matched = detectedByPath.get(
+              path.resolve(backup.backupPath).toLowerCase(),
+            );
+            if (!matched) {
+              continue;
+            }
+            results.push(buildUpgradeBackupRecoveryCandidate(matched, backup));
+          }
+        }
+      } catch (error) {
+        console.warn(
+          "[Recovery] failed to inspect upgrade backup candidates:",
+          error,
+        );
+      }
 
-  logStartupEvent({
-    event: "recovery:candidates_detected",
-    currentPath: scrubPath(currentPath),
-    candidatePathCount: mergedCandidatePaths.length,
-    resultCount: dedupedResults.length,
-    results: dedupedResults.map((r) => ({
-      sourceType: r.sourceType,
-      sourcePath: scrubPath(r.sourcePath),
-      displayPath: scrubPath(r.displayPath),
-      promptCount: r.promptCount,
-      folderCount: r.folderCount,
-      skillCount: r.skillCount,
-      lastModified: r.lastModified,
-    })),
-  });
-  if (!hasManualOverrides) {
-    cachedRecoveryResult = dedupedResults;
-    transientRecoveryResult = null;
-  } else {
-    transientRecoveryResult = dedupedResults;
-  }
-  return dedupedResults;
-});
+      results.push(
+        ...detectRecoverableDatabaseFiles(
+          currentPath,
+          listStandaloneDatabaseBackupFiles(currentPath),
+        ).map((candidate) => buildStandaloneDbBackupCandidate(candidate)),
+      );
+    }
+
+    const dedupedResults = results
+      .filter((candidate, index, array) => {
+        return (
+          array.findIndex(
+            (other) =>
+              path.resolve(other.sourcePath).toLowerCase() ===
+              path.resolve(candidate.sourcePath).toLowerCase(),
+          ) === index
+        );
+      })
+      .sort((a, b) => {
+        const timeA = a.lastModified ? new Date(a.lastModified).getTime() : 0;
+        const timeB = b.lastModified ? new Date(b.lastModified).getTime() : 0;
+        if (timeA !== timeB) {
+          return timeB - timeA;
+        }
+        if (a.promptCount !== b.promptCount) {
+          return b.promptCount - a.promptCount;
+        }
+        return b.folderCount + b.skillCount - (a.folderCount + a.skillCount);
+      });
+
+    logStartupEvent({
+      event: "recovery:candidates_detected",
+      currentPath: scrubPath(currentPath),
+      candidatePathCount: mergedCandidatePaths.length,
+      resultCount: dedupedResults.length,
+      results: dedupedResults.map((r) => ({
+        sourceType: r.sourceType,
+        sourcePath: scrubPath(r.sourcePath),
+        displayPath: scrubPath(r.displayPath),
+        promptCount: r.promptCount,
+        folderCount: r.folderCount,
+        skillCount: r.skillCount,
+        lastModified: r.lastModified,
+      })),
+    });
+    if (!hasManualOverrides) {
+      cachedRecoveryResult = dedupedResults;
+      transientRecoveryResult = null;
+    } else {
+      transientRecoveryResult = dedupedResults;
+    }
+    return dedupedResults;
+  },
+);
 
 ipcMain.handle("data:previewRecovery", async (_event, sourcePath: string) => {
   if (typeof sourcePath !== "string" || sourcePath.trim().length === 0) {
@@ -1072,7 +1101,10 @@ ipcMain.handle("data:performRecovery", async (_event, sourcePath: string) => {
   // 直接原地重跑迁移，而不是把 DB 复制到自身。
   if (path.resolve(sourcePath) === path.resolve(currentPath)) {
     try {
-      const migResult = await migrateLegacyDataLayout(currentPath, app.getVersion());
+      const migResult = await migrateLegacyDataLayout(
+        currentPath,
+        app.getVersion(),
+      );
       const residualAfterRetry = detectResidualLegacyEntries(currentPath);
       logStartupEvent({
         event: "recovery:residual_migration_retry",
@@ -1117,8 +1149,12 @@ ipcMain.handle("data:performRecovery", async (_event, sourcePath: string) => {
       }, 500);
       return { success: true };
     } catch (retryErr) {
-      const msg = retryErr instanceof Error ? retryErr.message : String(retryErr);
-      logStartupEvent({ event: "recovery:residual_migration_retry_failed", error: msg });
+      const msg =
+        retryErr instanceof Error ? retryErr.message : String(retryErr);
+      logStartupEvent({
+        event: "recovery:residual_migration_retry_failed",
+        error: msg,
+      });
       return { success: false, error: msg };
     }
   }
@@ -1239,7 +1275,10 @@ ipcMain.handle(
       });
       if (canceled || !filePath) return { canceled: true };
 
-      const zipFiles: Record<string, [Uint8Array, { level: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 }]> = {};
+      const zipFiles: Record<
+        string,
+        [Uint8Array, { level: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 }]
+      > = {};
 
       function collectDirFiles(srcDir: string, zipPrefix: string): void {
         if (!fs.existsSync(srcDir)) return;
@@ -1279,13 +1318,19 @@ ipcMain.handle(
         collectDirFiles(getConfigDir(), "config/");
       }
       if (scope.aiConfigJson) {
-        zipFiles["ai-config.json"] = [strToU8(scope.aiConfigJson), { level: 1 }];
+        zipFiles["ai-config.json"] = [
+          strToU8(scope.aiConfigJson),
+          { level: 1 },
+        ];
       }
       if (scope.settingsJson) {
         zipFiles["settings.json"] = [strToU8(scope.settingsJson), { level: 1 }];
       }
       if (scope.exportJson) {
-        zipFiles["import-with-prompthub.json"] = [strToU8(scope.exportJson), { level: 1 }];
+        zipFiles["import-with-prompthub.json"] = [
+          strToU8(scope.exportJson),
+          { level: 1 },
+        ];
       }
 
       const zipped = zipSync(zipFiles);
@@ -1340,9 +1385,14 @@ function getObjectNumberValue(source: unknown, key: string): number {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
 }
 
-function databaseTableExists(db: Database.Database, tableName: string): boolean {
+function databaseTableExists(
+  db: Database.Database,
+  tableName: string,
+): boolean {
   const row = db
-    .prepare("SELECT 1 AS exists_flag FROM sqlite_master WHERE type = 'table' AND name = ?")
+    .prepare(
+      "SELECT 1 AS exists_flag FROM sqlite_master WHERE type = 'table' AND name = ?",
+    )
     .get(tableName);
   return getObjectNumberValue(row, "exists_flag") === 1;
 }
@@ -1548,7 +1598,8 @@ async function applyDataPathChange(
   if (action !== "switch" && isPathInside(currentPath, resolvedTargetPath)) {
     return {
       success: false,
-      error: "Cannot migrate data into a child directory of the current data directory",
+      error:
+        "Cannot migrate data into a child directory of the current data directory",
     };
   }
 
@@ -1580,7 +1631,11 @@ async function applyDataPathChange(
 
   let backupPath: string | undefined;
   try {
-    if (action === "overwrite" && targetInspection.exists && targetInspection.hasPromptHubData) {
+    if (
+      action === "overwrite" &&
+      targetInspection.exists &&
+      targetInspection.hasPromptHubData
+    ) {
       const snapshot = await createUpgradeDataSnapshot(resolvedTargetPath, {
         fromVersion: `${app.getVersion()}-pre-data-path-overwrite`,
         toVersion: app.getVersion(),
@@ -1626,43 +1681,43 @@ async function applyDataPathChange(
   }
 }
 
-ipcMain.handle("data:previewDataPathChange", async (_event, newPath: string) => {
-  if (typeof newPath !== "string" || newPath.trim().length === 0) {
+ipcMain.handle(
+  "data:previewDataPathChange",
+  async (_event, newPath: string) => {
+    if (typeof newPath !== "string" || newPath.trim().length === 0) {
+      return {
+        success: false,
+        error: "data:previewDataPathChange requires a non-empty newPath string",
+      };
+    }
+
+    const currentPath = app.getPath("userData");
+    const resolvedTargetPath = path.resolve(newPath);
+    const inspection = inspectDataPath(resolvedTargetPath);
+    const isCurrentPath = path.resolve(currentPath) === resolvedTargetPath;
+
     return {
-      success: false,
-      error: "data:previewDataPathChange requires a non-empty newPath string",
-    };
-  }
-
-  const currentPath = app.getPath("userData");
-  const resolvedTargetPath = path.resolve(newPath);
-  const inspection = inspectDataPath(resolvedTargetPath);
-  const isCurrentPath = path.resolve(currentPath) === resolvedTargetPath;
-
-  return {
-    success: true,
-    targetPath: resolvedTargetPath,
-    currentPath,
-    exists: inspection.exists,
-    hasPromptHubData: inspection.hasPromptHubData,
-    isCurrentPath,
-    markers: inspection.markers,
-    currentSummary: summarizeDataPath(currentPath),
-    targetSummary: summarizeDataPath(resolvedTargetPath),
-    recommendedAction: isCurrentPath
-      ? "switch"
-      : inspection.hasPromptHubData
+      success: true,
+      targetPath: resolvedTargetPath,
+      currentPath,
+      exists: inspection.exists,
+      hasPromptHubData: inspection.hasPromptHubData,
+      isCurrentPath,
+      markers: inspection.markers,
+      currentSummary: summarizeDataPath(currentPath),
+      targetSummary: summarizeDataPath(resolvedTargetPath),
+      recommendedAction: isCurrentPath
         ? "switch"
-        : "migrate",
-  };
-});
+        : inspection.hasPromptHubData
+          ? "switch"
+          : "migrate",
+    };
+  },
+);
 
 ipcMain.handle(
   "data:applyDataPathChange",
-  async (
-    _event,
-    params: { newPath?: unknown; action?: unknown },
-  ) => {
+  async (_event, params: { newPath?: unknown; action?: unknown }) => {
     const newPath = typeof params?.newPath === "string" ? params.newPath : "";
     const action =
       params?.action === "switch" ||
@@ -1838,7 +1893,8 @@ app.whenReady().then(async () => {
         skippedLegacyBackups: backupStartup.migration.skipped,
         snapshotBackupId: backupStartup.snapshot?.backupId ?? null,
         snapshotPath: scrubPath(backupStartup.snapshot?.backupPath ?? null),
-        snapshotFromVersion: backupStartup.snapshot?.manifest.fromVersion ?? null,
+        snapshotFromVersion:
+          backupStartup.snapshot?.manifest.fromVersion ?? null,
         snapshotToVersion: backupStartup.snapshot?.manifest.toVersion ?? null,
         snapshotError: backupStartup.snapshotError,
       });
@@ -1876,7 +1932,10 @@ app.whenReady().then(async () => {
         }
       }
     } catch (error) {
-      console.warn("[startup] upgrade backup bootstrap failed, continuing:", error);
+      console.warn(
+        "[startup] upgrade backup bootstrap failed, continuing:",
+        error,
+      );
       logStartupEvent({
         event: "startup:upgrade_backup_failed_to_bootstrap",
         error: error instanceof Error ? error.message : String(error),
@@ -1978,7 +2037,6 @@ app.whenReady().then(async () => {
     // Register global shortcuts
     // 注册快捷键
     registerShortcuts();
-
 
     registerE2EIPC();
 

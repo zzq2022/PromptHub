@@ -1,19 +1,19 @@
-import { ipcMain } from 'electron';
-import Database from '../database/sqlite';
-import { registerPromptIPC } from './prompt.ipc';
-import { registerFolderIPC } from './folder.ipc';
-import { registerSettingsIPC } from './settings.ipc';
-import { registerImageIPC } from './image.ipc';
-import { registerRulesIPC } from './rules.ipc';
-import { registerSkillIPC } from './skill.ipc';
-import { registerAIIPC } from './ai.ipc';
-import { PromptDB } from '../database/prompt';
-import { FolderDB } from '../database/folder';
-import { SkillDB } from '../database/skill';
-import { registerSecurityIPC } from './security.ipc';
-import { registerBackupIPC } from './backup.ipc';
-import { registerCliIPC } from './cli.ipc';
-import { IPC_CHANNELS } from '@prompthub/shared/constants/ipc-channels';
+import { ipcMain } from "electron";
+import Database from "../database/sqlite";
+import { registerPromptIPC } from "./prompt.ipc";
+import { registerFolderIPC } from "./folder.ipc";
+import { registerSettingsIPC } from "./settings.ipc";
+import { registerImageIPC } from "./image.ipc";
+import { registerRulesIPC } from "./rules.ipc";
+import { registerSkillIPC } from "./skill.ipc";
+import { registerAIIPC } from "./ai.ipc";
+import { PromptDB } from "../database/prompt";
+import { FolderDB } from "../database/folder";
+import { SkillDB } from "../database/skill";
+import { registerSecurityIPC } from "./security.ipc";
+import { registerBackupIPC } from "./backup.ipc";
+import { registerCliIPC } from "./cli.ipc";
+import { IPC_CHANNELS } from "@prompthub/shared/constants/ipc-channels";
 
 const REBINDABLE_DB_CHANNELS = [
   IPC_CHANNELS.PROMPT_CREATE,
@@ -162,4 +162,3 @@ export function registerAllIPC(
     ipcMain.handle = originalHandle;
   }
 }
-

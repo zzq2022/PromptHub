@@ -56,10 +56,7 @@ export function CLISettings() {
     try {
       const result = await window.electron?.cli?.install?.(method);
       if (!result?.success) {
-        showToast(
-          result?.error || t("settings.cliInstallFailed"),
-          "error",
-        );
+        showToast(result?.error || t("settings.cliInstallFailed"), "error");
         return;
       }
 
@@ -110,7 +107,9 @@ export function CLISettings() {
 
           {status.installed && status.version ? (
             <SettingItem label={t("settings.cliVersionLabel")}>
-              <span className="text-sm text-muted-foreground">{status.version}</span>
+              <span className="text-sm text-muted-foreground">
+                {status.version}
+              </span>
             </SettingItem>
           ) : null}
 
@@ -165,13 +164,19 @@ export function CLISettings() {
               disabled={isLoading || isInstalling}
               className="inline-flex h-10 items-center gap-2 rounded-xl border border-border bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted/60 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <RefreshCwIcon className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+              <RefreshCwIcon
+                className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+              />
               {t("settings.cliRefreshStatus")}
             </button>
           </div>
           <div className="rounded-xl bg-muted/30 px-4 py-3 text-xs text-muted-foreground">
-            <p className="font-medium text-foreground">{t("settings.cliFeatureTitle")}</p>
-            <p className="mt-1.5 whitespace-pre-line">{t("settings.cliFeatureDesc")}</p>
+            <p className="font-medium text-foreground">
+              {t("settings.cliFeatureTitle")}
+            </p>
+            <p className="mt-1.5 whitespace-pre-line">
+              {t("settings.cliFeatureDesc")}
+            </p>
           </div>
         </div>
       </SettingSection>

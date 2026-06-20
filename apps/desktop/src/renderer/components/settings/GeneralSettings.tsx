@@ -122,8 +122,14 @@ export function GeneralSettings() {
               settings.setTagFilterMode(value as "single" | "multi")
             }
             options={[
-              { value: "single", label: t("settings.tagFilterModeSingle", "单选") },
-              { value: "multi", label: t("settings.tagFilterModeMulti", "多选") },
+              {
+                value: "single",
+                label: t("settings.tagFilterModeSingle", "单选"),
+              },
+              {
+                value: "multi",
+                label: t("settings.tagFilterModeMulti", "多选"),
+              },
             ]}
             className="w-40"
           />

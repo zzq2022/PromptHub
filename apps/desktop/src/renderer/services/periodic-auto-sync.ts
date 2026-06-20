@@ -1,6 +1,4 @@
-import {
-  hasValidSelfHostedConfig,
-} from "./app-background";
+import { hasValidSelfHostedConfig } from "./app-background";
 
 type SyncProviderKind = "manual" | "self-hosted";
 

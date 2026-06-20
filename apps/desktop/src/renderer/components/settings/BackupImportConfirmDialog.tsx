@@ -32,15 +32,20 @@ export function BackupImportConfirmDialog({
         importPreview ? (
           <div className="space-y-2 text-left">
             <p>
-              {t("settings.importPreviewFile", "File")}: {importPreview.file.name}
+              {t("settings.importPreviewFile", "File")}:{" "}
+              {importPreview.file.name}
             </p>
             <p>
-              {t("settings.importPreviewExportedAt", "Exported at")}: {new Date(
-                importPreview.summary.exportedAt,
-              ).toLocaleString()}
+              {t("settings.importPreviewExportedAt", "Exported at")}:{" "}
+              {new Date(importPreview.summary.exportedAt).toLocaleString()}
             </p>
             <p>
-              {t("settings.importPreviewCounts", "Will import")}: {importPreview.summary.counts.prompts} prompts, {importPreview.summary.counts.folders} folders, {importPreview.summary.counts.versions} versions, {importPreview.summary.counts.rules} rules, {importPreview.summary.counts.skills} skills
+              {t("settings.importPreviewCounts", "Will import")}:{" "}
+              {importPreview.summary.counts.prompts} prompts,{" "}
+              {importPreview.summary.counts.folders} folders,{" "}
+              {importPreview.summary.counts.versions} versions,{" "}
+              {importPreview.summary.counts.rules} rules,{" "}
+              {importPreview.summary.counts.skills} skills
             </p>
             <p>
               {t(
@@ -50,7 +55,11 @@ export function BackupImportConfirmDialog({
             </p>
             {hasAnySkipped(importPreview.summary.skipped) ? (
               <p>
-                {t("settings.importPreviewSkipped", "Invalid records that will be skipped")}: {formatImportSkippedDetails(importPreview.summary.skipped)}
+                {t(
+                  "settings.importPreviewSkipped",
+                  "Invalid records that will be skipped",
+                )}
+                : {formatImportSkippedDetails(importPreview.summary.skipped)}
               </p>
             ) : null}
           </div>

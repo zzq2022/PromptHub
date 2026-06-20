@@ -6,10 +6,7 @@ import type {
   SkillFileSnapshot,
   SkillVersion,
 } from "@prompthub/shared/types/skill";
-import {
-  exportDatabase,
-  restoreFromBackup,
-} from "./database-backup";
+import { exportDatabase, restoreFromBackup } from "./database-backup";
 import type { DatabaseBackup } from "./database-backup-format";
 import {
   issueSolvedPromptHubCaptcha,
@@ -172,7 +169,10 @@ async function loginToSelfHostedWeb(
   });
 
   if (!response.ok && captchaBoundaryError) {
-    const message = await extractErrorMessage(response, captchaBoundaryError.message);
+    const message = await extractErrorMessage(
+      response,
+      captchaBoundaryError.message,
+    );
     if (message.includes("captcha")) {
       throw new Error(
         `${captchaBoundaryError.message} The connected PromptHub Web server still requires captcha during login, so update the self-hosted Web deployment and try again.`,
@@ -274,10 +274,9 @@ function toWebSettings(backup: DatabaseBackup): Settings {
         : state.customPlatformRootPaths &&
             typeof state.customPlatformRootPaths === "object"
           ? Object.fromEntries(
-              Object.entries(state.customPlatformRootPaths).map(([platformId, rootPath]) => [
-                platformId,
-                { rootPath },
-              ]),
+              Object.entries(state.customPlatformRootPaths).map(
+                ([platformId, rootPath]) => [platformId, { rootPath }],
+              ),
             )
           : {},
     customPlatformRootPaths:
@@ -292,11 +291,16 @@ function toWebSettings(backup: DatabaseBackup): Settings {
       ? state.disabledPlatformIds.filter(
           (value): value is string => typeof value === "string",
         )
-      : Array.isArray((state as { trackedRulePlatformIds?: unknown }).trackedRulePlatformIds)
-        ? (state as { trackedRulePlatformIds: unknown[] }).trackedRulePlatformIds.filter(
+      : Array.isArray(
+            (state as { trackedRulePlatformIds?: unknown })
+              .trackedRulePlatformIds,
+          )
+        ? (
+            state as { trackedRulePlatformIds: unknown[] }
+          ).trackedRulePlatformIds.filter(
             (value): value is string => typeof value === "string",
           )
-      : [],
+        : [],
     customSkillPlatformPaths:
       state.customSkillPlatformPaths &&
       typeof state.customSkillPlatformPaths === "object"
@@ -317,8 +321,12 @@ function remapPromptMedia(
 ): Prompt[] {
   return prompts.map((prompt) => ({
     ...prompt,
-    images: prompt.images?.map((fileName) => imageMap.get(fileName) || fileName),
-    videos: prompt.videos?.map((fileName) => videoMap.get(fileName) || fileName),
+    images: prompt.images?.map(
+      (fileName) => imageMap.get(fileName) || fileName,
+    ),
+    videos: prompt.videos?.map(
+      (fileName) => videoMap.get(fileName) || fileName,
+    ),
   }));
 }
 
@@ -375,9 +383,7 @@ async function downloadMediaMap(
 function buildDesktopSettingsSnapshot(
   webSettings: Settings,
   settingsUpdatedAt?: string,
-):
-  | { state: Record<string, unknown> }
-  | undefined {
+): { state: Record<string, unknown> } | undefined {
   const currentState = useSettingsStore.getState();
   if (!currentState) {
     return undefined;
@@ -425,7 +431,9 @@ function mergeLatestById<T>(
       continue;
     }
 
-    if (toTimestamp(getUpdatedAt(item)) >= toTimestamp(getUpdatedAt(existing))) {
+    if (
+      toTimestamp(getUpdatedAt(item)) >= toTimestamp(getUpdatedAt(existing))
+    ) {
       merged.set(id, item);
     }
   }
@@ -495,7 +503,8 @@ function mergeDesktopBackupWithRemote(
     payload.settings,
     payload.settingsUpdatedAt || payload.exportedAt,
   );
-  const remoteSettingsUpdatedAt = payload.settingsUpdatedAt || payload.exportedAt;
+  const remoteSettingsUpdatedAt =
+    payload.settingsUpdatedAt || payload.exportedAt;
   const localSettingsUpdatedAt = localBackup.settingsUpdatedAt || 0;
   const useRemoteSettings =
     toTimestamp(remoteSettingsUpdatedAt) >= toTimestamp(localSettingsUpdatedAt);
@@ -578,7 +587,8 @@ function buildDesktopBackupFromRemote(
   remoteImages: Record<string, string> | undefined,
   remoteVideos: Record<string, string> | undefined,
 ): DatabaseBackup {
-  const remoteSettingsUpdatedAt = payload.settingsUpdatedAt || payload.exportedAt;
+  const remoteSettingsUpdatedAt =
+    payload.settingsUpdatedAt || payload.exportedAt;
   const remoteSettingsSnapshot = buildDesktopSettingsSnapshot(
     payload.settings,
     remoteSettingsUpdatedAt,
@@ -599,9 +609,11 @@ function buildDesktopBackupFromRemote(
         : null,
   }));
   const remotePromptIds = new Set(normalizedPrompts.map((prompt) => prompt.id));
-  const normalizedPromptVersions = (payload.promptVersions || payload.versions || []).filter(
-    (version) => remotePromptIds.has(version.promptId),
-  );
+  const normalizedPromptVersions = (
+    payload.promptVersions ||
+    payload.versions ||
+    []
+  ).filter((version) => remotePromptIds.has(version.promptId));
   const remoteSkillIds = new Set(payload.skills.map((skill) => skill.id));
   const normalizedSkillVersions = payload.skillVersions.filter((version) =>
     remoteSkillIds.has(version.skillId),

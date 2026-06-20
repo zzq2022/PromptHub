@@ -1,7 +1,5 @@
 import type { AIConfig } from "../../services/ai";
-import {
-  resolveScenarioAIConfig,
-} from "../../services/ai-defaults";
+import { resolveScenarioAIConfig } from "../../services/ai-defaults";
 import type {
   AIModelConfig,
   ModelRouteDefaults,

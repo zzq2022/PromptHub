@@ -80,9 +80,8 @@ function formatSeenAt(value: string): string {
 export function WebDeviceSettings() {
   const { t } = useTranslation();
   const webContext = getWebContext();
-  const [deviceSettings, setDeviceSettings] = useState<DeviceManagementSettings>(
-    DEFAULT_DEVICE_SETTINGS,
-  );
+  const [deviceSettings, setDeviceSettings] =
+    useState<DeviceManagementSettings>(DEFAULT_DEVICE_SETTINGS);
   const [devices, setDevices] = useState<ConnectedDeviceRecord[]>([]);
   const [loadingDevices, setLoadingDevices] = useState(false);
 
@@ -97,8 +96,7 @@ export function WebDeviceSettings() {
   }, []);
 
   const currentBrowserDeviceId = useMemo(
-    () =>
-      typeof window === "undefined" ? "" : getOrCreateBrowserDeviceId(),
+    () => (typeof window === "undefined" ? "" : getOrCreateBrowserDeviceId()),
     [],
   );
 

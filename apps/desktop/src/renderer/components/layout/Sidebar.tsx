@@ -338,7 +338,7 @@ export function Sidebar({
   const runtimeCapabilities = getRuntimeCapabilities();
   const webRuntime = isWebRuntime();
   const canAddRuleProject = !webRuntime;
-  const activeModule = appModule === "rules" ? "rules" : viewMode;
+  const activeModule = appModule === "rules" || appModule === "projects" ? appModule : viewMode;
 
   useEffect(() => {
     if (storeView === "store") {
@@ -711,6 +711,20 @@ export function Sidebar({
             active: activeModule === "skill",
             onClick: () => {
               setAppModule("skill");
+              closeTagPopover();
+              if (currentPage !== "home") onNavigate("home");
+            },
+          };
+        }
+
+        if (moduleId === "projects") {
+          return {
+            key: moduleId,
+            label: t("common.projects"),
+            icon: <FolderOpenIcon className="h-5 w-5" />,
+            active: activeModule === "projects",
+            onClick: () => {
+              setAppModule("projects");
               closeTagPopover();
               if (currentPage !== "home") onNavigate("home");
             },

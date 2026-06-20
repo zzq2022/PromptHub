@@ -63,7 +63,12 @@ export async function readSkillTranslationSidecar(
     window.api.skill.readLocalFile(skillId, skillMdPath),
   ]);
 
-  if (!metaEntry || metaEntry.isDirectory || !contentEntry || contentEntry.isDirectory) {
+  if (
+    !metaEntry ||
+    metaEntry.isDirectory ||
+    !contentEntry ||
+    contentEntry.isDirectory
+  ) {
     return null;
   }
 

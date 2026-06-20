@@ -58,9 +58,12 @@ export function normalizeAgentAssetConfig<T extends AgentAssetConfig>(
       typeof input.rootPath === "string"
         ? normalizeAgentRootPath(input.rootPath)
         : input.rootPath,
-    skillsRelativePath: normalizeRelativePath(input.skillsRelativePath) || undefined,
-    rulesRelativePath: normalizeRelativePath(input.rulesRelativePath) || undefined,
-    agentsRelativePath: normalizeRelativePath(input.agentsRelativePath) || undefined,
+    skillsRelativePath:
+      normalizeRelativePath(input.skillsRelativePath) || undefined,
+    rulesRelativePath:
+      normalizeRelativePath(input.rulesRelativePath) || undefined,
+    agentsRelativePath:
+      normalizeRelativePath(input.agentsRelativePath) || undefined,
     commandsRelativePath:
       normalizeRelativePath(input.commandsRelativePath) || undefined,
     configRelativePaths: uniqNonEmptyRelativePaths(input.configRelativePaths),
@@ -80,19 +83,18 @@ export function normalizeBuiltinAgentOverrides(
     return {};
   }
 
-  return Object.entries(overrides).reduce<Record<string, BuiltinAgentOverrideConfig>>(
-    (acc, [platformId, value]) => {
-      if (!value || typeof value !== "object" || Array.isArray(value)) {
-        return acc;
-      }
-      const normalized = normalizeBuiltinAgentOverride(value);
-      if (Object.keys(normalized).length > 0) {
-        acc[platformId] = normalized;
-      }
+  return Object.entries(overrides).reduce<
+    Record<string, BuiltinAgentOverrideConfig>
+  >((acc, [platformId, value]) => {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
       return acc;
-    },
-    {},
-  );
+    }
+    const normalized = normalizeBuiltinAgentOverride(value);
+    if (Object.keys(normalized).length > 0) {
+      acc[platformId] = normalized;
+    }
+    return acc;
+  }, {});
 }
 
 export interface EffectiveBuiltinAgentConfig extends AgentAssetConfig {
@@ -110,7 +112,8 @@ export function getEffectiveBuiltinAgentConfig(
   return {
     id: platform.id,
     name: platform.name,
-    rootPath: normalizedOverride.rootPath || normalizeAgentRootPath(defaultRootPath),
+    rootPath:
+      normalizedOverride.rootPath || normalizeAgentRootPath(defaultRootPath),
     skillsRelativePath:
       normalizedOverride.skillsRelativePath ||
       normalizeRelativePath(platform.skillsRelativePath) ||
@@ -127,16 +130,17 @@ export function getEffectiveBuiltinAgentConfig(
       normalizedOverride.commandsRelativePath ||
       normalizeRelativePath("commands") ||
       undefined,
-    configRelativePaths:
-      normalizedOverride.configRelativePaths?.length
-        ? normalizedOverride.configRelativePaths
-        : uniqNonEmptyRelativePaths(platform.configFiles),
+    configRelativePaths: normalizedOverride.configRelativePaths?.length
+      ? normalizedOverride.configRelativePaths
+      : uniqNonEmptyRelativePaths(platform.configFiles),
   };
 }
 
 function uniqPaths(values: string[]): string[] {
   return Array.from(
-    new Set(values.map(normalizeAgentRootPath).filter((value) => value.length > 0)),
+    new Set(
+      values.map(normalizeAgentRootPath).filter((value) => value.length > 0),
+    ),
   );
 }
 

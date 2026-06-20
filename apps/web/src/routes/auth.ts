@@ -235,23 +235,22 @@ auth.post('/refresh', async (c) => {
 auth.post('/logout', async (c) => {
   const parsed = await parseOptionalAuthBody(c);
   if (!parsed.success) {
+    clearAuthCookies(c);
     return parsed.response;
   }
 
   try {
     const { userId } = getAuthUser(c);
     const refreshToken = parsed.data.refreshToken ?? getRefreshTokenFromCookie(c);
-    if (!refreshToken) {
-      return error(c, 422, ErrorCode.VALIDATION_ERROR, 'refreshToken is required');
+    if (refreshToken) {
+      await authService.logout(userId, refreshToken);
     }
-
-    await authService.logout(userId, refreshToken);
-    clearAuthCookies(c);
-    return success(c, { ok: true });
   } catch (routeError) {
-    clearAuthCookies(c);
-    return toAuthErrorResponse(c, routeError);
+    console.warn('[AUTH] Invalidation of refresh token failed during logout:', routeError);
   }
+
+  clearAuthCookies(c);
+  return success(c, { ok: true });
 });
 
 auth.get('/me', async (c) => {

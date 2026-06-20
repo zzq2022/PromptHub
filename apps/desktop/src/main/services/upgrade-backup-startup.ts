@@ -61,7 +61,10 @@ async function readLastRunVersion(
     const parsed = JSON.parse(
       await fs.promises.readFile(markerPath, "utf8"),
     ) as Partial<LastRunVersionRecord>;
-    if (typeof parsed.version !== "string" || parsed.version.trim().length === 0) {
+    if (
+      typeof parsed.version !== "string" ||
+      parsed.version.trim().length === 0
+    ) {
       return null;
     }
 
@@ -82,7 +85,11 @@ async function writeLastRunVersion(
   };
 
   await fs.promises.mkdir(path.dirname(markerPath), { recursive: true });
-  await fs.promises.writeFile(markerPath, JSON.stringify(payload, null, 2), "utf8");
+  await fs.promises.writeFile(
+    markerPath,
+    JSON.stringify(payload, null, 2),
+    "utf8",
+  );
 }
 
 export async function runUpgradeBackupStartupTasks(

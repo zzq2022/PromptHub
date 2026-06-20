@@ -640,6 +640,76 @@ button.primary-button {
   min-height: 2.75rem;
 }
 
+/* ------------------------------------------------------------------ */
+/* Workspace Top Navigation Bar (for authenticated main workspace)     */
+/* ------------------------------------------------------------------ */
+
+.workspace-web-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.workspace-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1.25rem;
+  background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+  color: #ffffff;
+  flex-shrink: 0;
+  z-index: 100;
+}
+
+.workspace-topbar-brand {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.workspace-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+}
+
+.workspace-topbar-link {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  border: none;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.workspace-topbar-link:hover {
+  background: rgba(255, 255, 255, 0.32);
+}
+
+.workspace-topbar-admin {
+  background: rgba(250, 204, 21, 0.35);
+  color: #ffffff;
+}
+
+.workspace-topbar-admin:hover {
+  background: rgba(250, 204, 21, 0.55);
+}
+
+.workspace-topbar-user {
+  opacity: 0.85;
+  font-weight: 600;
+}
+
+.workspace-app-container {
+  flex: 1;
+  overflow: hidden;
+}
+
 /* SkillHub page styles */
 .skillhub-page {
   display: flex;

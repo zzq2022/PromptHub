@@ -135,18 +135,16 @@ export function registerSkillPlatformHandlers(context: SkillIPCContext): void {
           "skill:uninstallPlatformSkill requires a non-empty platformSkillPath",
         );
       }
-      return SkillInstaller.uninstallPlatformSkill(platformId, platformSkillPath);
+      return SkillInstaller.uninstallPlatformSkill(
+        platformId,
+        platformSkillPath,
+      );
     },
   );
 
   ipcMain.handle(
     IPC_CHANNELS.SKILL_INSTALL_MD,
-    async (
-      _,
-      skillId: string,
-      skillMdContent: string,
-      platformId: string,
-    ) => {
+    async (_, skillId: string, skillMdContent: string, platformId: string) => {
       if (typeof skillId !== "string" || skillId.trim().length === 0) {
         throw new Error("skill:installMd requires a non-empty skillId");
       }
@@ -204,7 +202,9 @@ export function registerSkillPlatformHandlers(context: SkillIPCContext): void {
       if (!skill) {
         throw new Error(`Skill not found: ${skillId}`);
       }
-      return SkillInstaller.getSkillMdInstallStatusForSkill(skill, [skill.name]);
+      return SkillInstaller.getSkillMdInstallStatusForSkill(skill, [
+        skill.name,
+      ]);
     },
   );
 
@@ -219,14 +219,15 @@ export function registerSkillPlatformHandlers(context: SkillIPCContext): void {
       const results: Record<string, Record<string, boolean>> = {};
       await Promise.all(
         skillIds.map(async (skillId) => {
-          if (typeof skillId !== "string" || skillId.trim().length === 0) return;
+          if (typeof skillId !== "string" || skillId.trim().length === 0)
+            return;
           try {
             const skill = db.getById(skillId);
             if (!skill) return;
-            results[skillId] = await SkillInstaller.getSkillMdInstallStatusForSkill(
-              skill,
-              [skill.name],
-            );
+            results[skillId] =
+              await SkillInstaller.getSkillMdInstallStatusForSkill(skill, [
+                skill.name,
+              ]);
           } catch {
             // skip failed checks
           }
@@ -256,16 +257,9 @@ export function registerSkillPlatformHandlers(context: SkillIPCContext): void {
 
   ipcMain.handle(
     IPC_CHANNELS.SKILL_INSTALL_MD_SYMLINK,
-    async (
-      _,
-      skillId: string,
-      skillMdContent: string,
-      platformId: string,
-    ) => {
+    async (_, skillId: string, skillMdContent: string, platformId: string) => {
       if (typeof skillId !== "string" || skillId.trim().length === 0) {
-        throw new Error(
-          "skill:installMdSymlink requires a non-empty skillId",
-        );
+        throw new Error("skill:installMdSymlink requires a non-empty skillId");
       }
       if (typeof skillMdContent !== "string") {
         throw new Error(
@@ -350,7 +344,9 @@ export function registerSkillPlatformHandlers(context: SkillIPCContext): void {
         throw new Error("skill:scanRemoteGithub requires a non-empty repoUrl");
       }
       if (!Array.isArray(registrySkills)) {
-        throw new Error("skill:scanRemoteGithub requires registrySkills to be an array");
+        throw new Error(
+          "skill:scanRemoteGithub requires registrySkills to be an array",
+        );
       }
       return SkillInstaller.scanRemoteGithub(
         repoUrl,
@@ -365,7 +361,9 @@ export function registerSkillPlatformHandlers(context: SkillIPCContext): void {
     IPC_CHANNELS.SKILL_LIST_REMOTE_BRANCHES,
     async (_, repoUrl: string) => {
       if (typeof repoUrl !== "string" || repoUrl.trim().length === 0) {
-        throw new Error("skill:listRemoteBranches requires a non-empty repoUrl");
+        throw new Error(
+          "skill:listRemoteBranches requires a non-empty repoUrl",
+        );
       }
       return SkillInstaller.listRemoteBranches(repoUrl);
     },

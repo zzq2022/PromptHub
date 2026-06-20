@@ -137,7 +137,10 @@ export function PlatformWorkbenchPrototype() {
             description:
               "Skill package that coordinates planning, retrieval and answer synthesis across research tasks.",
             type: "Skill",
-            status: t("settings.platformWorkbench.statusPublished", "Published"),
+            status: t(
+              "settings.platformWorkbench.statusPublished",
+              "Published",
+            ),
             metric: "12 variants",
             chips: ["Skill", "Versioned", "Shared"],
             owner: "PromptHub Team",
@@ -212,7 +215,10 @@ export function PlatformWorkbenchPrototype() {
         ],
         lanes: [
           {
-            label: t("settings.platformWorkbench.laneResearch", "Research agents"),
+            label: t(
+              "settings.platformWorkbench.laneResearch",
+              "Research agents",
+            ),
             value: "6",
             hint: t(
               "settings.platformWorkbench.laneResearchHint",
@@ -295,10 +301,7 @@ export function PlatformWorkbenchPrototype() {
       },
       {
         id: "mcp",
-        label: t(
-          "settings.platformWorkbench.mcpLabel",
-          "MCP & Integrations",
-        ),
+        label: t("settings.platformWorkbench.mcpLabel", "MCP & Integrations"),
         eyebrow: t("settings.platformWorkbench.mcpEyebrow", "Connections"),
         title: t(
           "settings.platformWorkbench.mcpTitle",
@@ -539,7 +542,12 @@ export function PlatformWorkbenchPrototype() {
       return true;
     }
 
-    return [resource.name, resource.description, resource.type, ...resource.chips]
+    return [
+      resource.name,
+      resource.description,
+      resource.type,
+      ...resource.chips,
+    ]
       .join(" ")
       .toLowerCase()
       .includes(lowered);
@@ -576,7 +584,10 @@ export function PlatformWorkbenchPrototype() {
           <div className="max-w-2xl space-y-3">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.2em] text-white/70">
               <AppWindowIcon className="h-3.5 w-3.5" />
-              {t("settings.platformWorkbench.badge", "Future Workspace Preview")}
+              {t(
+                "settings.platformWorkbench.badge",
+                "Future Workspace Preview",
+              )}
             </div>
             <div className="space-y-2">
               <h2 className="text-2xl font-semibold tracking-tight xl:text-3xl">
@@ -644,7 +655,9 @@ export function PlatformWorkbenchPrototype() {
                   <stat.icon className="h-4 w-4 text-white/60" />
                 </div>
                 <div className="text-2xl font-semibold">{stat.value}</div>
-                <p className="mt-2 text-xs leading-5 text-white/60">{stat.hint}</p>
+                <p className="mt-2 text-xs leading-5 text-white/60">
+                  {stat.hint}
+                </p>
               </div>
             ))}
           </div>
@@ -694,7 +707,8 @@ export function PlatformWorkbenchPrototype() {
                         {section.label}
                       </div>
                       <div className="mt-1 text-xs leading-5 text-muted-foreground">
-                        {section.resources.length} {t("settings.platformWorkbench.items", "items")}
+                        {section.resources.length}{" "}
+                        {t("settings.platformWorkbench.items", "items")}
                       </div>
                     </div>
                   </div>
@@ -706,7 +720,10 @@ export function PlatformWorkbenchPrototype() {
           <div className="mt-4 rounded-2xl border border-dashed border-border bg-muted/20 p-3">
             <div className="flex items-center gap-2 text-sm font-medium text-foreground">
               <BriefcaseBusinessIcon className="h-4 w-4 text-primary" />
-              {t("settings.platformWorkbench.sidebarFootTitle", "Design signal")}
+              {t(
+                "settings.platformWorkbench.sidebarFootTitle",
+                "Design signal",
+              )}
             </div>
             <p className="mt-2 text-xs leading-5 text-muted-foreground">
               {t(
@@ -764,7 +781,9 @@ export function PlatformWorkbenchPrototype() {
                   <div className="text-xs uppercase tracking-[0.16em] opacity-75">
                     {item.label}
                   </div>
-                  <div className="mt-2 text-2xl font-semibold">{item.value}</div>
+                  <div className="mt-2 text-2xl font-semibold">
+                    {item.value}
+                  </div>
                 </div>
               ))}
             </div>
@@ -862,7 +881,10 @@ export function PlatformWorkbenchPrototype() {
             <div className="space-y-4">
               <div>
                 <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                  {t("settings.platformWorkbench.contextTitle", "Context panel")}
+                  {t(
+                    "settings.platformWorkbench.contextTitle",
+                    "Context panel",
+                  )}
                 </div>
                 <h3 className="mt-2 text-lg font-semibold text-foreground">
                   {selectedResource.name}
@@ -897,7 +919,10 @@ export function PlatformWorkbenchPrototype() {
                   },
                   {
                     icon: CircleDashedIcon,
-                    label: t("settings.platformWorkbench.metaUpdated", "Updated"),
+                    label: t(
+                      "settings.platformWorkbench.metaUpdated",
+                      "Updated",
+                    ),
                     value: selectedResource.updatedAt,
                   },
                 ].map((item) => (
@@ -961,7 +986,10 @@ export function PlatformWorkbenchPrototype() {
                   className="inline-flex items-center justify-center gap-2 rounded-2xl border border-border bg-background px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted"
                 >
                   <DatabaseIcon className="h-4 w-4" />
-                  {t("settings.platformWorkbench.actionCompare", "Compare model")}
+                  {t(
+                    "settings.platformWorkbench.actionCompare",
+                    "Compare model",
+                  )}
                 </button>
               </div>
 

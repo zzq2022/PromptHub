@@ -790,7 +790,8 @@ export function AISettings() {
     const result = await fetchAvailableModels(
       newModel.apiUrl,
       newModel.apiKey,
-      (newModel as { apiProtocol?: "openai" | "gemini" | "anthropic" }).apiProtocol ||
+      (newModel as { apiProtocol?: "openai" | "gemini" | "anthropic" })
+        .apiProtocol ||
         (newModel.provider === "google"
           ? "gemini"
           : newModel.provider === "anthropic"
@@ -826,7 +827,8 @@ export function AISettings() {
     const result = await fetchAvailableModels(
       newModel.apiUrl,
       newModel.apiKey,
-      (newModel as { apiProtocol?: "openai" | "gemini" | "anthropic" }).apiProtocol ||
+      (newModel as { apiProtocol?: "openai" | "gemini" | "anthropic" })
+        .apiProtocol ||
         (newModel.provider === "google"
           ? "gemini"
           : newModel.provider === "anthropic"
@@ -954,8 +956,8 @@ export function AISettings() {
       testAIConnection({
         provider: compareConfig.provider || "custom",
         apiProtocol:
-          (compareConfig as { apiProtocol?: "openai" | "gemini" | "anthropic" }).apiProtocol ||
-          "openai",
+          (compareConfig as { apiProtocol?: "openai" | "gemini" | "anthropic" })
+            .apiProtocol || "openai",
         apiKey: compareConfig.apiKey,
         apiUrl: compareConfig.apiUrl,
         model: compareConfig.model,
@@ -1062,10 +1064,10 @@ export function AISettings() {
                                                     : group.providerId ===
                                                         "ernie"
                                                       ? "ERNIE"
-                                                        : group.providerId ===
-                                                            "spark"
-                                                          ? "Spark"
-                                                          : group.provider,
+                                                      : group.providerId ===
+                                                          "spark"
+                                                        ? "Spark"
+                                                        : group.provider,
                               18,
                             )}
                           </span>
@@ -1834,10 +1836,10 @@ export function AISettings() {
                                                     : group.providerId ===
                                                         "ernie"
                                                       ? "ERNIE"
-                                                        : group.providerId ===
-                                                            "spark"
-                                                          ? "Spark"
-                                                          : group.provider,
+                                                      : group.providerId ===
+                                                          "spark"
+                                                        ? "Spark"
+                                                        : group.provider,
                               18,
                             )}
                           </span>

@@ -50,7 +50,9 @@ export function PromptQuickRewriteDialog({
   const scenarioModelDefaults = useSettingsStore(
     (state) => state.scenarioModelDefaults,
   );
-  const modelRouteDefaults = useSettingsStore((state) => state.modelRouteDefaults);
+  const modelRouteDefaults = useSettingsStore(
+    (state) => state.modelRouteDefaults,
+  );
 
   const rewriteModel = useMemo(
     () =>
@@ -171,7 +173,10 @@ export function PromptQuickRewriteDialog({
     setIsApplyingDraft(true);
 
     try {
-      const updatedPrompt = await promptDb.updatePrompt(prompt.id, rewriteDraft);
+      const updatedPrompt = await promptDb.updatePrompt(
+        prompt.id,
+        rewriteDraft,
+      );
       await updatePrompt(prompt.id, rewriteDraft);
 
       showToast(t("toast.saved"), "success");
@@ -209,27 +214,29 @@ export function PromptQuickRewriteDialog({
                   {t("prompt.quickRewriteHint")}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
-              {[
-                t("prompt.aiRewriteTemplateClarity"),
-                t("prompt.aiRewriteTemplateStructure"),
-                (prompt.promptType ?? "text") === "image"
-                  ? t("prompt.aiRewriteTemplateImage")
-                  : t("prompt.aiRewriteTemplateConstraints"),
-              ].map((template) => (
-                <button
-                  key={template}
-                  type="button"
-                  onClick={() => handleApplyRewriteTemplate(template)}
-                  className="rounded-full border border-border bg-background px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                >
-                  {template}
-                </button>
-              ))}
+                  {[
+                    t("prompt.aiRewriteTemplateClarity"),
+                    t("prompt.aiRewriteTemplateStructure"),
+                    (prompt.promptType ?? "text") === "image"
+                      ? t("prompt.aiRewriteTemplateImage")
+                      : t("prompt.aiRewriteTemplateConstraints"),
+                  ].map((template) => (
+                    <button
+                      key={template}
+                      type="button"
+                      onClick={() => handleApplyRewriteTemplate(template)}
+                      className="rounded-full border border-border bg-background px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                    >
+                      {template}
+                    </button>
+                  ))}
                 </div>
                 <div className="mt-3">
                   <Textarea
                     value={rewriteInstruction}
-                    onChange={(event) => setRewriteInstruction(event.target.value)}
+                    onChange={(event) =>
+                      setRewriteInstruction(event.target.value)
+                    }
                     placeholder={t("prompt.aiRewritePlaceholder")}
                     className="min-h-[120px]"
                   />
@@ -243,7 +250,11 @@ export function PromptQuickRewriteDialog({
                   <Button
                     type="button"
                     onClick={() => void handleRewritePrompt()}
-                    disabled={!canRewrite || isRewritingPrompt || !rewriteInstruction.trim()}
+                    disabled={
+                      !canRewrite ||
+                      isRewritingPrompt ||
+                      !rewriteInstruction.trim()
+                    }
                   >
                     {isRewritingPrompt ? (
                       <LoaderIcon className="h-4 w-4 animate-spin" />

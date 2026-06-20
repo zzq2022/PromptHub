@@ -29,23 +29,37 @@ export function SkillCodePane({
         <div className="rounded-2xl border border-border app-wallpaper-surface p-4">
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             <div>
-              <div className="text-[11px] font-medium text-muted-foreground">{t("skill.id")}</div>
-              <div className="mt-1 truncate font-mono text-xs">{selectedSkill.id}</div>
+              <div className="text-[11px] font-medium text-muted-foreground">
+                {t("skill.id")}
+              </div>
+              <div className="mt-1 truncate font-mono text-xs">
+                {selectedSkill.id}
+              </div>
             </div>
             <div>
-              <div className="text-[11px] font-medium text-muted-foreground">{t("skill.protocol")}</div>
+              <div className="text-[11px] font-medium text-muted-foreground">
+                {t("skill.protocol")}
+              </div>
               <div className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-primary">
                 <ChevronRightIcon className="w-4 h-4" />
                 {getProtocolDisplayLabel(selectedSkill.protocol_type)}
               </div>
             </div>
             <div>
-              <div className="text-[11px] font-medium text-muted-foreground">{t("skill.createdAt")}</div>
-              <div className="mt-1 text-xs">{new Date(selectedSkill.created_at).toLocaleDateString()}</div>
+              <div className="text-[11px] font-medium text-muted-foreground">
+                {t("skill.createdAt")}
+              </div>
+              <div className="mt-1 text-xs">
+                {new Date(selectedSkill.created_at).toLocaleDateString()}
+              </div>
             </div>
             <div>
-              <div className="text-[11px] font-medium text-muted-foreground">{t("skill.updatedAt")}</div>
-              <div className="mt-1 text-xs">{new Date(selectedSkill.updated_at).toLocaleDateString()}</div>
+              <div className="text-[11px] font-medium text-muted-foreground">
+                {t("skill.updatedAt")}
+              </div>
+              <div className="mt-1 text-xs">
+                {new Date(selectedSkill.updated_at).toLocaleDateString()}
+              </div>
             </div>
           </div>
         </div>
@@ -69,7 +83,9 @@ export function SkillCodePane({
             {t("skill.source", "Source")}
           </div>
           <div className="min-w-0 grid grid-cols-[auto,minmax(0,1fr)] items-center gap-3">
-            <div className="truncate text-sm font-medium">{sourceMeta.sourceLabel}</div>
+            <div className="truncate text-sm font-medium">
+              {sourceMeta.sourceLabel}
+            </div>
             <div className="whitespace-normal break-words text-xs text-muted-foreground">
               {sourceMeta.displayValue}
             </div>
@@ -108,7 +124,6 @@ export function SkillCodePane({
           )}
         </div>
       </section>
-
     </div>
   );
 }

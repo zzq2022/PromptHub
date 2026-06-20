@@ -50,7 +50,10 @@ import {
 } from "./prompt-modal-utils";
 import { usePromptMediaManager } from "./usePromptMediaManager";
 import { usePromptNativeFullscreen } from "./usePromptNativeFullscreen";
-import { resolveLocalImageSrc, resolveLocalVideoSrc } from "../../utils/media-url";
+import {
+  resolveLocalImageSrc,
+  resolveLocalVideoSrc,
+} from "../../utils/media-url";
 
 /* Existing code */
 // Add initialData to props
@@ -113,8 +116,12 @@ export function EditPromptModal({
   const sourceHistory = useSettingsStore((state) => state.sourceHistory);
   const addSourceHistory = useSettingsStore((state) => state.addSourceHistory);
   const aiModels = useSettingsStore((state) => state.aiModels);
-  const scenarioModelDefaults = useSettingsStore((state) => state.scenarioModelDefaults);
-  const modelRouteDefaults = useSettingsStore((state) => state.modelRouteDefaults);
+  const scenarioModelDefaults = useSettingsStore(
+    (state) => state.scenarioModelDefaults,
+  );
+  const modelRouteDefaults = useSettingsStore(
+    (state) => state.modelRouteDefaults,
+  );
   const translationModel = useMemo(() => {
     return resolveScenarioModel(
       aiModels,
@@ -426,10 +433,7 @@ export function EditPromptModal({
     setNotes(rewriteSnapshot.notes);
     setRewriteSnapshot(null);
     setRewriteSummary(null);
-    showToast(
-      t("prompt.aiRewriteUndoDone"),
-      "success",
-    );
+    showToast(t("prompt.aiRewriteUndoDone"), "success");
   };
 
   const handleRewritePrompt = async () => {
@@ -439,18 +443,12 @@ export function EditPromptModal({
     }
 
     if (!rewriteInstruction.trim()) {
-      showToast(
-        t("prompt.aiRewriteNeedsInstruction"),
-        "error",
-      );
+      showToast(t("prompt.aiRewriteNeedsInstruction"), "error");
       return;
     }
 
     if (!userPrompt.trim()) {
-      showToast(
-        t("prompt.aiRewriteNeedsContent"),
-        "error",
-      );
+      showToast(t("prompt.aiRewriteNeedsContent"), "error");
       return;
     }
 
@@ -498,18 +496,12 @@ export function EditPromptModal({
       }
 
       setRewriteSummary(
-        rewritten.summary ||
-          t("prompt.aiRewriteSummaryDefault"),
+        rewritten.summary || t("prompt.aiRewriteSummaryDefault"),
       );
-      showToast(
-        t("prompt.aiRewriteDone"),
-        "success",
-      );
+      showToast(t("prompt.aiRewriteDone"), "success");
     } catch (error) {
       showToast(
-        error instanceof Error
-          ? error.message
-          : t("prompt.aiRewriteFailed"),
+        error instanceof Error ? error.message : t("prompt.aiRewriteFailed"),
         "error",
       );
     } finally {
@@ -586,12 +578,7 @@ export function EditPromptModal({
       setShowEnglishVersion(true);
       showToast(t("prompt.englishGenerated"), "success");
     } catch (e) {
-      showToast(
-        e instanceof Error
-          ? e.message
-          : t("common.error"),
-        "error",
-      );
+      showToast(e instanceof Error ? e.message : t("common.error"), "error");
     } finally {
       setIsTranslating(false);
     }
@@ -613,10 +600,7 @@ export function EditPromptModal({
       userPromptEn || (isMainContentEnglish ? userPrompt : "");
 
     if (!englishSystem && !englishUser) {
-      showToast(
-        t("prompt.noEnglishContentToTranslate"),
-        "error",
-      );
+      showToast(t("prompt.noEnglishContentToTranslate"), "error");
       return;
     }
 
@@ -1084,10 +1068,7 @@ export function EditPromptModal({
             </div>
             <p className="text-xs text-muted-foreground">
               {promptType === "text" &&
-                t(
-                  "prompt.typeTextDesc",
-                  "Test with chat models (e.g. GPT-4)",
-                )}
+                t("prompt.typeTextDesc", "Test with chat models (e.g. GPT-4)")}
               {promptType === "image" &&
                 t(
                   "prompt.typeImageDesc",
@@ -1159,7 +1140,9 @@ export function EditPromptModal({
               variant="primary"
               size="sm"
               onClick={handleRewritePrompt}
-              disabled={isRewritingPrompt || !canRewrite || !rewriteInstruction.trim()}
+              disabled={
+                isRewritingPrompt || !canRewrite || !rewriteInstruction.trim()
+              }
             >
               {isRewritingPrompt ? (
                 <Loader2Icon className="w-4 h-4 animate-spin" />
@@ -1183,7 +1166,7 @@ export function EditPromptModal({
               <ChevronDownIcon className="w-4 h-4 text-muted-foreground" />
             ) : (
               <ChevronRightIcon className="w-4 h-4 text-muted-foreground" />
-                )}
+            )}
             <span>{t("prompt.moreSettings", "More Settings")}</span>
             {!showAttributes && (
               <span className="text-xs text-muted-foreground ml-2 font-normal truncate max-w-[400px]">
@@ -1424,7 +1407,10 @@ export function EditPromptModal({
                           "prompt.translateDetectedEnglish",
                           "检测到英文内容，翻译为当前语言",
                         )
-                      : t("prompt.translateFromEnglish", "从英文翻译到当前语言"))
+                      : t(
+                          "prompt.translateFromEnglish",
+                          "从英文翻译到当前语言",
+                        ))
                   }
                 >
                   {isTranslating ? (

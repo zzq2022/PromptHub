@@ -88,7 +88,11 @@ async function downloadImageBuffer(
   }
 
   const parsedUrl = new URL(targetUrl);
-  if (!(["http:", "https:"] as const).includes(parsedUrl.protocol as "http:" | "https:")) {
+  if (
+    !(["http:", "https:"] as const).includes(
+      parsedUrl.protocol as "http:" | "https:",
+    )
+  ) {
     throw new Error("Invalid or blocked URL");
   }
 
@@ -139,7 +143,9 @@ async function downloadImageBuffer(
           return;
         }
 
-        const contentType = getSingleHeaderValue(response.headers["content-type"]);
+        const contentType = getSingleHeaderValue(
+          response.headers["content-type"],
+        );
         if (contentType && !contentType.toLowerCase().startsWith("image/")) {
           response.resume();
           reject(new Error("Remote resource is not an image"));
@@ -274,7 +280,9 @@ export function registerImageIPC(): void {
         try {
           const resolvedFilePath = path.resolve(filePath);
           if (!isAllowedSelectedImagePath(resolvedFilePath)) {
-            throw new Error("Image path was not selected through the file picker");
+            throw new Error(
+              "Image path was not selected through the file picker",
+            );
           }
 
           const ext = path.extname(filePath);
@@ -505,7 +513,9 @@ export function registerImageIPC(): void {
         try {
           const resolvedFilePath = path.resolve(filePath);
           if (!isAllowedSelectedVideoPath(resolvedFilePath)) {
-            throw new Error("Video path was not selected through the file picker");
+            throw new Error(
+              "Video path was not selected through the file picker",
+            );
           }
 
           const ext = path.extname(filePath);

@@ -1,9 +1,15 @@
-import { SearchIcon, PlusIcon, SettingsIcon, SunIcon, MoonIcon } from 'lucide-react';
-import { usePromptStore } from '../../stores/prompt.store';
-import { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
-import { CreatePromptModal } from '../prompt/CreatePromptModal';
-import { SettingsModal } from '../settings/SettingsModal';
+import {
+  SearchIcon,
+  PlusIcon,
+  SettingsIcon,
+  SunIcon,
+  MoonIcon,
+} from "lucide-react";
+import { usePromptStore } from "../../stores/prompt.store";
+import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import { CreatePromptModal } from "../prompt/CreatePromptModal";
+import { SettingsModal } from "../settings/SettingsModal";
 
 export function Header() {
   const { t } = useTranslation();
@@ -21,21 +27,23 @@ export function Header() {
     tags: string[];
   }) => {
     // TODO: 调用 API 创建 Prompt
-    console.log('Creating prompt:', data);
+    console.log("Creating prompt:", data);
   };
 
   useEffect(() => {
     // 检测系统主题
-    const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const darkModeMediaQuery = window.matchMedia(
+      "(prefers-color-scheme: dark)",
+    );
     setIsDark(darkModeMediaQuery.matches);
-    
+
     const handler = (e: MediaQueryListEvent) => setIsDark(e.matches);
-    darkModeMediaQuery.addEventListener('change', handler);
-    return () => darkModeMediaQuery.removeEventListener('change', handler);
+    darkModeMediaQuery.addEventListener("change", handler);
+    return () => darkModeMediaQuery.removeEventListener("change", handler);
   }, []);
 
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', isDark);
+    document.documentElement.classList.toggle("dark", isDark);
   }, [isDark]);
 
   return (
@@ -46,7 +54,7 @@ export function Header() {
           <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
           <input
             type="text"
-            placeholder={t('header.search')}
+            placeholder={t("header.search")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="
@@ -73,7 +81,7 @@ export function Header() {
           "
         >
           <PlusIcon className="w-4 h-4" />
-          <span>{t('header.new')}</span>
+          <span>{t("header.new")}</span>
         </button>
 
         {/* 主题切换 */}
@@ -86,7 +94,11 @@ export function Header() {
             transition-colors duration-quick
           "
         >
-          {isDark ? <SunIcon className="w-5 h-5" /> : <MoonIcon className="w-5 h-5" />}
+          {isDark ? (
+            <SunIcon className="w-5 h-5" />
+          ) : (
+            <MoonIcon className="w-5 h-5" />
+          )}
         </button>
 
         {/* 设置按钮 */}

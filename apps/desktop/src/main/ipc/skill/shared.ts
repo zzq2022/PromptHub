@@ -18,7 +18,8 @@ export async function ensureLocalRepoPath(
   const skill = db.getById(skillId);
   if (!skill) return null;
 
-  const managedRepoPath = SkillInstaller.getPreferredLocalRepoPathForSkill(skill);
+  const managedRepoPath =
+    SkillInstaller.getPreferredLocalRepoPathForSkill(skill);
   const candidateRepoPath =
     skill.local_repo_path &&
     (await SkillInstaller.isManagedRepoPath(skill.local_repo_path))

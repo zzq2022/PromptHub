@@ -48,10 +48,7 @@ export function usePromptMediaManager({
       }
 
       showToast(
-        translate(
-          "prompt.uploadFailed",
-          "图片下载失败，请检查链接是否有效",
-        ),
+        translate("prompt.uploadFailed", "图片下载失败，请检查链接是否有效"),
         "error",
       );
     },
@@ -159,7 +156,9 @@ export function usePromptMediaManager({
             "error",
           );
         } else {
-          showImageUrlError(error instanceof Error ? error.message : String(error));
+          showImageUrlError(
+            error instanceof Error ? error.message : String(error),
+          );
         }
       } finally {
         setIsDownloadingImage(false);

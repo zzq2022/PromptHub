@@ -99,11 +99,7 @@ export function detectAgentPlatformSkillSource(input: {
   for (const sourcePath of candidates) {
     const platform = SKILL_PLATFORMS.find((entry) =>
       Object.values(entry.rootDir).some((rootTemplate) =>
-        hasDirectSkillChild(
-          sourcePath,
-          rootTemplate,
-          entry.skillsRelativePath,
-        ),
+        hasDirectSkillChild(sourcePath, rootTemplate, entry.skillsRelativePath),
       ),
     );
     if (platform) {

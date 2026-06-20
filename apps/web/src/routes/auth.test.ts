@@ -39,6 +39,8 @@ async function createTestApp(dataDir: string, options?: { allowRegistration?: bo
   process.env.DATA_ROOT = dataDir;
   process.env.ALLOW_REGISTRATION = options?.allowRegistration === false ? 'false' : 'true';
   process.env.LOG_LEVEL = 'debug';
+  process.env.AUTH_LOGIN_MAX_ATTEMPTS = '5';
+  process.env.AUTH_REGISTER_MAX_ATTEMPTS = '10';
 
   const [{ createApp }] = await Promise.all([
     import('../app'),
@@ -399,7 +401,7 @@ describe('web auth routes', () => {
     }
   }, TEST_TIMEOUT);
 
-  it('rejects login when captcha is missing', async () => {
+  it('accepts login when captcha is missing', async () => {
     const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'prompthub-web-auth-test-'));
 
     try {
@@ -414,10 +416,10 @@ describe('web auth routes', () => {
         }),
       );
 
-      expect(response.status).toBe(422);
-      const payload = await response.json() as { error: { code: string; message: string } };
-      expect(payload.error.code).toBe('VALIDATION_ERROR');
-      expect(payload.error.message).toContain('captchaId');
+      expect(response.status).toBe(200);
+      const payload = await response.json() as { data: { accessToken: string; refreshToken: string } };
+      expect(payload.data.accessToken.length).toBeGreaterThan(0);
+      expect(payload.data.refreshToken.length).toBeGreaterThan(0);
     } finally {
       fs.rmSync(dataDir, { recursive: true, force: true });
     }

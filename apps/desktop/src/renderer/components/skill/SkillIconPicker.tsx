@@ -81,57 +81,147 @@ const DARK_PRESET_BACKGROUNDS = [
 ];
 
 const LIGHT_PRESET_ICONS: PresetIconOption[] = [
-  { id: "document", name: "Document", iconUrl: ICON_DOCUMENT, background: "#efe6dc" },
+  {
+    id: "document",
+    name: "Document",
+    iconUrl: ICON_DOCUMENT,
+    background: "#efe6dc",
+  },
   { id: "folder", name: "Folder", iconUrl: ICON_FOLDER, background: "#dce8ff" },
   { id: "pdf", name: "PDF", iconUrl: ICON_PDF, background: "#e8d7f3" },
   { id: "github", name: "GitHub", iconUrl: ICON_GITHUB, background: "#e1e4fb" },
-  { id: "terminal", name: "Terminal", iconUrl: ICON_TERMINAL, background: "#dce7e6" },
+  {
+    id: "terminal",
+    name: "Terminal",
+    iconUrl: ICON_TERMINAL,
+    background: "#dce7e6",
+  },
   { id: "mcp", name: "MCP", iconUrl: ICON_MCP, background: "#d6ece7" },
   { id: "html", name: "HTML", iconUrl: ICON_HTML5, background: "#f5ddd2" },
   { id: "css", name: "CSS", iconUrl: ICON_CSS, background: "#f2d6de" },
   { id: "react", name: "React", iconUrl: ICON_REACT, background: "#d9edf7" },
   { id: "docker", name: "Docker", iconUrl: ICON_DOCKER, background: "#d9e5ff" },
-  { id: "database", name: "PostgreSQL", iconUrl: ICON_POSTGRESQL, background: "#dfe7ce" },
+  {
+    id: "database",
+    name: "PostgreSQL",
+    iconUrl: ICON_POSTGRESQL,
+    background: "#dfe7ce",
+  },
   { id: "chart", name: "Chart", iconUrl: ICON_BARCHART, background: "#ece0f4" },
-  { id: "research", name: "Research", iconUrl: ICON_RESEARCH, background: "#d8ebed" },
+  {
+    id: "research",
+    name: "Research",
+    iconUrl: ICON_RESEARCH,
+    background: "#d8ebed",
+  },
   { id: "target", name: "Target", iconUrl: ICON_TARGET, background: "#f5e6bf" },
   { id: "image", name: "Image", iconUrl: ICON_IMAGE, background: "#dce8ff" },
   { id: "design", name: "Design", iconUrl: ICON_BRUSH, background: "#f2d6de" },
-  { id: "palette", name: "Palette", iconUrl: ICON_SWATCHES, background: "#eadff0" },
-  { id: "playwright", name: "Playwright", iconUrl: ICON_PLAYWRIGHT, background: "#e6d9f5" },
-  { id: "architecture", name: "Architecture", iconUrl: ICON_ARCHITECTURE, background: "#dbe8e7" },
+  {
+    id: "palette",
+    name: "Palette",
+    iconUrl: ICON_SWATCHES,
+    background: "#eadff0",
+  },
+  {
+    id: "playwright",
+    name: "Playwright",
+    iconUrl: ICON_PLAYWRIGHT,
+    background: "#e6d9f5",
+  },
+  {
+    id: "architecture",
+    name: "Architecture",
+    iconUrl: ICON_ARCHITECTURE,
+    background: "#dbe8e7",
+  },
   { id: "globe", name: "Globe", iconUrl: ICON_GLOBE, background: "#d8eef0" },
-  { id: "lightbulb", name: "Idea", iconUrl: ICON_LIGHTBULB, background: "#f3e4b8" },
+  {
+    id: "lightbulb",
+    name: "Idea",
+    iconUrl: ICON_LIGHTBULB,
+    background: "#f3e4b8",
+  },
   { id: "pen", name: "Writing", iconUrl: ICON_PEN, background: "#f2dfcf" },
-  { id: "security", name: "Security", iconUrl: ICON_LOCK, background: "#e4dcf7" },
+  {
+    id: "security",
+    name: "Security",
+    iconUrl: ICON_LOCK,
+    background: "#e4dcf7",
+  },
   { id: "bot", name: "Bot", iconUrl: ICON_BOT, background: "#dce7ff" },
   { id: "openai", name: "OpenAI", iconUrl: ICON_OPENAI, background: "#e9dfd0" },
 ];
 
 const DARK_PRESET_ICONS: PresetIconOption[] = [
-  { id: "document", name: "Document", iconUrl: ICON_DOCUMENT, background: "#5b463b" },
+  {
+    id: "document",
+    name: "Document",
+    iconUrl: ICON_DOCUMENT,
+    background: "#5b463b",
+  },
   { id: "folder", name: "Folder", iconUrl: ICON_FOLDER, background: "#334766" },
   { id: "pdf", name: "PDF", iconUrl: ICON_PDF, background: "#4c3b63" },
   { id: "github", name: "GitHub", iconUrl: ICON_GITHUB, background: "#39425f" },
-  { id: "terminal", name: "Terminal", iconUrl: ICON_TERMINAL, background: "#314646" },
+  {
+    id: "terminal",
+    name: "Terminal",
+    iconUrl: ICON_TERMINAL,
+    background: "#314646",
+  },
   { id: "mcp", name: "MCP", iconUrl: ICON_MCP, background: "#284842" },
   { id: "html", name: "HTML", iconUrl: ICON_HTML5, background: "#5d4036" },
   { id: "css", name: "CSS", iconUrl: ICON_CSS, background: "#5b3441" },
   { id: "react", name: "React", iconUrl: ICON_REACT, background: "#224a5b" },
   { id: "docker", name: "Docker", iconUrl: ICON_DOCKER, background: "#304c6d" },
-  { id: "database", name: "PostgreSQL", iconUrl: ICON_POSTGRESQL, background: "#475536" },
+  {
+    id: "database",
+    name: "PostgreSQL",
+    iconUrl: ICON_POSTGRESQL,
+    background: "#475536",
+  },
   { id: "chart", name: "Chart", iconUrl: ICON_BARCHART, background: "#4a405d" },
-  { id: "research", name: "Research", iconUrl: ICON_RESEARCH, background: "#29494e" },
+  {
+    id: "research",
+    name: "Research",
+    iconUrl: ICON_RESEARCH,
+    background: "#29494e",
+  },
   { id: "target", name: "Target", iconUrl: ICON_TARGET, background: "#5f5129" },
   { id: "image", name: "Image", iconUrl: ICON_IMAGE, background: "#304863" },
   { id: "design", name: "Design", iconUrl: ICON_BRUSH, background: "#5d3642" },
-  { id: "palette", name: "Palette", iconUrl: ICON_SWATCHES, background: "#503f5d" },
-  { id: "playwright", name: "Playwright", iconUrl: ICON_PLAYWRIGHT, background: "#4b3c5f" },
-  { id: "architecture", name: "Architecture", iconUrl: ICON_ARCHITECTURE, background: "#344a4a" },
+  {
+    id: "palette",
+    name: "Palette",
+    iconUrl: ICON_SWATCHES,
+    background: "#503f5d",
+  },
+  {
+    id: "playwright",
+    name: "Playwright",
+    iconUrl: ICON_PLAYWRIGHT,
+    background: "#4b3c5f",
+  },
+  {
+    id: "architecture",
+    name: "Architecture",
+    iconUrl: ICON_ARCHITECTURE,
+    background: "#344a4a",
+  },
   { id: "globe", name: "Globe", iconUrl: ICON_GLOBE, background: "#284953" },
-  { id: "lightbulb", name: "Idea", iconUrl: ICON_LIGHTBULB, background: "#5a4a25" },
+  {
+    id: "lightbulb",
+    name: "Idea",
+    iconUrl: ICON_LIGHTBULB,
+    background: "#5a4a25",
+  },
   { id: "pen", name: "Writing", iconUrl: ICON_PEN, background: "#5c4337" },
-  { id: "security", name: "Security", iconUrl: ICON_LOCK, background: "#433f5f" },
+  {
+    id: "security",
+    name: "Security",
+    iconUrl: ICON_LOCK,
+    background: "#433f5f",
+  },
   { id: "bot", name: "Bot", iconUrl: ICON_BOT, background: "#344864" },
   { id: "openai", name: "OpenAI", iconUrl: ICON_OPENAI, background: "#54493f" },
 ];
@@ -193,7 +283,10 @@ export function SkillIconPicker({
               {t("skill.icon", "图标")}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              {t("skill.iconHint", "可以上传自己的图标，或从预置图标里直接选择。")}
+              {t(
+                "skill.iconHint",
+                "可以上传自己的图标，或从预置图标里直接选择。",
+              )}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">

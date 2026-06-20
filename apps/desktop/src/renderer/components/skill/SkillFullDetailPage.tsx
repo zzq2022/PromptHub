@@ -89,7 +89,6 @@ import { AgentSkillDetailActions } from "./AgentSkillDetailActions";
 
 const OPEN_CREATE_SKILL_PROJECT_MODAL_EVENT = "open-create-skill-project-modal";
 
-
 /**
  * Full-width Skill Detail Page
  * 全宽技能详情页
@@ -195,6 +194,9 @@ export function SkillFullDetailPage({
   const setProjectSkillImportPreferences = useSettingsStore(
     (state) => state.setProjectSkillImportPreferences,
   );
+  const defaultProjectDeployTargetPath = useSettingsStore(
+    (state) => state.defaultProjectDeployTargetPath,
+  );
   const aiModels = useSettingsStore((state) => state.aiModels);
   const updateSkillProject = useSettingsStore(
     (state) => state.updateSkillProject,
@@ -283,7 +285,7 @@ export function SkillFullDetailPage({
     const selectedProjectTargets = selectedProjects.map((project) => ({
       project,
       targetDirs:
-        targetDirsByProjectId?.[project.id] ?? getProjectDeployTargets(project),
+        targetDirsByProjectId?.[project.id] ?? getProjectDeployTargets(project, defaultProjectDeployTargetPath),
     }));
     if (
       !selectedProjectTargets.some(({ targetDirs }) => targetDirs.length > 0)
@@ -416,6 +418,12 @@ export function SkillFullDetailPage({
     setProjectSkillImportModePreference(mode);
   };
 
+  const resolveProjectDeployTargets = useMemo(
+    () => (project: SkillProject) =>
+      getProjectDeployTargets(project, defaultProjectDeployTargetPath),
+    [defaultProjectDeployTargetPath],
+  );
+
   const getProjectDeployedTargets = (project: SkillProject) => {
     if (!selectedSkill) {
       return [];
@@ -424,7 +432,7 @@ export function SkillFullDetailPage({
     return getDeployedProjectSkillTargets(
       scannedSkills,
       selectedSkill.name,
-      getProjectDeployTargets(project),
+      getProjectDeployTargets(project, defaultProjectDeployTargetPath),
     );
   };
 
@@ -956,7 +964,8 @@ export function SkillFullDetailPage({
   if (!selectedSkill) return null;
 
   const hasSourceUpdateMetadata = Boolean(
-    !isExternalDetail && (selectedSkill.source_url || selectedSkill.content_url),
+    !isExternalDetail &&
+    (selectedSkill.source_url || selectedSkill.content_url),
   );
   const showApplySourceUpdate = sourceUpdateStatus === "update-available";
   const installedPlatformDetails = Object.values(skillMdInstallDetails).filter(
@@ -1770,7 +1779,7 @@ export function SkillFullDetailPage({
                       skillMdInstallStatus={skillMdInstallStatus}
                       t={t}
                       togglePlatformSelection={togglePlatformSelection}
-                      getProjectDeployTargets={getProjectDeployTargets}
+                      getProjectDeployTargets={resolveProjectDeployTargets}
                       uninstallFromPlatform={requestUninstallFromPlatform}
                       uninstalledPlatforms={uninstalledPlatforms}
                     />

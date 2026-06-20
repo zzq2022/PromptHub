@@ -154,7 +154,7 @@ export function AdminSkillManage() {
                       ID: {skill.id}{skill.registrySlug ? ` (${skill.registrySlug})` : ''}
                     </div>
                   </td>
-                  <td>{skill.author || skill.ownerUsername || '—'}</td>
+                  <td>{skill.ownerUsername || skill.author || '—'}</td>
                   <td>{skill.version}</td>
                   <td>
                     <span className={`admin-badge admin-badge-${skill.visibility}`}>
@@ -166,7 +166,7 @@ export function AdminSkillManage() {
                       {skill.approvalStatus ? approvalLabels[skill.approvalStatus] : '—'}
                     </span>
                   </td>
-                  <td>{new Date(skill.createdAt).toLocaleDateString()}</td>
+                  <td>{new Date(skill.createdAt).toLocaleString()}</td>
                   <td className="admin-table-actions">
                     <button
                       className="admin-btn admin-btn-secondary"

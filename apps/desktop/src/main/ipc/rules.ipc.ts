@@ -26,13 +26,19 @@ import {
 } from "../services/rules-workspace";
 
 export function registerRulesIPC(): void {
-  ipcMain.handle(IPC_CHANNELS.RULES_LIST, async (): Promise<RuleFileDescriptor[]> => {
-    return listCachedRuleDescriptors();
-  });
+  ipcMain.handle(
+    IPC_CHANNELS.RULES_LIST,
+    async (): Promise<RuleFileDescriptor[]> => {
+      return listCachedRuleDescriptors();
+    },
+  );
 
-  ipcMain.handle(IPC_CHANNELS.RULES_SCAN, async (): Promise<RuleFileDescriptor[]> => {
-    return scanRuleDescriptors();
-  });
+  ipcMain.handle(
+    IPC_CHANNELS.RULES_SCAN,
+    async (): Promise<RuleFileDescriptor[]> => {
+      return scanRuleDescriptors();
+    },
+  );
 
   ipcMain.handle(
     IPC_CHANNELS.RULES_READ,
@@ -43,7 +49,11 @@ export function registerRulesIPC(): void {
 
   ipcMain.handle(
     IPC_CHANNELS.RULES_SAVE,
-    async (_event, ruleId: RuleFileId, content: string): Promise<RuleFileContent> => {
+    async (
+      _event,
+      ruleId: RuleFileId,
+      content: string,
+    ): Promise<RuleFileContent> => {
       if (typeof content !== "string") {
         throw new Error("rules:save requires a string content");
       }
@@ -83,8 +93,15 @@ export function registerRulesIPC(): void {
 
   ipcMain.handle(
     IPC_CHANNELS.RULES_ADD_PROJECT,
-    async (_event, input: CreateRuleProjectInput): Promise<RuleFileDescriptor> => {
-      if (!input || typeof input.name !== "string" || typeof input.rootPath !== "string") {
+    async (
+      _event,
+      input: CreateRuleProjectInput,
+    ): Promise<RuleFileDescriptor> => {
+      if (
+        !input ||
+        typeof input.name !== "string" ||
+        typeof input.rootPath !== "string"
+      ) {
         throw new Error("rules:addProject requires name and rootPath");
       }
 
@@ -122,7 +139,11 @@ export function registerRulesIPC(): void {
 
   ipcMain.handle(
     IPC_CHANNELS.RULES_VERSION_DELETE,
-    async (_event, ruleId: RuleFileId, versionId: string): Promise<RuleVersionSnapshot[]> => {
+    async (
+      _event,
+      ruleId: RuleFileId,
+      versionId: string,
+    ): Promise<RuleVersionSnapshot[]> => {
       if (!ruleId || typeof ruleId !== "string") {
         throw new Error("rules:version:delete requires a ruleId");
       }

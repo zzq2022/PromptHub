@@ -69,10 +69,14 @@ export function SkillQuickInstall({ skill, onClose }: SkillQuickInstallProps) {
     });
   }, [skill.id]);
 
+  const defaultProjectDeployTargetPath = useSettingsStore(
+    (state) => state.defaultProjectDeployTargetPath,
+  );
+
   const getMissingTargets = (project: SkillProject) => {
     if (!repoPath) return [];
     const scannedSkills = projectScanState[project.id]?.scannedSkills ?? [];
-    const targets = getProjectDeployTargets(project);
+    const targets = getProjectDeployTargets(project, defaultProjectDeployTargetPath);
     const deployableTargets = getDeployableProjectTargetDirs(
       repoPath,
       skill.name,
@@ -223,7 +227,8 @@ export function SkillQuickInstall({ skill, onClose }: SkillQuickInstallProps) {
         showToast(
           t("skill.installPartialFailure", {
             details: failures.join("\n"),
-            defaultValue: "Some install targets could not be installed\n{{details}}",
+            defaultValue:
+              "Some install targets could not be installed\n{{details}}",
           }),
           "error",
         );
@@ -316,7 +321,10 @@ export function SkillQuickInstall({ skill, onClose }: SkillQuickInstallProps) {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <p className="text-sm text-muted-foreground">
-                      {t("skill.selectPlatforms", "Select platforms to install")}
+                      {t(
+                        "skill.selectPlatforms",
+                        "Select platforms to install",
+                      )}
                     </p>
                     {uninstalledPlatforms.length > 0 && (
                       <button
@@ -356,7 +364,10 @@ export function SkillQuickInstall({ skill, onClose }: SkillQuickInstallProps) {
                         >
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
-                              <PlatformIcon platformId={platform.id} size={26} />
+                              <PlatformIcon
+                                platformId={platform.id}
+                                size={26}
+                              />
                             </div>
                             <span className="font-medium text-sm">
                               {platform.name}

@@ -54,14 +54,14 @@ function getPresetProjectImportTargets(rootPath: string): Array<{
       path: `${normalizedRoot}/.agents/skills`,
     },
     {
+      id: `${normalizedRoot}/skills`,
+      label: "skills",
+      path: `${normalizedRoot}/skills`,
+    },
+    {
       id: `${normalizedRoot}/.claude/skills`,
       label: ".claude/skills",
       path: `${normalizedRoot}/.claude/skills`,
-    },
-    {
-      id: `${normalizedRoot}/.gemini/skills`,
-      label: ".gemini/skills",
-      path: `${normalizedRoot}/.gemini/skills`,
     },
   ];
 }
@@ -137,6 +137,74 @@ export function SkillLibraryImportModal({
   const [selectedTargetIds, setSelectedTargetIds] = useState<Set<string>>(
     new Set(),
   );
+  const [existingTargetIds, setExistingTargetIds] = useState<Set<string>>(
+    new Set(),
+  );
+
+  useEffect(() => {
+    if (!isOpen || !showTargetSettings || presetTargets.length === 0) {
+      setExistingTargetIds(new Set());
+      return;
+    }
+
+    let isMounted = true;
+    const checkPaths = async () => {
+      const existing = new Set<string>();
+      const savedPreferences = project
+        ? projectSkillImportPreferencesByProjectId[project.id]
+        : undefined;
+      const hasSavedPreferences = !!(
+        savedPreferences?.selectedTargetIds &&
+        savedPreferences.selectedTargetIds.length > 0
+      );
+
+      const targetsToCheck = [
+        ...presetTargets,
+        ...customTargets.map((path) => ({
+          id: path,
+          path,
+        })),
+      ];
+
+      for (const target of targetsToCheck) {
+        try {
+          const status = await window.api.skill.getLocalPathStatus(target.path);
+          if (status?.exists) {
+            existing.add(target.id);
+          }
+        } catch (err) {
+          console.error("Failed to check path existence:", err);
+        }
+      }
+
+      if (!isMounted) return;
+
+      setExistingTargetIds(existing);
+
+      // If user doesn't have saved preferences, and we found existing folders on disk,
+      // dynamically select all existing folders as the default selection.
+      if (!hasSavedPreferences && existing.size > 0) {
+        setSelectedTargetIds((previous) => {
+          if (areStringSetsEqual(previous, existing)) {
+            return previous;
+          }
+          return new Set(existing);
+        });
+      }
+    };
+
+    void checkPaths();
+    return () => {
+      isMounted = false;
+    };
+  }, [
+    isOpen,
+    presetTargets,
+    customTargets,
+    project,
+    projectSkillImportPreferencesByProjectId,
+    showTargetSettings,
+  ]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -436,6 +504,7 @@ export function SkillLibraryImportModal({
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
                     {presetTargets.map((target) => {
                       const isSelected = selectedTargetIds.has(target.id);
+                      const exists = existingTargetIds.has(target.id);
                       return (
                         <button
                           key={target.id}
@@ -447,8 +516,16 @@ export function SkillLibraryImportModal({
                               : "border-border bg-background hover:bg-accent"
                           }`}
                         >
-                          <div className="text-sm font-medium text-foreground">
-                            {target.label}
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="text-sm font-medium text-foreground">
+                              {target.label}
+                            </div>
+                            {exists && (
+                              <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/10 px-1.5 py-0.5 text-[9px] font-medium text-emerald-600 dark:text-emerald-300">
+                                <span className="h-1 w-1 rounded-full bg-emerald-500 animate-pulse" />
+                                {t("skill.pathExists", "Existing")}
+                              </span>
+                            )}
                           </div>
                           <div className="mt-1 break-all font-mono text-[11px] text-muted-foreground">
                             {target.path}
@@ -462,6 +539,7 @@ export function SkillLibraryImportModal({
                     <div className="space-y-2">
                       {customTargets.map((target) => {
                         const isSelected = selectedTargetIds.has(target);
+                        const exists = existingTargetIds.has(target);
                         return (
                           <button
                             key={target}
@@ -473,10 +551,18 @@ export function SkillLibraryImportModal({
                                 : "border-border bg-background hover:bg-accent"
                             }`}
                           >
-                            <div className="text-sm font-medium text-foreground">
-                              {t(
-                                "skill.customProjectDeployTarget",
-                                "Custom target",
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="text-sm font-medium text-foreground">
+                                {t(
+                                  "skill.customProjectDeployTarget",
+                                  "Custom target",
+                                )}
+                              </div>
+                              {exists && (
+                                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/10 px-1.5 py-0.5 text-[9px] font-medium text-emerald-600 dark:text-emerald-300">
+                                  <span className="h-1 w-1 rounded-full bg-emerald-500 animate-pulse" />
+                                  {t("skill.pathExists", "Existing")}
+                                </span>
                               )}
                             </div>
                             <div className="mt-1 break-all font-mono text-[11px] text-muted-foreground">

@@ -1,12 +1,15 @@
-import { CSSProperties, HTMLAttributes, forwardRef } from 'react';
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { ChevronRightIcon, MoreHorizontalIcon, LockIcon } from 'lucide-react';
-import type { Folder } from '@prompthub/shared/types';
-import { renderFolderIcon } from '../folderIconHelper';
-import { indentationWidth } from './utilities';
+import { CSSProperties, HTMLAttributes, forwardRef } from "react";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { ChevronRightIcon, MoreHorizontalIcon, LockIcon } from "lucide-react";
+import type { Folder } from "@prompthub/shared/types";
+import { renderFolderIcon } from "../folderIconHelper";
+import { indentationWidth } from "./utilities";
 
-export interface SortableTreeItemProps extends Omit<HTMLAttributes<HTMLLIElement>, 'id'> {
+export interface SortableTreeItemProps extends Omit<
+  HTMLAttributes<HTMLLIElement>,
+  "id"
+> {
   id: string;
   folder: Folder;
   depth: number;
@@ -24,25 +27,31 @@ export interface SortableTreeItemProps extends Omit<HTMLAttributes<HTMLLIElement
   style?: CSSProperties;
 }
 
-export const SortableTreeItem = forwardRef<HTMLLIElement, SortableTreeItemProps>(
-  ({
-    id,
-    folder,
-    depth,
-    indentationWidth,
-    indicator,
-    collapsed,
-    hasChildren,
-    isExpanded,
-    isActive,
-    isLocked,
-    promptCount = 0,
-    onSelect,
-    onEdit,
-    onToggleExpand,
-    style: styleProp,
-    ...props
-  }, ref) => {
+export const SortableTreeItem = forwardRef<
+  HTMLLIElement,
+  SortableTreeItemProps
+>(
+  (
+    {
+      id,
+      folder,
+      depth,
+      indentationWidth,
+      indicator,
+      collapsed,
+      hasChildren,
+      isExpanded,
+      isActive,
+      isLocked,
+      promptCount = 0,
+      onSelect,
+      onEdit,
+      onToggleExpand,
+      style: styleProp,
+      ...props
+    },
+    ref,
+  ) => {
     const {
       attributes,
       listeners,
@@ -65,7 +74,7 @@ export const SortableTreeItem = forwardRef<HTMLLIElement, SortableTreeItemProps>
         ref={setNodeRef}
         style={style}
         data-tree-item
-        className={`list-none box-border mb-0.5 relative select-none transition-opacity duration-quick ${isDragging ? 'z-50 opacity-0' : 'opacity-100'}`}
+        className={`list-none box-border mb-0.5 relative select-none transition-opacity duration-quick ${isDragging ? "z-50 opacity-0" : "opacity-100"}`}
         {...props}
       >
         <div
@@ -73,11 +82,12 @@ export const SortableTreeItem = forwardRef<HTMLLIElement, SortableTreeItemProps>
           {...listeners}
           className={`
             group/folder relative flex items-center transition-[background-color] duration-base rounded-lg min-h-[32px] cursor-default
-            ${isActive
-              ? 'bg-sidebar-accent text-sidebar-foreground'
-              : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+            ${
+              isActive
+                ? "bg-sidebar-accent text-sidebar-foreground"
+                : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
             }
-            ${collapsed ? 'justify-center px-0' : ''}
+            ${collapsed ? "justify-center px-0" : ""}
           `}
           style={{
             paddingLeft: collapsed ? 0 : paddingLeft + 8,
@@ -98,7 +108,7 @@ export const SortableTreeItem = forwardRef<HTMLLIElement, SortableTreeItemProps>
                   <ChevronRightIcon
                     className={`
                       w-4 h-4 transition-transform duration-base text-sidebar-foreground/40
-                      ${isExpanded ? 'rotate-90' : ''}
+                      ${isExpanded ? "rotate-90" : ""}
                     `}
                   />
                 </button>
@@ -111,7 +121,7 @@ export const SortableTreeItem = forwardRef<HTMLLIElement, SortableTreeItemProps>
             onClick={onSelect}
             className={`
               flex-1 flex items-center gap-2 py-1.5 rounded-lg text-sm select-none overflow-hidden
-              ${collapsed ? 'flex-col justify-center gap-1' : ''}
+              ${collapsed ? "flex-col justify-center gap-1" : ""}
             `}
           >
             <span className="text-base flex items-center justify-center w-5 h-5 shrink-0">
@@ -123,7 +133,9 @@ export const SortableTreeItem = forwardRef<HTMLLIElement, SortableTreeItemProps>
                 <span className="truncate font-normal tracking-tight">
                   {folder.name}
                 </span>
-                {isLocked && <LockIcon className="w-3 h-3 flex-shrink-0 text-muted-foreground/70" />}
+                {isLocked && (
+                  <LockIcon className="w-3 h-3 flex-shrink-0 text-muted-foreground/70" />
+                )}
               </div>
             ) : (
               <span className="text-[10px] leading-none text-sidebar-foreground/60 max-w-full truncate">
@@ -151,7 +163,7 @@ export const SortableTreeItem = forwardRef<HTMLLIElement, SortableTreeItemProps>
                 }}
                 className={`
                   p-1.5 rounded opacity-0 group-hover/folder:opacity-100 hover:bg-black/5 dark:hover:bg-white/5 transition-all z-30
-                  ${isActive ? 'opacity-60' : ''}
+                  ${isActive ? "opacity-60" : ""}
                 `}
               >
                 <MoreHorizontalIcon className="w-4 h-4 text-sidebar-foreground/50" />
@@ -161,5 +173,5 @@ export const SortableTreeItem = forwardRef<HTMLLIElement, SortableTreeItemProps>
         </div>
       </li>
     );
-  }
+  },
 );

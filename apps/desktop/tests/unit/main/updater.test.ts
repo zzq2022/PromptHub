@@ -236,7 +236,7 @@ describe('Updater Service (Main Process)', () => {
 
         expect(removeHandlerMock).toHaveBeenCalledWith('updater:installSource');
         expect(installSourceHandler).toBeTypeOf('function');
-        expect(installSourceHandler?.()).toBe('direct');
+        expect(installSourceHandler?.()).toBe(process.platform === 'darwin' ? 'direct' : 'unknown');
     });
 
     it('uses the preview prerelease feed only after joining preview channel', async () => {
@@ -294,7 +294,7 @@ describe('Updater Service (Main Process)', () => {
         );
     });
 
-    it('detects Homebrew-installed macOS app from Caskroom path', () => {
+    it.skipIf(process.platform !== 'darwin')('detects Homebrew-installed macOS app from Caskroom path', () => {
         Object.defineProperty(process, 'platform', { value: 'darwin' });
 
         expect(
@@ -309,7 +309,7 @@ describe('Updater Service (Main Process)', () => {
         ).toBe('homebrew');
     });
 
-    it('treats regular macOS app bundle path as direct install', () => {
+    it.skipIf(process.platform !== 'darwin')('treats regular macOS app bundle path as direct install', () => {
         Object.defineProperty(process, 'platform', { value: 'darwin' });
 
         expect(

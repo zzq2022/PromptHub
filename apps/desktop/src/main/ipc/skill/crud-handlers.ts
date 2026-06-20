@@ -92,10 +92,11 @@ export function registerSkillCrudHandlers({ db }: SkillIPCContext): void {
 
       if (isRenaming && nextName) {
         try {
-          const platformStatus = await SkillInstaller.getSkillMdInstallStatusForSkill(
-            existingSkill,
-            [existingSkill.name],
-          );
+          const platformStatus =
+            await SkillInstaller.getSkillMdInstallStatusForSkill(
+              existingSkill,
+              [existingSkill.name],
+            );
           deployedPlatforms = Object.entries(platformStatus)
             .filter(([, installed]) => installed)
             .map(([platformId]) => platformId);
@@ -307,9 +308,8 @@ export function registerSkillCrudHandlers({ db }: SkillIPCContext): void {
       throw new Error(`Unable to resolve local repo for skill: ${id}`);
     }
 
-    const fileEntries = await SkillInstaller.readLocalRepoFileBuffersByPath(
-      repoPath,
-    );
+    const fileEntries =
+      await SkillInstaller.readLocalRepoFileBuffersByPath(repoPath);
 
     if (fileEntries.length === 0) {
       throw new Error(`Skill repo is empty: ${skill.name}`);

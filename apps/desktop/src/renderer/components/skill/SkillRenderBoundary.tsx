@@ -34,10 +34,7 @@ export class SkillRenderBoundary extends React.Component<
   }
 
   componentDidUpdate(prevProps: SkillRenderBoundaryProps) {
-    if (
-      this.state.hasError &&
-      prevProps.resetKey !== this.props.resetKey
-    ) {
+    if (this.state.hasError && prevProps.resetKey !== this.props.resetKey) {
       this.setState({ hasError: false });
     }
   }
@@ -58,7 +55,9 @@ export class SkillRenderBoundary extends React.Component<
     return (
       <div
         className={`flex flex-col items-center justify-center rounded-2xl border border-border app-wallpaper-surface/80 text-center ${
-          compact ? "min-h-[220px] px-6 py-10" : "h-full min-h-[360px] px-8 py-12"
+          compact
+            ? "min-h-[220px] px-6 py-10"
+            : "h-full min-h-[360px] px-8 py-12"
         }`}
       >
         <div className="mb-4 rounded-full bg-red-500/10 p-3 text-red-500">

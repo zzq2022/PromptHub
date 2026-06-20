@@ -1,8 +1,4 @@
-import {
-  Loader2Icon,
-  PlusIcon,
-  TestTubeIcon,
-} from "lucide-react";
+import { Loader2Icon, PlusIcon, TestTubeIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import type { StatusCardData } from "./types";

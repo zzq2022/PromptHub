@@ -15,12 +15,8 @@ export function SettingSection({
 }) {
   return (
     <div className="relative space-y-3">
-      <h3 className="text-sm font-medium text-muted-foreground">
-        {title}
-      </h3>
-      <div className="app-settings-card">
-        {children}
-      </div>
+      <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>
+      <div className="app-settings-card">{children}</div>
     </div>
   );
 }

@@ -162,7 +162,12 @@ function buildStoreCatalogRows(options: {
   };
 
   appendSection("installed", options.importedLabel, options.installed, true);
-  appendSection("available", options.availableLabel, options.recommended, false);
+  appendSection(
+    "available",
+    options.availableLabel,
+    options.recommended,
+    false,
+  );
   return rows;
 }
 
@@ -562,8 +567,8 @@ export function SkillStore() {
     isSelectedSkillsShEntryCurrent &&
     isSelectedClawHubEntryCurrent &&
     isSelectedSkillHubEntryCurrent
-    ? selectedRemoteEntry
-    : undefined;
+      ? selectedRemoteEntry
+      : undefined;
   const selectedStoreTotalCount = visibleRemoteEntry?.totalCount;
   const selectedStoreMatchedCount = visibleRemoteEntry?.matchedCount;
   const selectedStoreLoadedCount = visibleRemoteEntry?.skills.length ?? 0;
@@ -587,8 +592,7 @@ export function SkillStore() {
     selectedStoreSourceId === "clawhub" ||
     selectedStoreSourceId === "skillhub" ||
     Boolean(selectedCustomSource);
-  const hasReliableStoreCategoryFilter =
-    selectedStoreSourceId !== "clawhub";
+  const hasReliableStoreCategoryFilter = selectedStoreSourceId !== "clawhub";
 
   useEffect(() => {
     if (!isSelectedSourceRemote) return;
@@ -802,7 +806,9 @@ export function SkillStore() {
 
   useEffect(() => {
     if (selectedStoreSkillIds.size === 0) return;
-    const visibleIds = new Set(sourceRegistrySkills.map(getRegistrySkillSelectionId));
+    const visibleIds = new Set(
+      sourceRegistrySkills.map(getRegistrySkillSelectionId),
+    );
     setSelectedStoreSkillIds((current) => {
       const next = new Set<string>();
       current.forEach((id) => {
@@ -1459,9 +1465,9 @@ export function SkillStore() {
         </div>
       </div>
 
-      {((shouldShowGenericCategoryFilter ||
+      {(shouldShowGenericCategoryFilter ||
         shouldShowSkillsShFilter ||
-        shouldShowStoreSearch) ||
+        shouldShowStoreSearch ||
         selectedStoreSourceId === "new-custom") && (
         <div
           className="px-6 py-3 border-b border-border app-wallpaper-section space-y-3"
@@ -1497,22 +1503,22 @@ export function SkillStore() {
           )}
 
           {shouldShowGenericCategoryFilter && (
-          <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
-            {categories.map((cat) => (
-              <button
-                key={cat.key}
-                onClick={() => setStoreCategory(cat.key)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
-                  storeCategory === cat.key
-                    ? "bg-primary text-white shadow-sm"
-                    : "bg-muted hover:bg-muted/80 text-muted-foreground"
-                }`}
-              >
-                {CATEGORY_ICONS[cat.key]}
-                {cat.label}
-              </button>
-            ))}
-          </div>
+            <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
+              {categories.map((cat) => (
+                <button
+                  key={cat.key}
+                  onClick={() => setStoreCategory(cat.key)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
+                    storeCategory === cat.key
+                      ? "bg-primary text-white shadow-sm"
+                      : "bg-muted hover:bg-muted/80 text-muted-foreground"
+                  }`}
+                >
+                  {CATEGORY_ICONS[cat.key]}
+                  {cat.label}
+                </button>
+              ))}
+            </div>
           )}
 
           {shouldShowSkillsShFilter && (
@@ -1541,21 +1547,21 @@ export function SkillStore() {
           )}
 
           {selectedStoreSourceId === "new-custom" && (
-          <SkillStoreSourceForm
-            branch={sourceBranch}
-            directory={sourceDirectory}
-            handleAddSource={handleAddSource}
-            setBranch={setSourceBranch}
-            setDirectory={setSourceDirectory}
-            setSourceName={setSourceName}
-            setSourceType={setSourceType}
-            setSourceUrl={setSourceUrl}
-            sourceName={sourceName}
-            sourceType={sourceType}
-            sourceUrl={sourceUrl}
-            t={t}
-            typeOptions={CUSTOM_SOURCE_TYPE_OPTIONS}
-          />
+            <SkillStoreSourceForm
+              branch={sourceBranch}
+              directory={sourceDirectory}
+              handleAddSource={handleAddSource}
+              setBranch={setSourceBranch}
+              setDirectory={setSourceDirectory}
+              setSourceName={setSourceName}
+              setSourceType={setSourceType}
+              setSourceUrl={setSourceUrl}
+              sourceName={sourceName}
+              sourceType={sourceType}
+              sourceUrl={sourceUrl}
+              t={t}
+              typeOptions={CUSTOM_SOURCE_TYPE_OPTIONS}
+            />
           )}
         </div>
       )}
@@ -1673,10 +1679,7 @@ export function SkillStore() {
                       {t("skill.storeLoadingMore", "Loading more...")}
                     </>
                   ) : canLoadNextStorePage ? (
-                    t(
-                      "skill.storeScrollLoadHint",
-                      "Scroll down to load more",
-                    )
+                    t("skill.storeScrollLoadHint", "Scroll down to load more")
                   ) : (
                     t("skill.storeEndOfResults", "End of results")
                   )}
@@ -1944,10 +1947,7 @@ export function SkillStore() {
                   "skill.batchStoreInstallSelected",
                   "Install selected",
                 )}
-                title={t(
-                  "skill.batchStoreInstallSelected",
-                  "Install selected",
-                )}
+                title={t("skill.batchStoreInstallSelected", "Install selected")}
               >
                 {runningBatchOperation === "install" ? (
                   <Loader2Icon className="h-4 w-4 animate-spin" />
@@ -1966,10 +1966,7 @@ export function SkillStore() {
                   "skill.batchStoreUpdateSelected",
                   "Update selected",
                 )}
-                title={t(
-                  "skill.batchStoreUpdateSelected",
-                  "Update selected",
-                )}
+                title={t("skill.batchStoreUpdateSelected", "Update selected")}
               >
                 {runningBatchOperation === "update" ? (
                   <Loader2Icon className="h-4 w-4 animate-spin" />

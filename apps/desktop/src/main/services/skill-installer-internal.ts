@@ -153,7 +153,10 @@ export async function resolveRepoBasePath(
   const realBasePath = await fs
     .realpath(resolvedBasePath)
     .catch(() => resolvedBasePath);
-  if (!options?.allowOutsideSkillsDir && !isPathWithin(realSkillsDir, realBasePath)) {
+  if (
+    !options?.allowOutsideSkillsDir &&
+    !isPathWithin(realSkillsDir, realBasePath)
+  ) {
     throw new Error("Managed repo path resolves outside skills directory");
   }
 

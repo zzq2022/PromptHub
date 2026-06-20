@@ -463,7 +463,9 @@ function reorderPromptTree(
   normalizePromptSiblings(nextPrompts, oldParentId, promptId);
 
   const targetSiblings = nextPrompts
-    .filter((item) => (item.parentId ?? null) === parentId && item.id !== promptId)
+    .filter(
+      (item) => (item.parentId ?? null) === parentId && item.id !== promptId,
+    )
     .sort(comparePromptOrder);
   const targetIndex = Math.min(Math.trunc(order), targetSiblings.length);
   targetSiblings.splice(targetIndex, 0, prompt);
@@ -485,7 +487,10 @@ function normalizePromptSiblings(
   excludeId: string,
 ): void {
   prompts
-    .filter((prompt) => (prompt.parentId ?? null) === parentId && prompt.id !== excludeId)
+    .filter(
+      (prompt) =>
+        (prompt.parentId ?? null) === parentId && prompt.id !== excludeId,
+    )
     .sort(comparePromptOrder)
     .forEach((prompt, index) => {
       prompt.order = index;
@@ -814,7 +819,8 @@ export async function clearDatabase(): Promise<void> {
 export function getDatabaseInfo(): { name: string; description: string } {
   return {
     name: "SQLite + Workspace Files",
-    description: "Prompt/Folder/Version 存储在主进程 SQLite，并同步为 workspace 文件",
+    description:
+      "Prompt/Folder/Version 存储在主进程 SQLite，并同步为 workspace 文件",
   };
 }
 
@@ -826,13 +832,17 @@ export function getDatabaseInfo(): { name: string; description: string } {
  */
 const IDB_MIGRATION_DONE_KEY = "prompthub:idb-migration-done";
 
-async function getMainProcessVersionKeys(promptIds: string[]): Promise<Set<string>> {
+async function getMainProcessVersionKeys(
+  promptIds: string[],
+): Promise<Set<string>> {
   if (!window.api?.version?.getAll || promptIds.length === 0) {
     return new Set();
   }
 
   const versionGroups = await Promise.all(
-    promptIds.map(async (promptId) => (await window.api.version.getAll(promptId)) ?? []),
+    promptIds.map(
+      async (promptId) => (await window.api.version.getAll(promptId)) ?? [],
+    ),
   );
 
   return new Set(
@@ -854,13 +864,19 @@ async function isMainProcessMigrationComplete(
   const mainPromptIds = new Set((mainPrompts ?? []).map((prompt) => prompt.id));
   const mainFolderIds = new Set((mainFolders ?? []).map((folder) => folder.id));
 
-  const hasAllPrompts = Array.from(legacyPromptIds).every((id) => mainPromptIds.has(id));
-  const hasAllFolders = Array.from(legacyFolderIds).every((id) => mainFolderIds.has(id));
+  const hasAllPrompts = Array.from(legacyPromptIds).every((id) =>
+    mainPromptIds.has(id),
+  );
+  const hasAllFolders = Array.from(legacyFolderIds).every((id) =>
+    mainFolderIds.has(id),
+  );
   if (!hasAllPrompts || !hasAllFolders) {
     return false;
   }
 
-  const mainVersionKeys = await getMainProcessVersionKeys(Array.from(legacyPromptIds));
+  const mainVersionKeys = await getMainProcessVersionKeys(
+    Array.from(legacyPromptIds),
+  );
   const legacyVersionKeys = new Set(
     legacyVersions.map((version) => `${version.promptId}:${version.version}`),
   );
@@ -905,7 +921,9 @@ export async function migrateLegacyIndexedDbToMainProcess(): Promise<{
   }
 
   const legacyVersions = (
-    await Promise.all(legacyPrompts.map((prompt) => legacyGetPromptVersions(prompt.id)))
+    await Promise.all(
+      legacyPrompts.map((prompt) => legacyGetPromptVersions(prompt.id)),
+    )
   ).flat();
 
   const fetchMainProcessSnapshot = async (): Promise<{
@@ -914,7 +932,9 @@ export async function migrateLegacyIndexedDbToMainProcess(): Promise<{
   }> => {
     const [prompts, folders] = await Promise.all([
       window.api.prompt.getAll(),
-      window.api.folder?.getAll ? window.api.folder.getAll() : Promise.resolve([]),
+      window.api.folder?.getAll
+        ? window.api.folder.getAll()
+        : Promise.resolve([]),
     ]);
 
     return {
@@ -925,7 +945,8 @@ export async function migrateLegacyIndexedDbToMainProcess(): Promise<{
 
   // Fetch main-process data once; reuse for completion check AND partial-data guard.
   // 只获取一次主进程数据，同时供完整性检查和部分数据守卫使用（消除重复 IPC 调用）。
-  const { prompts: mainPrompts, folders: mainFolders } = await fetchMainProcessSnapshot();
+  const { prompts: mainPrompts, folders: mainFolders } =
+    await fetchMainProcessSnapshot();
 
   if (
     await isMainProcessMigrationComplete(
@@ -958,10 +979,8 @@ export async function migrateLegacyIndexedDbToMainProcess(): Promise<{
     });
 
     if (!result?.imported) {
-      const {
-        prompts: refreshedPrompts,
-        folders: refreshedFolders,
-      } = await fetchMainProcessSnapshot();
+      const { prompts: refreshedPrompts, folders: refreshedFolders } =
+        await fetchMainProcessSnapshot();
 
       if (
         await isMainProcessMigrationComplete(
@@ -974,12 +993,20 @@ export async function migrateLegacyIndexedDbToMainProcess(): Promise<{
       ) {
         localStorage.setItem(IDB_MIGRATION_DONE_KEY, "1");
       }
-      return { migrated: false, promptCount: 0, folderCount: 0, versionCount: 0 };
+      return {
+        migrated: false,
+        promptCount: 0,
+        folderCount: 0,
+        versionCount: 0,
+      };
     }
   } catch (err) {
     // Migration failed — do NOT set the localStorage marker so we retry next boot.
     // 迁移失败 — 不写标记，下次启动会重试。
-    console.error("[IDB migration] Failed to migrate IndexedDB data to SQLite:", err);
+    console.error(
+      "[IDB migration] Failed to migrate IndexedDB data to SQLite:",
+      err,
+    );
     return { migrated: false, promptCount: 0, folderCount: 0, versionCount: 0 };
   }
 

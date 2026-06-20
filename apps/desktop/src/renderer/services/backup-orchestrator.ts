@@ -1,10 +1,5 @@
-import {
-  downloadSelectiveExport,
-} from "./database-backup";
-import {
-  type ManualBackupStatus,
-  recordManualBackup,
-} from "./backup-status";
+import { downloadSelectiveExport } from "./database-backup";
+import { type ManualBackupStatus, recordManualBackup } from "./backup-status";
 import { createUpgradeBackup } from "./upgrade-backup";
 import {
   pullFromSelfHostedWeb,
@@ -34,7 +29,9 @@ export interface SelfHostedAutoSyncResult {
   summary?: SelfHostedSyncSummary;
 }
 
-async function createSnapshotIfPossible(currentVersion?: string): Promise<void> {
+async function createSnapshotIfPossible(
+  currentVersion?: string,
+): Promise<void> {
   await createUpgradeBackup(
     currentVersion ? { fromVersion: currentVersion } : undefined,
   );
@@ -74,8 +71,6 @@ export async function runPreUpgradeBackup(
   await downloadExportFile();
   return recordManualBackup(currentVersion);
 }
-
-
 
 export async function runSelfHostedConnectionCheck(
   config: SelfHostedSyncConfig,
@@ -119,11 +114,7 @@ export async function runSelfHostedAutoSync(
       success: false,
       localChanged: false,
       message:
-        error instanceof Error
-          ? error.message
-          : "self-hosted auto sync failed",
+        error instanceof Error ? error.message : "self-hosted auto sync failed",
     };
   }
 }
-
-

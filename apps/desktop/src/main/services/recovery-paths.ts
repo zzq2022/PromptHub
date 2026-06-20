@@ -12,7 +12,10 @@ export interface RecoveryPathOptions {
 
 const APP_NAME_VARIANTS = ["PromptHub", "prompthub"];
 
-function resolveForPlatform(targetPath: string, platform: NodeJS.Platform): string {
+function resolveForPlatform(
+  targetPath: string,
+  platform: NodeJS.Platform,
+): string {
   return platform === "win32"
     ? path.win32.resolve(targetPath)
     : path.resolve(targetPath);
@@ -28,16 +31,23 @@ function joinForPlatform(
     : path.join(basePath, childPath);
 }
 
-function normalizeForPlatform(targetPath: string, platform: NodeJS.Platform): string {
+function normalizeForPlatform(
+  targetPath: string,
+  platform: NodeJS.Platform,
+): string {
   const resolved = resolveForPlatform(targetPath, platform);
   return platform === "win32" ? resolved.toLowerCase() : resolved;
 }
 
-export function getRecoveryCandidatePaths(options: RecoveryPathOptions): string[] {
+export function getRecoveryCandidatePaths(
+  options: RecoveryPathOptions,
+): string[] {
   const candidates: string[] = [];
 
   for (const name of APP_NAME_VARIANTS) {
-    candidates.push(joinForPlatform(options.appDataPath, name, options.platform));
+    candidates.push(
+      joinForPlatform(options.appDataPath, name, options.platform),
+    );
   }
 
   if (options.platform === "win32") {

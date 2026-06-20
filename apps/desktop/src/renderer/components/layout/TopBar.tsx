@@ -443,7 +443,10 @@ export function TopBar({
       }
       // Enter 确认选择当前结果
       if (isSkillView) {
-        if (!isSkillStoreCatalogView && skillSearchResults[currentResultIndex]) {
+        if (
+          !isSkillStoreCatalogView &&
+          skillSearchResults[currentResultIndex]
+        ) {
           selectSkill(skillSearchResults[currentResultIndex].id);
         }
       } else if (isRulesView) {
@@ -642,7 +645,10 @@ export function TopBar({
                           "Search project skills...",
                         )
                       : isAgentSkillView
-                        ? t("header.searchAgentSkills", "Search agent skills...")
+                        ? t(
+                            "header.searchAgentSkills",
+                            "Search agent skills...",
+                          )
                         : t("header.searchSkill", "Search skills...")
                     : isRulesView
                       ? t("rules.searchPlaceholder", "Search rule files...")
@@ -929,13 +935,19 @@ export function TopBar({
           </button>
 
           {webRuntime && (
-            <div className="flex items-center gap-2" style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}>
+            <div
+              className="flex items-center gap-2"
+              style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}
+            >
               {webContext?.username && (
                 <div className="flex items-center gap-1.5 px-2 py-1 bg-accent/35 rounded-lg border border-border/40">
                   <div className="w-5 h-5 rounded-full bg-primary/15 text-primary flex items-center justify-center text-[10px] font-bold uppercase select-none">
                     {webContext.username.charAt(0)}
                   </div>
-                  <span className="text-xs font-semibold text-foreground/85 max-w-[100px] truncate" title={webContext.username}>
+                  <span
+                    className="text-xs font-semibold text-foreground/85 max-w-[100px] truncate"
+                    title={webContext.username}
+                  >
                     {webContext.username}
                   </span>
                 </div>
@@ -946,7 +958,9 @@ export function TopBar({
                 title={t("settings.signOut")}
               >
                 <LogOutIcon className="w-4 h-4" />
-                <span className="hidden sm:inline">{t("settings.signOut")}</span>
+                <span className="hidden sm:inline">
+                  {t("settings.signOut")}
+                </span>
               </button>
             </div>
           )}

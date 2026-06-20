@@ -3,7 +3,11 @@ import { clsx } from "clsx";
 
 export type RevealIntent = "enter" | "exit";
 
-export type RevealVariant = "fade" | "fade-zoom" | "fade-slide-up" | "fade-slide-down";
+export type RevealVariant =
+  | "fade"
+  | "fade-zoom"
+  | "fade-slide-up"
+  | "fade-slide-down";
 
 export type RevealProps = HTMLAttributes<HTMLDivElement> & {
   /**
@@ -79,7 +83,13 @@ export const Reveal = forwardRef<HTMLDivElement, RevealProps>(function Reveal(
     <div
       ref={ref}
       {...rest}
-      className={clsx(base, variantClass, durationClass, easingClass, className)}
+      className={clsx(
+        base,
+        variantClass,
+        durationClass,
+        easingClass,
+        className,
+      )}
     >
       {children}
     </div>

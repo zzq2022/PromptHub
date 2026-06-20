@@ -52,7 +52,10 @@ export function ProjectSkillPreviewSidebar({
     : t("skill.openLocalSource", "Open Local Skill Folder");
 
   const sortedTargets = useMemo(
-    () => Array.from(new Set(deployTargets.filter((entry) => entry.trim().length > 0))),
+    () =>
+      Array.from(
+        new Set(deployTargets.filter((entry) => entry.trim().length > 0)),
+      ),
     [deployTargets],
   );
 
@@ -61,7 +64,9 @@ export function ProjectSkillPreviewSidebar({
       return new Set(sortedTargets);
     }
     return new Set(
-      Array.from(selectedTargets).filter((entry) => sortedTargets.includes(entry)),
+      Array.from(selectedTargets).filter((entry) =>
+        sortedTargets.includes(entry),
+      ),
     );
   }, [selectedTargets, sortedTargets]);
 
@@ -177,8 +182,12 @@ export function ProjectSkillPreviewSidebar({
                 >
                   <div className="min-w-0 flex-1">
                     <div className="text-sm font-medium text-foreground">
-                      {target.endsWith("/.agents/skills") || target.endsWith("\\.agents\\skills")
-                        ? t("skill.defaultProjectDeployTarget", "Default .agents target")
+                      {target.endsWith("/.agents/skills") ||
+                      target.endsWith("\\.agents\\skills")
+                        ? t(
+                            "skill.defaultProjectDeployTarget",
+                            "Default .agents target",
+                          )
                         : t("skill.customProjectDeployTarget", "Custom target")}
                     </div>
                     <div className="mt-1 break-all font-mono text-[11px] leading-relaxed text-muted-foreground">
@@ -251,10 +260,7 @@ export function ProjectSkillPreviewSidebar({
               <FolderOpenIcon className="h-5 w-5 shrink-0 text-primary" />
               <div className="min-w-0">
                 <div className="text-sm font-semibold text-foreground">
-                  {t(
-                    "skill.openSourceSkillFolder",
-                    "Open source Skill folder",
-                  )}
+                  {t("skill.openSourceSkillFolder", "Open source Skill folder")}
                 </div>
                 <div className="mt-1 break-words text-xs leading-relaxed text-muted-foreground">
                   {symlinkTargetPath}

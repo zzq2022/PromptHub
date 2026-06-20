@@ -184,7 +184,10 @@ export function getUserDataPath(): string {
   return path.join(baseDir, subFolder);
 }
 
-function resolvePreferredPath(primaryPath: string, legacyPath?: string): string {
+function resolvePreferredPath(
+  primaryPath: string,
+  legacyPath?: string,
+): string {
   if (fs.existsSync(primaryPath)) {
     return primaryPath;
   }
@@ -201,7 +204,9 @@ function readLayoutMarker(userDataPath: string): LayoutMarkerRecord | null {
   }
 
   try {
-    return JSON.parse(fs.readFileSync(markerPath, "utf8")) as LayoutMarkerRecord;
+    return JSON.parse(
+      fs.readFileSync(markerPath, "utf8"),
+    ) as LayoutMarkerRecord;
   } catch {
     return null;
   }

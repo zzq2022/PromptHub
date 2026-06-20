@@ -53,7 +53,9 @@ export function computeSkillContentFingerprint(content: string): string {
   return computeStableTextHash(normalizeSkillContentForHash(content));
 }
 
-export async function computeSkillContentHash(content: string): Promise<string> {
+export async function computeSkillContentHash(
+  content: string,
+): Promise<string> {
   const normalized = normalizeSkillContentForHash(content);
   const subtle = globalThis.crypto?.subtle;
 
@@ -76,7 +78,9 @@ export function findInstalledRegistrySkill(
   const sourceId = registrySkill.source_id?.toLowerCase();
   const contentUrl = registrySkill.content_url?.toLowerCase();
   const sourceUrl = registrySkill.source_url?.toLowerCase();
-  const installName = (registrySkill.install_name || registrySkill.slug).toLowerCase();
+  const installName = (
+    registrySkill.install_name || registrySkill.slug
+  ).toLowerCase();
   const hasInstalledSourceIdentity = (skill: Skill) =>
     Boolean(skill.source_id || skill.content_url || skill.source_url);
 
@@ -120,7 +124,8 @@ export async function getRegistrySkillUpdateStatus(
     };
   }
 
-  const localContent = installedSkill.content ?? installedSkill.instructions ?? "";
+  const localContent =
+    installedSkill.content ?? installedSkill.instructions ?? "";
   const localHash = await computeSkillContentHash(localContent);
   const installedHash = installedSkill.installed_content_hash;
   const localMatchesRemote = localHash === remoteHash;
@@ -131,7 +136,8 @@ export async function getRegistrySkillUpdateStatus(
     ? false
     : installedHash
       ? remoteHash !== installedHash
-      : remoteHash !== localHash || registrySkill.version !== installedSkill.version;
+      : remoteHash !== localHash ||
+        registrySkill.version !== installedSkill.version;
 
   let status: RegistrySkillUpdateStatus = "up-to-date";
   if (localModified && remoteChanged) {

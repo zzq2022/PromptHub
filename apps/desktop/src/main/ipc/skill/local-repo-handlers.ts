@@ -475,7 +475,9 @@ export function registerSkillLocalRepoHandlers({ db }: SkillIPCContext): void {
     IPC_CHANNELS.SKILL_GET_LOCAL_PATH_STATUS,
     async (_, localPath: string) => {
       if (typeof localPath !== "string" || localPath.trim() === "") {
-        throw new Error("skill:getLocalPathStatus requires a non-empty localPath");
+        throw new Error(
+          "skill:getLocalPathStatus requires a non-empty localPath",
+        );
       }
       return SkillInstaller.getLocalPathStatus(localPath);
     },

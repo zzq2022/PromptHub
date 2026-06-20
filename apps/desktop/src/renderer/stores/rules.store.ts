@@ -29,7 +29,9 @@ interface RulesState {
   setDraftContent: (content: string) => void;
   setAiInstruction: (instruction: string) => void;
   saveCurrentRule: () => Promise<void>;
-  resolveCurrentRuleConflict: (strategy: RuleConflictResolutionStrategy) => Promise<void>;
+  resolveCurrentRuleConflict: (
+    strategy: RuleConflictResolutionStrategy,
+  ) => Promise<void>;
   rewriteCurrentRule: () => Promise<void>;
   deleteRuleVersion: (ruleId: RuleFileId, versionId: string) => Promise<void>;
   addProjectRule: (input: CreateRuleProjectInput) => Promise<void>;
@@ -76,7 +78,9 @@ function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-function filterVisibleRuleFiles(files: RuleFileDescriptor[]): RuleFileDescriptor[] {
+function filterVisibleRuleFiles(
+  files: RuleFileDescriptor[],
+): RuleFileDescriptor[] {
   const settings = useSettingsStore.getState();
   const disabledPlatformIds = settings.disabledPlatformIds ?? [];
   const disabledSet = new Set(disabledPlatformIds);
@@ -115,16 +119,19 @@ export const useRulesStore = create<RulesState>((set, get) => ({
     const requestId = ++latestLoadFilesRequestId;
     set({ isLoading: true, error: null });
     try {
-      const allFiles = options?.force ? await window.api.rules.scan() : await window.api.rules.list();
+      const allFiles = options?.force
+        ? await window.api.rules.scan()
+        : await window.api.rules.list();
       const files = filterVisibleRuleFiles(allFiles);
       if (requestId !== latestLoadFilesRequestId) {
         return;
       }
       const currentSelectedRuleId = get().selectedRuleId;
       const selectedRuleId =
-        currentSelectedRuleId && files.some((file) => file.id === currentSelectedRuleId)
+        currentSelectedRuleId &&
+        files.some((file) => file.id === currentSelectedRuleId)
           ? currentSelectedRuleId
-          : files[0]?.id ?? null;
+          : (files[0]?.id ?? null);
       set({ files, selectedRuleId, isLoading: false, hasLoadedFiles: true });
 
       if (selectedRuleId) {
@@ -146,15 +153,26 @@ export const useRulesStore = create<RulesState>((set, get) => ({
 
   selectRule: async (ruleId) => {
     const currentState = get();
-    if (currentState.selectedRuleId === ruleId && currentState.currentFile?.id === ruleId) {
+    if (
+      currentState.selectedRuleId === ruleId &&
+      currentState.currentFile?.id === ruleId
+    ) {
       return;
     }
 
     const requestId = ++latestSelectRuleRequestId;
-    set({ selectedRuleId: ruleId, isLoading: true, error: null, aiSummary: null });
+    set({
+      selectedRuleId: ruleId,
+      isLoading: true,
+      error: null,
+      aiSummary: null,
+    });
     try {
       const file = await window.api.rules.read(ruleId);
-      if (requestId !== latestSelectRuleRequestId || get().selectedRuleId !== ruleId) {
+      if (
+        requestId !== latestSelectRuleRequestId ||
+        get().selectedRuleId !== ruleId
+      ) {
         return;
       }
       set({
@@ -163,7 +181,10 @@ export const useRulesStore = create<RulesState>((set, get) => ({
         isLoading: false,
       });
     } catch (error) {
-      if (requestId === latestSelectRuleRequestId && get().selectedRuleId === ruleId) {
+      if (
+        requestId === latestSelectRuleRequestId &&
+        get().selectedRuleId === ruleId
+      ) {
         set({ isLoading: false, error: getErrorMessage(error) });
       }
     }
@@ -183,9 +204,14 @@ export const useRulesStore = create<RulesState>((set, get) => ({
 
     set({ isSaving: true, error: null });
     try {
-      const updated = await window.api.rules.save(selectedRuleId, get().draftContent);
+      const updated = await window.api.rules.save(
+        selectedRuleId,
+        get().draftContent,
+      );
       const nextFiles = get().files.map((file) =>
-        file.id === updated.id ? { ...file, exists: true, path: updated.path } : file,
+        file.id === updated.id
+          ? { ...file, exists: true, path: updated.path }
+          : file,
       );
       set({
         selectedRuleId: updated.id,
@@ -209,7 +235,10 @@ export const useRulesStore = create<RulesState>((set, get) => ({
 
     set({ isSaving: true, error: null });
     try {
-      const updated = await window.api.rules.resolveConflict(selectedRuleId, strategy);
+      const updated = await window.api.rules.resolveConflict(
+        selectedRuleId,
+        strategy,
+      );
       const nextFiles = get().files.map((file) =>
         file.id === updated.id
           ? {
@@ -241,16 +270,19 @@ export const useRulesStore = create<RulesState>((set, get) => ({
       return;
     }
     const settings = useSettingsStore.getState();
-    const defaultModel = settings.aiModels?.find((m) => m.isDefault) || settings.aiModels?.[0] || {
-      apiKey: settings.aiApiKey,
-      apiUrl: settings.aiApiUrl,
-      model: settings.aiModel,
-      provider: settings.aiProvider,
-      apiProtocol: settings.aiApiProtocol,
-    };
-    
+    const defaultModel = settings.aiModels?.find((m) => m.isDefault) ||
+      settings.aiModels?.[0] || {
+        apiKey: settings.aiApiKey,
+        apiUrl: settings.aiApiUrl,
+        model: settings.aiModel,
+        provider: settings.aiProvider,
+        apiProtocol: settings.aiApiProtocol,
+      };
+
     if (!defaultModel.apiKey) {
-      set({ error: "AI API key not configured. Please configure it in settings." });
+      set({
+        error: "AI API key not configured. Please configure it in settings.",
+      });
       return;
     }
 
@@ -314,9 +346,16 @@ export const useRulesStore = create<RulesState>((set, get) => ({
       const files = await window.api.rules.list();
       const removedRuleId = `project:${projectId}`;
       const nextSelectedRuleId =
-        get().selectedRuleId === removedRuleId ? files[0]?.id ?? null : get().selectedRuleId;
+        get().selectedRuleId === removedRuleId
+          ? (files[0]?.id ?? null)
+          : get().selectedRuleId;
 
-      set({ files, selectedRuleId: nextSelectedRuleId, isLoading: false, hasLoadedFiles: true });
+      set({
+        files,
+        selectedRuleId: nextSelectedRuleId,
+        isLoading: false,
+        hasLoadedFiles: true,
+      });
 
       if (nextSelectedRuleId) {
         await get().selectRule(nextSelectedRuleId);
@@ -332,7 +371,10 @@ export const useRulesStore = create<RulesState>((set, get) => ({
 
   deleteRuleVersion: async (ruleId, versionId) => {
     try {
-      const updatedVersions = await window.api.rules.deleteVersion(ruleId, versionId);
+      const updatedVersions = await window.api.rules.deleteVersion(
+        ruleId,
+        versionId,
+      );
       const currentFile = get().currentFile;
       if (currentFile?.id === ruleId) {
         set({ currentFile: { ...currentFile, versions: updatedVersions } });
@@ -345,8 +387,12 @@ export const useRulesStore = create<RulesState>((set, get) => ({
 
   getSidebarSections: () => {
     const { files, selectedRuleId } = get();
-    const skillPlatformOrder = useSettingsStore.getState().skillPlatformOrder ?? [];
-    const globalItems = getOrderedGlobalRuleFiles(files, skillPlatformOrder).map((file) => ({
+    const skillPlatformOrder =
+      useSettingsStore.getState().skillPlatformOrder ?? [];
+    const globalItems = getOrderedGlobalRuleFiles(
+      files,
+      skillPlatformOrder,
+    ).map((file) => ({
       id: file.id,
       type: "global" as const,
       platformId: file.platformId,
@@ -373,7 +419,9 @@ export const useRulesStore = create<RulesState>((set, get) => ({
         exists: file.exists,
         active: selectedRuleId === file.id,
         canRemove: file.id.startsWith("project:"),
-        projectId: file.id.startsWith("project:") ? file.id.slice("project:".length) : null,
+        projectId: file.id.startsWith("project:")
+          ? file.id.slice("project:".length)
+          : null,
         description: file.description,
         icon: "FolderRoot",
         badge: null,
@@ -396,7 +444,10 @@ export const useRulesStore = create<RulesState>((set, get) => ({
   getProjectRuleCount: () =>
     get().files.filter((file) => file.id.startsWith("project:")).length,
   getGlobalRuleCount: () =>
-    get().files.filter((file) => file.platformId !== "workspace" && !file.id.startsWith("project:")).length,
+    get().files.filter(
+      (file) =>
+        file.platformId !== "workspace" && !file.id.startsWith("project:"),
+    ).length,
   getProjectRuleItems: () =>
     get()
       .files.filter((file) => file.id.startsWith("project:"))

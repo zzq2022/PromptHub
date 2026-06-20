@@ -219,7 +219,9 @@ function resolveSeedFiles(skill: E2ESkillSeed): E2ESkillFileSeed[] {
   }
 
   const skillMdContent =
-    skill.instructions || skill.content || `# ${skill.name}\n\nE2E seeded skill`;
+    skill.instructions ||
+    skill.content ||
+    `# ${skill.name}\n\nE2E seeded skill`;
 
   return [
     {
@@ -244,7 +246,10 @@ function writeSeedSkillFiles(skill: E2ESkillSeed, repoDir: string): string {
   return skillMd?.content || files[0]?.content || "";
 }
 
-function createSeedSkillInput(skill: E2ESkillSeed, repoDir: string): CreateSkillParams {
+function createSeedSkillInput(
+  skill: E2ESkillSeed,
+  repoDir: string,
+): CreateSkillParams {
   const content = writeSeedSkillFiles(skill, repoDir);
 
   return {

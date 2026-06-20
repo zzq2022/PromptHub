@@ -1,8 +1,19 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { createPortal } from 'react-dom';
-import { useTranslation } from 'react-i18next';
-import { ChevronDownIcon, LayoutGridIcon, ListIcon, ImageIcon, Columns3Icon as KanbanIcon } from 'lucide-react';
-import { usePromptStore, SortBy, SortOrder, ViewMode } from '../../stores/prompt.store';
+import { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
+import {
+  ChevronDownIcon,
+  LayoutGridIcon,
+  ListIcon,
+  ImageIcon,
+  Columns3Icon as KanbanIcon,
+} from "lucide-react";
+import {
+  usePromptStore,
+  SortBy,
+  SortOrder,
+  ViewMode,
+} from "../../stores/prompt.store";
 
 interface SortOption {
   label: string;
@@ -28,39 +39,54 @@ export function PromptListHeader({ count }: PromptListHeaderProps) {
   const setSortOrder = usePromptStore((state) => state.setSortOrder);
   const setViewMode = usePromptStore((state) => state.setViewMode);
   const galleryImageSize = usePromptStore((state) => state.galleryImageSize);
-  const setGalleryImageSize = usePromptStore((state) => state.setGalleryImageSize);
+  const setGalleryImageSize = usePromptStore(
+    (state) => state.setGalleryImageSize,
+  );
   const kanbanColumns = usePromptStore((state) => state.kanbanColumns);
   const setKanbanColumns = usePromptStore((state) => state.setKanbanColumns);
 
   // Sort options
   // 排序选项
   const sortOptions: SortOption[] = [
-    { label: t('prompt.sortNewest'), sortBy: 'updatedAt', sortOrder: 'desc' },
-    { label: t('prompt.sortOldest'), sortBy: 'updatedAt', sortOrder: 'asc' },
-    { label: t('prompt.sortTitleAsc'), sortBy: 'title', sortOrder: 'asc' },
-    { label: t('prompt.sortTitleDesc'), sortBy: 'title', sortOrder: 'desc' },
-    { label: t('prompt.sortMostUsed'), sortBy: 'usageCount', sortOrder: 'desc' },
-    { label: t('prompt.sortLeastUsed'), sortBy: 'usageCount', sortOrder: 'asc' },
+    { label: t("prompt.sortNewest"), sortBy: "updatedAt", sortOrder: "desc" },
+    { label: t("prompt.sortOldest"), sortBy: "updatedAt", sortOrder: "asc" },
+    { label: t("prompt.sortTitleAsc"), sortBy: "title", sortOrder: "asc" },
+    { label: t("prompt.sortTitleDesc"), sortBy: "title", sortOrder: "desc" },
+    {
+      label: t("prompt.sortMostUsed"),
+      sortBy: "usageCount",
+      sortOrder: "desc",
+    },
+    {
+      label: t("prompt.sortLeastUsed"),
+      sortBy: "usageCount",
+      sortOrder: "asc",
+    },
   ];
 
   // Get currently selected sort option
   // Get currently selected sort option
   // 获取当前选中的排序选项
-  const currentOption = sortOptions.find(
-    (opt) => opt.sortBy === sortBy && opt.sortOrder === sortOrder
-  ) || sortOptions[0];
+  const currentOption =
+    sortOptions.find(
+      (opt) => opt.sortBy === sortBy && opt.sortOrder === sortOrder,
+    ) || sortOptions[0];
 
   // Click outside to close dropdown
   // 点击外部关闭下拉菜单
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node) &&
-          buttonRef.current && !buttonRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   // Calculate dropdown position
@@ -88,7 +114,7 @@ export function PromptListHeader({ count }: PromptListHeaderProps) {
   };
 
   const toggleViewMode = () => {
-    setViewMode(viewMode === 'card' ? 'list' : 'card');
+    setViewMode(viewMode === "card" ? "list" : "card");
   };
 
   return (
@@ -96,7 +122,7 @@ export function PromptListHeader({ count }: PromptListHeaderProps) {
       {/* Left side: Prompt count */}
       {/* 左侧：Prompt 数量 */}
       <span className="text-xs text-muted-foreground whitespace-nowrap">
-        {t('prompt.promptCount', { count })}
+        {t("prompt.promptCount", { count })}
       </span>
 
       {/* Right side: Sort + View toggle */}
@@ -111,54 +137,58 @@ export function PromptListHeader({ count }: PromptListHeaderProps) {
             className="flex items-center gap-1 px-2 py-1 text-xs rounded-md hover:bg-accent transition-colors"
           >
             <span className="text-muted-foreground">{currentOption.label}</span>
-            <ChevronDownIcon className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+            <ChevronDownIcon
+              className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`}
+            />
           </button>
 
-          {isOpen && createPortal(
-            <div
-              ref={dropdownRef}
-              className="prompt-list-sort-menu fixed w-32 py-1 rounded-lg bg-popover border border-border shadow-lg z-[9999]"
-              style={{ top: menuPosition.top, right: menuPosition.right }}
-            >
-              {sortOptions.map((option) => (
-                <button
-                  key={`${option.sortBy}-${option.sortOrder}`}
-                  onClick={() => handleSelectSort(option)}
-                  className={`w-full px-3 py-1.5 text-left text-xs hover:bg-accent transition-colors ${option.sortBy === sortBy && option.sortOrder === sortOrder
-                    ? 'text-primary font-medium'
-                    : 'text-foreground'
+          {isOpen &&
+            createPortal(
+              <div
+                ref={dropdownRef}
+                className="prompt-list-sort-menu fixed w-32 py-1 rounded-lg bg-popover border border-border shadow-lg z-[9999]"
+                style={{ top: menuPosition.top, right: menuPosition.right }}
+              >
+                {sortOptions.map((option) => (
+                  <button
+                    key={`${option.sortBy}-${option.sortOrder}`}
+                    onClick={() => handleSelectSort(option)}
+                    className={`w-full px-3 py-1.5 text-left text-xs hover:bg-accent transition-colors ${
+                      option.sortBy === sortBy && option.sortOrder === sortOrder
+                        ? "text-primary font-medium"
+                        : "text-foreground"
                     }`}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>,
-            document.body
-          )}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>,
+              document.body,
+            )}
         </div>
 
         {/* Image size control - Only shown in Gallery mode */}
         {/* 图片大小控制 - 仅在 Gallery 模式显示 */}
-        {viewMode === 'gallery' && (
+        {viewMode === "gallery" && (
           <div className="flex items-center border border-border rounded-md overflow-hidden mr-2">
             <button
-              onClick={() => setGalleryImageSize('small')}
-              className={`px-2 py-1 text-xs transition-colors ${galleryImageSize === 'small' ? 'bg-primary text-white' : 'hover:bg-accent text-muted-foreground'}`}
-              title={t('prompt.sizeSmall', '小图')}
+              onClick={() => setGalleryImageSize("small")}
+              className={`px-2 py-1 text-xs transition-colors ${galleryImageSize === "small" ? "bg-primary text-white" : "hover:bg-accent text-muted-foreground"}`}
+              title={t("prompt.sizeSmall", "小图")}
             >
               S
             </button>
             <button
-              onClick={() => setGalleryImageSize('medium')}
-              className={`px-2 py-1 text-xs transition-colors ${galleryImageSize === 'medium' ? 'bg-primary text-white' : 'hover:bg-accent text-muted-foreground'}`}
-              title={t('prompt.sizeMedium', '中图')}
+              onClick={() => setGalleryImageSize("medium")}
+              className={`px-2 py-1 text-xs transition-colors ${galleryImageSize === "medium" ? "bg-primary text-white" : "hover:bg-accent text-muted-foreground"}`}
+              title={t("prompt.sizeMedium", "中图")}
             >
               M
             </button>
             <button
-              onClick={() => setGalleryImageSize('large')}
-              className={`px-2 py-1 text-xs transition-colors ${galleryImageSize === 'large' ? 'bg-primary text-white' : 'hover:bg-accent text-muted-foreground'}`}
-              title={t('prompt.sizeLarge', '大图')}
+              onClick={() => setGalleryImageSize("large")}
+              className={`px-2 py-1 text-xs transition-colors ${galleryImageSize === "large" ? "bg-primary text-white" : "hover:bg-accent text-muted-foreground"}`}
+              title={t("prompt.sizeLarge", "大图")}
             >
               L
             </button>
@@ -167,26 +197,26 @@ export function PromptListHeader({ count }: PromptListHeaderProps) {
 
         {/* Kanban columns control - Only shown in Kanban mode */}
         {/* 看板列数控制 - 仅在看板模式显示 */}
-        {viewMode === 'kanban' && (
+        {viewMode === "kanban" && (
           <div className="flex items-center border border-border rounded-md overflow-hidden mr-2">
             <button
               onClick={() => setKanbanColumns(2)}
-              className={`px-2 py-1 text-xs transition-colors ${kanbanColumns === 2 ? 'bg-primary text-white' : 'hover:bg-accent text-muted-foreground'}`}
-              title={t('prompt.columns2', '2 列')}
+              className={`px-2 py-1 text-xs transition-colors ${kanbanColumns === 2 ? "bg-primary text-white" : "hover:bg-accent text-muted-foreground"}`}
+              title={t("prompt.columns2", "2 列")}
             >
               2
             </button>
             <button
               onClick={() => setKanbanColumns(3)}
-              className={`px-2 py-1 text-xs transition-colors ${kanbanColumns === 3 ? 'bg-primary text-white' : 'hover:bg-accent text-muted-foreground'}`}
-              title={t('prompt.columns3', '3 列')}
+              className={`px-2 py-1 text-xs transition-colors ${kanbanColumns === 3 ? "bg-primary text-white" : "hover:bg-accent text-muted-foreground"}`}
+              title={t("prompt.columns3", "3 列")}
             >
               3
             </button>
             <button
               onClick={() => setKanbanColumns(4)}
-              className={`px-2 py-1 text-xs transition-colors ${kanbanColumns === 4 ? 'bg-primary text-white' : 'hover:bg-accent text-muted-foreground'}`}
-              title={t('prompt.columns4', '4 列')}
+              className={`px-2 py-1 text-xs transition-colors ${kanbanColumns === 4 ? "bg-primary text-white" : "hover:bg-accent text-muted-foreground"}`}
+              title={t("prompt.columns4", "4 列")}
             >
               4
             </button>
@@ -201,50 +231,58 @@ export function PromptListHeader({ count }: PromptListHeaderProps) {
           <div
             className="absolute h-full bg-primary rounded-[3px] transition-all duration-base ease-out"
             style={{
-              width: 'calc(100% / 4)',
-              left: viewMode === 'card' ? '0%' 
-                : viewMode === 'gallery' ? 'calc(100% / 4)' 
-                : viewMode === 'kanban' ? 'calc(200% / 4)' 
-                : 'calc(300% / 4)',
+              width: "calc(100% / 4)",
+              left:
+                viewMode === "card"
+                  ? "0%"
+                  : viewMode === "gallery"
+                    ? "calc(100% / 4)"
+                    : viewMode === "kanban"
+                      ? "calc(200% / 4)"
+                      : "calc(300% / 4)",
             }}
           />
           <button
-            onClick={() => setViewMode('card')}
-            className={`relative z-10 p-1.5 transition-colors duration-base ${viewMode === 'card'
-              ? 'text-white'
-              : 'text-muted-foreground hover:text-foreground'
-              }`}
-            title={t('prompt.viewCard')}
+            onClick={() => setViewMode("card")}
+            className={`relative z-10 p-1.5 transition-colors duration-base ${
+              viewMode === "card"
+                ? "text-white"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+            title={t("prompt.viewCard")}
           >
             <LayoutGridIcon className="w-3.5 h-3.5" />
           </button>
           <button
-            onClick={() => setViewMode('gallery')}
-            className={`relative z-10 p-1.5 transition-colors duration-base ${viewMode === 'gallery'
-              ? 'text-white'
-              : 'text-muted-foreground hover:text-foreground'
-              }`}
-            title={t('prompt.viewGallery', '图片视图')}
+            onClick={() => setViewMode("gallery")}
+            className={`relative z-10 p-1.5 transition-colors duration-base ${
+              viewMode === "gallery"
+                ? "text-white"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+            title={t("prompt.viewGallery", "图片视图")}
           >
             <ImageIcon className="w-3.5 h-3.5" />
           </button>
           <button
-            onClick={() => setViewMode('kanban')}
-            className={`relative z-10 p-1.5 transition-colors duration-base ${viewMode === 'kanban'
-              ? 'text-white'
-              : 'text-muted-foreground hover:text-foreground'
-              }`}
-            title={t('prompt.viewKanban', '看板视图')}
+            onClick={() => setViewMode("kanban")}
+            className={`relative z-10 p-1.5 transition-colors duration-base ${
+              viewMode === "kanban"
+                ? "text-white"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+            title={t("prompt.viewKanban", "看板视图")}
           >
             <KanbanIcon className="w-3.5 h-3.5" />
           </button>
           <button
-            onClick={() => setViewMode('list')}
-            className={`relative z-10 p-1.5 transition-colors duration-base ${viewMode === 'list'
-              ? 'text-white'
-              : 'text-muted-foreground hover:text-foreground'
-              }`}
-            title={t('prompt.viewList')}
+            onClick={() => setViewMode("list")}
+            className={`relative z-10 p-1.5 transition-colors duration-base ${
+              viewMode === "list"
+                ? "text-white"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+            title={t("prompt.viewList")}
           >
             <ListIcon className="w-3.5 h-3.5" />
           </button>

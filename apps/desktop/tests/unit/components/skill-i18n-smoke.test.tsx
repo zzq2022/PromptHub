@@ -193,6 +193,7 @@ function createSettingsState(overrides: Partial<Record<string, unknown>> = {}) {
     skillProjects: [],
     projectSkillImportModePreference: "copy",
     projectSkillImportPreferencesByProjectId: {},
+    defaultProjectDeployTargetPath: ".agents/skills",
     setProjectSkillImportModePreference: vi.fn(),
     setProjectSkillImportPreferences: vi.fn(),
     skillListPageSize: 10,

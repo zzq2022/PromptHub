@@ -63,12 +63,29 @@ const skillHighlightStyle = HighlightStyle.define([
     tag: [tags.name, tags.variableName, tags.propertyName],
     color: "var(--skill-code-variable)",
   },
-  { tag: [tags.function(tags.variableName), tags.labelName], color: "var(--skill-code-function)" },
-  { tag: [tags.string, tags.special(tags.string)], color: "var(--skill-code-string)" },
-  { tag: [tags.number, tags.bool, tags.null, tags.atom], color: "var(--skill-code-atom)" },
-  { tag: [tags.comment, tags.lineComment, tags.blockComment], color: "var(--skill-code-comment)", fontStyle: "italic" },
+  {
+    tag: [tags.function(tags.variableName), tags.labelName],
+    color: "var(--skill-code-function)",
+  },
+  {
+    tag: [tags.string, tags.special(tags.string)],
+    color: "var(--skill-code-string)",
+  },
+  {
+    tag: [tags.number, tags.bool, tags.null, tags.atom],
+    color: "var(--skill-code-atom)",
+  },
+  {
+    tag: [tags.comment, tags.lineComment, tags.blockComment],
+    color: "var(--skill-code-comment)",
+    fontStyle: "italic",
+  },
   { tag: tags.heading, color: "var(--skill-code-heading)", fontWeight: "700" },
-  { tag: [tags.link, tags.url], color: "var(--skill-code-link)", textDecoration: "underline" },
+  {
+    tag: [tags.link, tags.url],
+    color: "var(--skill-code-link)",
+    textDecoration: "underline",
+  },
   { tag: [tags.invalid, tags.deleted], color: "var(--skill-code-invalid)" },
   { tag: tags.inserted, color: "var(--skill-code-inserted)" },
 ]);

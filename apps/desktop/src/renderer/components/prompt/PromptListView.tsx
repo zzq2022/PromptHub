@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type {
   DragEvent as ReactDragEvent,
   MouseEvent as ReactMouseEvent,
-} from 'react';
-import { useTranslation } from 'react-i18next';
+} from "react";
+import { useTranslation } from "react-i18next";
 import {
   ChevronDownIcon,
   ChevronRightIcon,
@@ -11,10 +11,10 @@ import {
   GripVerticalIcon,
   ImageIcon,
   StarIcon,
-} from 'lucide-react';
-import type { Prompt } from '@prompthub/shared/types';
+} from "lucide-react";
+import type { Prompt } from "@prompthub/shared/types";
 
-type DropPosition = 'before' | 'after' | 'inside';
+type DropPosition = "before" | "after" | "inside";
 
 interface PromptListViewProps {
   prompts: Prompt[];
@@ -30,7 +30,7 @@ interface PromptListViewProps {
     newOrder: number,
   ) => void;
   sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
+  sortOrder?: "asc" | "desc";
 }
 
 function comparePromptTreeOrder(a: Prompt, b: Prompt): number {
@@ -46,14 +46,14 @@ function getDropPosition(event: ReactDragEvent<HTMLElement>): DropPosition {
   const y = event.clientY - rect.top;
 
   if (y < rect.height / 3) {
-    return 'before';
+    return "before";
   }
 
   if (y > (rect.height * 2) / 3) {
-    return 'after';
+    return "after";
   }
 
-  return 'inside';
+  return "inside";
 }
 
 export function PromptListView({
@@ -151,7 +151,7 @@ export function PromptListView({
 
       const selectedPrompt = promptById.get(selectedId);
       if (!selectedPrompt) return;
-      if (event.key !== 'Tab' || event.ctrlKey || event.metaKey) return;
+      if (event.key !== "Tab" || event.ctrlKey || event.metaKey) return;
 
       event.preventDefault();
 
@@ -185,11 +185,15 @@ export function PromptListView({
 
       const previousSibling = siblings[currentIndex - 1];
       setExpandedIds((current) => new Set(current).add(previousSibling.id));
-      onMovePrompt(selectedId, previousSibling.id, getChildren(previousSibling.id).length);
+      onMovePrompt(
+        selectedId,
+        previousSibling.id,
+        getChildren(previousSibling.id).length,
+      );
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [
     draggingId,
     getChildren,
@@ -207,22 +211,22 @@ export function PromptListView({
 
     if (diffDays === 0) {
       return date.toLocaleTimeString(undefined, {
-        hour: '2-digit',
-        minute: '2-digit',
+        hour: "2-digit",
+        minute: "2-digit",
       });
     }
 
     if (diffDays === 1) {
-      return t('common.yesterday') || '昨天';
+      return t("common.yesterday") || "昨天";
     }
 
     if (diffDays < 7) {
-      return `${diffDays}${t('common.daysAgo') || '天前'}`;
+      return `${diffDays}${t("common.daysAgo") || "天前"}`;
     }
 
     return date.toLocaleDateString(undefined, {
-      month: 'short',
-      day: 'numeric',
+      month: "short",
+      day: "numeric",
     });
   };
 
@@ -241,8 +245,8 @@ export function PromptListView({
   const handleDragStart = useCallback(
     (event: ReactDragEvent, promptId: string) => {
       setDraggingId(promptId);
-      event.dataTransfer.effectAllowed = 'move';
-      event.dataTransfer.setData('text/plain', promptId);
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", promptId);
     },
     [],
   );
@@ -256,7 +260,7 @@ export function PromptListView({
   const updateDropTarget = useCallback(
     (event: ReactDragEvent<HTMLElement>, targetPrompt: Prompt) => {
       event.preventDefault();
-      event.dataTransfer.dropEffect = 'move';
+      event.dataTransfer.dropEffect = "move";
 
       if (!draggingId || draggingId === targetPrompt.id) {
         setDropTargetId(null);
@@ -266,7 +270,7 @@ export function PromptListView({
 
       const nextDropPosition = getDropPosition(event);
       const nextParentId =
-        nextDropPosition === 'inside'
+        nextDropPosition === "inside"
           ? targetPrompt.id
           : getVisibleParentId(targetPrompt);
 
@@ -284,7 +288,10 @@ export function PromptListView({
 
   const handleDragLeave = useCallback((event: ReactDragEvent<HTMLElement>) => {
     const nextTarget = event.relatedTarget;
-    if (nextTarget instanceof Node && event.currentTarget.contains(nextTarget)) {
+    if (
+      nextTarget instanceof Node &&
+      event.currentTarget.contains(nextTarget)
+    ) {
       return;
     }
 
@@ -301,10 +308,14 @@ export function PromptListView({
         return;
       }
 
-      if (dropPosition === 'inside') {
+      if (dropPosition === "inside") {
         if (canMoveToParent(draggingId, targetPrompt.id)) {
           setExpandedIds((current) => new Set(current).add(targetPrompt.id));
-          onMovePrompt(draggingId, targetPrompt.id, getChildren(targetPrompt.id).length);
+          onMovePrompt(
+            draggingId,
+            targetPrompt.id,
+            getChildren(targetPrompt.id).length,
+          );
         }
         handleDragEnd();
         return;
@@ -325,7 +336,7 @@ export function PromptListView({
       const nextOrder =
         targetIndex < 0
           ? targetSiblings.length
-          : targetIndex + (dropPosition === 'after' ? 1 : 0);
+          : targetIndex + (dropPosition === "after" ? 1 : 0);
 
       onMovePrompt(draggingId, nextParentId, nextOrder);
       handleDragEnd();
@@ -342,7 +353,8 @@ export function PromptListView({
   );
 
   const isSelected = useCallback(
-    (promptId: string) => selectedId === promptId || selectedIds.includes(promptId),
+    (promptId: string) =>
+      selectedId === promptId || selectedIds.includes(promptId),
     [selectedId, selectedIds],
   );
 
@@ -382,26 +394,26 @@ export function PromptListView({
               transition-colors duration-quick relative
               ${
                 isSelected(prompt.id)
-                  ? 'bg-primary/10 border-l-2 border-l-primary'
-                  : isDropTarget(prompt.id) && dropPosition === 'inside'
-                    ? 'bg-primary/20 border-l-2 border-l-primary'
-                    : 'hover:bg-accent/50'
+                  ? "bg-primary/10 border-l-2 border-l-primary"
+                  : isDropTarget(prompt.id) && dropPosition === "inside"
+                    ? "bg-primary/20 border-l-2 border-l-primary"
+                    : "hover:bg-accent/50"
               }
-              ${isDragging(prompt.id) ? 'opacity-50' : ''}
+              ${isDragging(prompt.id) ? "opacity-50" : ""}
               ${
-                isDropTarget(prompt.id) && dropPosition === 'inside'
-                  ? 'ring-2 ring-primary/50 ring-inset'
-                  : ''
-              }
-              ${
-                isDropTarget(prompt.id) && dropPosition === 'before'
-                  ? 'border-t-2 border-t-primary'
-                  : ''
+                isDropTarget(prompt.id) && dropPosition === "inside"
+                  ? "ring-2 ring-primary/50 ring-inset"
+                  : ""
               }
               ${
-                isDropTarget(prompt.id) && dropPosition === 'after'
-                  ? 'border-b-2 border-b-primary'
-                  : ''
+                isDropTarget(prompt.id) && dropPosition === "before"
+                  ? "border-t-2 border-t-primary"
+                  : ""
+              }
+              ${
+                isDropTarget(prompt.id) && dropPosition === "after"
+                  ? "border-b-2 border-b-primary"
+                  : ""
               }
             `}
             style={{ paddingLeft: `${depth * 16 + 12}px` }}
@@ -415,7 +427,7 @@ export function PromptListView({
                     toggleExpand(prompt.id);
                   }}
                   className="p-0.5 rounded hover:bg-accent transition-colors"
-                  aria-label={isExpanded ? 'Collapse prompt' : 'Expand prompt'}
+                  aria-label={isExpanded ? "Collapse prompt" : "Expand prompt"}
                 >
                   {isExpanded ? (
                     <ChevronDownIcon className="w-4 h-4 text-muted-foreground" />
@@ -433,7 +445,7 @@ export function PromptListView({
               <div className="flex items-center gap-2">
                 <h3
                   className={`font-medium text-sm leading-snug break-words line-clamp-2 ${
-                    isSelected(prompt.id) ? 'text-primary' : 'text-foreground'
+                    isSelected(prompt.id) ? "text-primary" : "text-foreground"
                   }`}
                   title={prompt.title}
                 >
@@ -478,7 +490,7 @@ export function PromptListView({
                   onCopy(prompt);
                 }}
                 className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-                title={t('prompt.copy')}
+                title={t("prompt.copy")}
               >
                 <CopyIcon className="w-3.5 h-3.5" />
               </button>
@@ -490,18 +502,18 @@ export function PromptListView({
                 }}
                 className={`p-1.5 rounded-md transition-colors ${
                   prompt.isFavorite
-                    ? 'text-yellow-500 hover:bg-yellow-500/10'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                    ? "text-yellow-500 hover:bg-yellow-500/10"
+                    : "text-muted-foreground hover:text-foreground hover:bg-accent"
                 }`}
                 title={
                   prompt.isFavorite
-                    ? t('nav.favorites')
-                    : t('prompt.addToFavorites') || '添加收藏'
+                    ? t("nav.favorites")
+                    : t("prompt.addToFavorites") || "添加收藏"
                 }
               >
                 <StarIcon
                   className={`w-3.5 h-3.5 ${
-                    prompt.isFavorite ? 'fill-current' : ''
+                    prompt.isFavorite ? "fill-current" : ""
                   }`}
                 />
               </button>

@@ -37,8 +37,10 @@ export function setAuthCookies(
 }
 
 export function clearAuthCookies(c: Context): void {
-  deleteCookie(c, ACCESS_COOKIE_NAME, { path: '/' });
-  deleteCookie(c, REFRESH_COOKIE_NAME, { path: '/' });
+  const requestUrl = new URL(c.req.url);
+  const secure = requestUrl.protocol === 'https:';
+  deleteCookie(c, ACCESS_COOKIE_NAME, { path: '/', secure, sameSite: 'Lax' });
+  deleteCookie(c, REFRESH_COOKIE_NAME, { path: '/', secure, sameSite: 'Lax' });
 }
 
 export function getAccessTokenFromCookie(c: Context): string | undefined {

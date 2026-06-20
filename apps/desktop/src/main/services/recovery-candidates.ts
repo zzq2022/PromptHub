@@ -152,7 +152,9 @@ export function buildResidualLegacyRecoveryCandidate(
     countWorkspacePromptFiles(path.join(currentPath, "data", "prompts")),
   );
   const folderCount = Math.max(
-    readWorkspaceFolderCount(path.join(currentPath, "workspace", "folders.json")),
+    readWorkspaceFolderCount(
+      path.join(currentPath, "workspace", "folders.json"),
+    ),
     readWorkspaceFolderCount(path.join(currentPath, "data", "folders.json")),
   );
   const skillCount = Math.max(
@@ -183,7 +185,9 @@ export function buildResidualLegacyRecoveryCandidate(
   };
 }
 
-export function listStandaloneDatabaseBackupFiles(currentPath: string): string[] {
+export function listStandaloneDatabaseBackupFiles(
+  currentPath: string,
+): string[] {
   if (!fs.existsSync(currentPath)) {
     return [];
   }
@@ -236,7 +240,8 @@ export function buildDirectoryRecoveryCandidate(
     lastModified: options?.lastModified ?? latestModifiedIso(raw.sourcePath),
     previewAvailable,
     dataSources,
-    description: options?.description ?? candidateDescription(sourceType, dataSources),
+    description:
+      options?.description ?? candidateDescription(sourceType, dataSources),
     backupId: options?.backupId ?? null,
     fromVersion: options?.fromVersion ?? null,
     toVersion: options?.toVersion ?? null,
@@ -320,7 +325,9 @@ function extractFrontmatterTitle(raw: string): string | null {
   const value = titleLine.slice(titleLine.indexOf(":") + 1).trim();
   try {
     const parsed = JSON.parse(value);
-    return typeof parsed === "string" && parsed.trim().length > 0 ? parsed : null;
+    return typeof parsed === "string" && parsed.trim().length > 0
+      ? parsed
+      : null;
   } catch {
     return value.replace(/^['"]|['"]$/g, "") || null;
   }
@@ -388,7 +395,10 @@ function previewFromWorkspace(basePath: string): RecoveryPreviewResult {
         name?: string;
         createdAt?: unknown;
       }>;
-      for (const folder of parsed.slice(0, Math.max(0, PREVIEW_LIMIT - items.length))) {
+      for (const folder of parsed.slice(
+        0,
+        Math.max(0, PREVIEW_LIMIT - items.length),
+      )) {
         items.push({
           kind: "folder",
           id: folder.id,
@@ -418,7 +428,10 @@ function previewFromWorkspace(basePath: string): RecoveryPreviewResult {
       const entries = fs
         .readdirSync(skillsDir, { withFileTypes: true })
         .filter((entry) => entry.isDirectory());
-      for (const entry of entries.slice(0, Math.max(0, PREVIEW_LIMIT - items.length))) {
+      for (const entry of entries.slice(
+        0,
+        Math.max(0, PREVIEW_LIMIT - items.length),
+      )) {
         items.push({
           kind: "skill",
           title: entry.name,
@@ -454,7 +467,10 @@ function previewFromSqlite(dbPath: string): RecoveryPreviewResult {
       try {
         fs.rmSync(lockDir, { recursive: true, force: true });
       } catch (err) {
-        console.warn(`[Recovery] Failed to clear lock ${lockDir} during preview:`, err);
+        console.warn(
+          `[Recovery] Failed to clear lock ${lockDir} during preview:`,
+          err,
+        );
       }
     }
     candidateDb = new DatabaseAdapter(dbPath, { readOnly: true });
@@ -554,7 +570,9 @@ function previewFromSqlite(dbPath: string): RecoveryPreviewResult {
       sourcePath: dbPath,
       previewAvailable: true,
       items,
-      truncated: (promptTotal?.count ?? 0) + (folderTotal?.count ?? 0) + skillTotal > items.length,
+      truncated:
+        (promptTotal?.count ?? 0) + (folderTotal?.count ?? 0) + skillTotal >
+        items.length,
     };
   } catch (error) {
     return {
@@ -606,7 +624,9 @@ export async function previewRecoveryCandidate(
     return previewFromSqlite(candidate.sourcePath);
   }
 
-  const sqlitePath = fs.existsSync(path.join(candidate.sourcePath, "data", "prompthub.db"))
+  const sqlitePath = fs.existsSync(
+    path.join(candidate.sourcePath, "data", "prompthub.db"),
+  )
     ? path.join(candidate.sourcePath, "data", "prompthub.db")
     : path.join(candidate.sourcePath, "prompthub.db");
   if (fs.existsSync(sqlitePath)) {

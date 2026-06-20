@@ -3,7 +3,7 @@ import { persist } from "zustand/middleware";
 
 type ViewMode = "prompt" | "skill";
 
-export type AppModule = ViewMode | "rules";
+export type AppModule = ViewMode | "rules" | "projects";
 export type SettingsSectionId =
   | "web"
   | "devices"
@@ -42,7 +42,7 @@ function clamp(value: number, min: number, max: number): number {
 }
 
 function normalizeAppModule(value: unknown): AppModule {
-  return value === "skill" || value === "rules" || value === "prompt"
+  return value === "skill" || value === "rules" || value === "prompt" || value === "projects"
     ? value
     : "prompt";
 }

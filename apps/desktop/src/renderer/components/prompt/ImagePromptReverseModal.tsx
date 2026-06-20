@@ -115,7 +115,9 @@ export function ImagePromptReverseModal({
   const scenarioModelDefaults = useSettingsStore(
     (state) => state.scenarioModelDefaults,
   );
-  const modelRouteDefaults = useSettingsStore((state) => state.modelRouteDefaults);
+  const modelRouteDefaults = useSettingsStore(
+    (state) => state.modelRouteDefaults,
+  );
   const aiProvider = useSettingsStore((state) => state.aiProvider);
   const aiApiProtocol = useSettingsStore((state) => state.aiApiProtocol);
   const aiApiKey = useSettingsStore((state) => state.aiApiKey);
@@ -208,7 +210,10 @@ export function ImagePromptReverseModal({
   const handleImageFile = useCallback(
     async (file: File) => {
       if (!file.type.startsWith("image/")) {
-        showToast(t("imageReverse.unsupported", "Only image files are supported."), "error");
+        showToast(
+          t("imageReverse.unsupported", "Only image files are supported."),
+          "error",
+        );
         return;
       }
 
@@ -268,8 +273,8 @@ export function ImagePromptReverseModal({
     }
 
     const handlePaste = (event: ClipboardEvent) => {
-      const imageItem = Array.from(event.clipboardData?.items ?? []).find((item) =>
-        item.type.startsWith("image/"),
+      const imageItem = Array.from(event.clipboardData?.items ?? []).find(
+        (item) => item.type.startsWith("image/"),
       );
       const file = imageItem?.getAsFile();
       if (file) {
@@ -312,7 +317,10 @@ export function ImagePromptReverseModal({
     }
 
     if (!imageInput) {
-      showToast(t("imageReverse.needsImage", "Please add an image first."), "error");
+      showToast(
+        t("imageReverse.needsImage", "Please add an image first."),
+        "error",
+      );
       return;
     }
 
@@ -375,10 +383,16 @@ export function ImagePromptReverseModal({
       }
 
       setDraft(generatedDraft);
-      showToast(t("imageReverse.draftReady", "Reverse draft is ready"), "success");
+      showToast(
+        t("imageReverse.draftReady", "Reverse draft is ready"),
+        "success",
+      );
     } catch (error) {
       console.error("Image prompt reverse generation failed:", error);
-      showToast(t("imageReverse.failed", "Image prompt reverse failed"), "error");
+      showToast(
+        t("imageReverse.failed", "Image prompt reverse failed"),
+        "error",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -398,7 +412,8 @@ export function ImagePromptReverseModal({
       folderId: resolveMatchedFolderId(draft.suggestedFolder),
       promptType: "image",
       tags: draft.tags,
-      images: attachReferenceImage && imageInput ? [imageInput.fileName] : undefined,
+      images:
+        attachReferenceImage && imageInput ? [imageInput.fileName] : undefined,
       variables: extractPromptVariables(draft.userPrompt),
     });
 
@@ -508,7 +523,10 @@ export function ImagePromptReverseModal({
                     {imageInput.name}
                   </div>
                   <div className="mt-1 text-xs text-muted-foreground">
-                    {t("imageReverse.ready", "Ready to reverse into an image prompt")}
+                    {t(
+                      "imageReverse.ready",
+                      "Ready to reverse into an image prompt",
+                    )}
                   </div>
                   <button
                     type="button"
@@ -558,7 +576,10 @@ export function ImagePromptReverseModal({
                 setGuidance(event.target.value);
                 setDraft(null);
               }}
-              aria-label={t("imageReverse.guidance", "Extra guidance (optional)")}
+              aria-label={t(
+                "imageReverse.guidance",
+                "Extra guidance (optional)",
+              )}
               placeholder={t(
                 "imageReverse.placeholder",
                 "For example: make it more photorealistic and add quality terms for Midjourney / Stable Diffusion.",
@@ -576,10 +597,7 @@ export function ImagePromptReverseModal({
               <Checkbox
                 checked={attachReferenceImage}
                 onChange={setAttachReferenceImage}
-                label={t(
-                  "imageReverse.attachReference",
-                  "Keep as reference",
-                )}
+                label={t("imageReverse.attachReference", "Keep as reference")}
               />
             </div>
 
@@ -617,7 +635,10 @@ export function ImagePromptReverseModal({
                       onChange={(event) =>
                         setDraft({ ...draft, title: event.target.value })
                       }
-                      aria-label={t("imageReverse.draftTitleLabel", "Draft title")}
+                      aria-label={t(
+                        "imageReverse.draftTitleLabel",
+                        "Draft title",
+                      )}
                       className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
                     />
                   </div>
@@ -647,7 +668,10 @@ export function ImagePromptReverseModal({
                       <input
                         value={draft.description ?? ""}
                         onChange={(event) =>
-                          setDraft({ ...draft, description: event.target.value })
+                          setDraft({
+                            ...draft,
+                            description: event.target.value,
+                          })
                         }
                         aria-label={t("prompt.description", "Description")}
                         className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
@@ -691,10 +715,15 @@ export function ImagePromptReverseModal({
                     label: (
                       <div className="flex items-center gap-2">
                         <SparklesIcon className="h-4 w-4 shrink-0 text-primary" />
-                        <span>{t("quickAdd.smartFolder", "AI Smart Auto-Folder")}</span>
+                        <span>
+                          {t("quickAdd.smartFolder", "AI Smart Auto-Folder")}
+                        </span>
                       </div>
                     ),
-                    labelText: t("quickAdd.smartFolder", "AI Smart Auto-Folder"),
+                    labelText: t(
+                      "quickAdd.smartFolder",
+                      "AI Smart Auto-Folder",
+                    ),
                   },
                   ...folders.map((folder) => ({
                     value: folder.id,

@@ -78,7 +78,13 @@ const VIDEO_BATCH_SIZE = 5;
 const VIDEO_MAX_SIZE_BYTES = 100 * 1024 * 1024;
 const VIDEO_MAX_COUNT = 100;
 const SKILL_CONCURRENCY = 5;
-const SUPPORTED_BACKUP_EXTENSIONS = [".phub.gz", ".json", ".phub", ".gz", ".zip"];
+const SUPPORTED_BACKUP_EXTENSIONS = [
+  ".phub.gz",
+  ".json",
+  ".phub",
+  ".gz",
+  ".zip",
+];
 
 export const BACKUP_IMPORT_ACCEPT = ".json,.phub,.gz,.zip";
 
@@ -91,7 +97,8 @@ export function isSupportedBackupFileName(fileName: string): boolean {
 
 export function pickSupportedBackupFile(files: FileList | File[]): File | null {
   return (
-    Array.from(files).find((file) => isSupportedBackupFileName(file.name)) ?? null
+    Array.from(files).find((file) => isSupportedBackupFileName(file.name)) ??
+    null
   );
 }
 
@@ -291,7 +298,9 @@ async function collectSkillData(): Promise<{
         .filter((file) => {
           if (file.isDirectory) return false;
           const normalized = file.path.replace(/\\/g, "/").toLowerCase();
-          return !normalized.startsWith("versions/") && normalized !== "versions";
+          return (
+            !normalized.startsWith("versions/") && normalized !== "versions"
+          );
         })
         .map((file) => ({
           relativePath: file.path,
@@ -449,7 +458,9 @@ async function getAllPromptVersions(): Promise<PromptVersion[]> {
   });
 }
 
-function sortFoldersForRestore(folders: DatabaseBackup["folders"]): DatabaseBackup["folders"] {
+function sortFoldersForRestore(
+  folders: DatabaseBackup["folders"],
+): DatabaseBackup["folders"] {
   const remaining = new Map(folders.map((folder) => [folder.id, folder]));
   const restored = new Set<string>();
   const ordered: DatabaseBackup["folders"] = [];
@@ -458,7 +469,11 @@ function sortFoldersForRestore(folders: DatabaseBackup["folders"]): DatabaseBack
     let progressed = false;
 
     for (const [id, folder] of remaining) {
-      if (!folder.parentId || restored.has(folder.parentId) || !remaining.has(folder.parentId)) {
+      if (
+        !folder.parentId ||
+        restored.has(folder.parentId) ||
+        !remaining.has(folder.parentId)
+      ) {
         ordered.push(folder);
         restored.add(id);
         remaining.delete(id);
@@ -579,11 +594,13 @@ export async function importDatabase(backup: DatabaseBackup): Promise<void> {
 
   // Never clear local data unless the imported payload has already passed the
   // same structural validation as file-based imports.
-  parsePromptHubBackupFileContent(JSON.stringify({
-    kind: "prompthub-backup",
-    exportedAt: normalizedBackup.exportedAt,
-    payload: normalizedBackup,
-  }));
+  parsePromptHubBackupFileContent(
+    JSON.stringify({
+      kind: "prompthub-backup",
+      exportedAt: normalizedBackup.exportedAt,
+      payload: normalizedBackup,
+    }),
+  );
 
   if (!hasMeaningfulBackupContent(normalizedBackup)) {
     throw new Error(
@@ -717,7 +734,10 @@ export async function importDatabase(backup: DatabaseBackup): Promise<void> {
     }
   }
 
-  if (normalizedBackup.skillVersions && normalizedBackup.skillVersions.length > 0) {
+  if (
+    normalizedBackup.skillVersions &&
+    normalizedBackup.skillVersions.length > 0
+  ) {
     const nextCurrentVersionBySkillId = new Map<string, number>();
 
     for (const version of normalizedBackup.skillVersions) {
@@ -728,7 +748,7 @@ export async function importDatabase(backup: DatabaseBackup): Promise<void> {
 
         if (!restoredSkillId) {
           console.warn(
-            `Skipping skill version restore for skill "${version.skillId}" because the corresponding skill was not successfully restored in the database.`
+            `Skipping skill version restore for skill "${version.skillId}" because the corresponding skill was not successfully restored in the database.`,
           );
           continue;
         }
@@ -770,14 +790,16 @@ export async function importDatabase(backup: DatabaseBackup): Promise<void> {
   }
 
   if (normalizedBackup.skillFiles) {
-    for (const [skillKey, files] of Object.entries(normalizedBackup.skillFiles)) {
+    for (const [skillKey, files] of Object.entries(
+      normalizedBackup.skillFiles,
+    )) {
       const restoredSkillId =
         restoredSkillIdMap.get(skillKey) ??
         restoredSkillsByName.get(skillKey)?.id;
 
       if (!restoredSkillId) {
         console.warn(
-          `Skipping skill files restore for key "${skillKey}" because the corresponding skill was not successfully restored in the database.`
+          `Skipping skill files restore for key "${skillKey}" because the corresponding skill was not successfully restored in the database.`,
         );
         continue;
       }
@@ -875,7 +897,9 @@ export async function downloadSelectiveExport(
     videos: normalized.videos ? fullBackup.videos : undefined,
     aiConfig: normalized.aiConfig ? fullBackup.aiConfig : undefined,
     settings: normalized.settings ? fullBackup.settings : undefined,
-    settingsUpdatedAt: normalized.settings ? fullBackup.settingsUpdatedAt : undefined,
+    settingsUpdatedAt: normalized.settings
+      ? fullBackup.settingsUpdatedAt
+      : undefined,
     rules: normalized.rules ? fullBackup.rules : undefined,
     skills: normalized.skills ? fullBackup.skills : undefined,
     skillVersions: normalized.skills ? fullBackup.skillVersions : undefined,
@@ -940,7 +964,9 @@ export async function restoreFromFile(file: File): Promise<ImportSkippedStats> {
   return skipped;
 }
 
-export async function restoreFromBackup(backup: DatabaseBackup): Promise<ImportSkippedStats> {
+export async function restoreFromBackup(
+  backup: DatabaseBackup,
+): Promise<ImportSkippedStats> {
   await importDatabase(backup);
   return createEmptySkippedStats();
 }

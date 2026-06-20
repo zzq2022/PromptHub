@@ -15,8 +15,7 @@ export function normalizeVersion(value: string): string {
 
 export function parseVersion(value: string): ParsedVersion | null {
   const normalized = normalizeVersion(value);
-  const match =
-    /^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?$/.exec(normalized);
+  const match = /^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?$/.exec(normalized);
 
   if (!match) {
     return null;
@@ -81,7 +80,10 @@ export function compareVersions(left: string, right: string): number {
     }
   }
 
-  if (parsedLeft.prerelease.length === 0 && parsedRight.prerelease.length === 0) {
+  if (
+    parsedLeft.prerelease.length === 0 &&
+    parsedRight.prerelease.length === 0
+  ) {
     return 0;
   }
 

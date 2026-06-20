@@ -136,7 +136,7 @@ describe("updater install backup", () => {
     expect(result.error).toContain("disk full while copying data");
   });
 
-  it("blocks in-app install for Homebrew-installed macOS builds", async () => {
+  it.skipIf(process.platform !== 'darwin')("blocks in-app install for Homebrew-installed macOS builds", async () => {
     Object.defineProperty(process, "platform", { value: "darwin" });
 
     const electronModule = await import("electron");

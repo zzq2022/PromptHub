@@ -129,6 +129,7 @@ function createSettingsState(overrides: Partial<Record<string, unknown>> = {}) {
     skillInstallMethod: "symlink",
     skillProjects: [],
     projectSkillImportModePreference: "copy",
+    defaultProjectDeployTargetPath: ".agents/skills",
     setProjectSkillImportModePreference: vi.fn(),
     skillListPageSize: 10,
     setSkillListPageSize: vi.fn(),

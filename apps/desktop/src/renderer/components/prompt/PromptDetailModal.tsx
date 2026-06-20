@@ -1,18 +1,33 @@
-import { useTranslation } from 'react-i18next';
-import { StarIcon, HashIcon, ClockIcon, CopyIcon, CheckIcon, SparklesIcon, EditIcon, Maximize2Icon, Minimize2Icon, GlobeIcon, PlayIcon, VideoIcon, BracesIcon, Share2Icon } from 'lucide-react';
-import { Modal } from '../ui/Modal';
-import { ImagePreviewModal } from '../ui/ImagePreviewModal';
-import { LocalImage } from '../ui/LocalImage';
-import { PromptQuickRewriteDialog } from './PromptQuickRewriteDialog';
-import { PromptQuickRewriteTrigger } from './PromptQuickRewriteTrigger';
-import type { Prompt } from '@prompthub/shared/types';
-import { useEffect, useMemo, useState } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import rehypeSanitize from 'rehype-sanitize';
-import rehypeHighlight from 'rehype-highlight';
-import { defaultSchema } from 'hast-util-sanitize';
-import { resolveLocalVideoSrc } from '../../utils/media-url';
+import { useTranslation } from "react-i18next";
+import {
+  StarIcon,
+  HashIcon,
+  ClockIcon,
+  CopyIcon,
+  CheckIcon,
+  SparklesIcon,
+  EditIcon,
+  Maximize2Icon,
+  Minimize2Icon,
+  GlobeIcon,
+  PlayIcon,
+  VideoIcon,
+  BracesIcon,
+  Share2Icon,
+} from "lucide-react";
+import { Modal } from "../ui/Modal";
+import { ImagePreviewModal } from "../ui/ImagePreviewModal";
+import { LocalImage } from "../ui/LocalImage";
+import { PromptQuickRewriteDialog } from "./PromptQuickRewriteDialog";
+import { PromptQuickRewriteTrigger } from "./PromptQuickRewriteTrigger";
+import type { Prompt } from "@prompthub/shared/types";
+import { useEffect, useMemo, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeSanitize from "rehype-sanitize";
+import rehypeHighlight from "rehype-highlight";
+import { defaultSchema } from "hast-util-sanitize";
+import { resolveLocalVideoSrc } from "../../utils/media-url";
 
 interface PromptDetailModalProps {
   isOpen: boolean;
@@ -41,23 +56,22 @@ export function PromptDetailModal({
   const [shared, setShared] = useState(false);
   const [isQuickRewriteOpen, setIsQuickRewriteOpen] = useState(false);
 
-
   const preferEnglish = useMemo(() => {
-    const lang = (i18n.language || '').toLowerCase();
-    return !(lang.startsWith('zh'));
+    const lang = (i18n.language || "").toLowerCase();
+    return !lang.startsWith("zh");
   }, [i18n.language]);
 
   // 动态语言标签
   const uiLangTag = useMemo(() => {
-    const lang = (i18n.language || '').toLowerCase();
-    if (lang.startsWith('zh')) return 'ZH';
-    if (lang.startsWith('ja')) return 'JA';
-    if (lang.startsWith('de')) return 'DE';
-    if (lang.startsWith('fr')) return 'FR';
-    if (lang.startsWith('es')) return 'ES';
-    if (lang.startsWith('ko')) return 'KO';
-    if (lang.startsWith('en')) return 'EN';
-    return lang.split('-')[0].toUpperCase();
+    const lang = (i18n.language || "").toLowerCase();
+    if (lang.startsWith("zh")) return "ZH";
+    if (lang.startsWith("ja")) return "JA";
+    if (lang.startsWith("de")) return "DE";
+    if (lang.startsWith("fr")) return "FR";
+    if (lang.startsWith("es")) return "ES";
+    if (lang.startsWith("ko")) return "KO";
+    if (lang.startsWith("en")) return "EN";
+    return lang.split("-")[0].toUpperCase();
   }, [i18n.language]);
 
   // Automatically select Prompt language based on UI language (if English version exists)
@@ -75,10 +89,13 @@ export function PromptDetailModal({
   }, [prompt?.id, prompt?.systemPromptEn, prompt?.userPromptEn, preferEnglish]);
 
   const sanitizeSchema: any = useMemo(() => {
-    const schema = { ...defaultSchema, attributes: { ...defaultSchema.attributes } };
-    schema.attributes.code = [...(schema.attributes.code || []), ['className']];
-    schema.attributes.span = [...(schema.attributes.span || []), ['className']];
-    schema.attributes.pre = [...(schema.attributes.pre || []), ['className']];
+    const schema = {
+      ...defaultSchema,
+      attributes: { ...defaultSchema.attributes },
+    };
+    schema.attributes.code = [...(schema.attributes.code || []), ["className"]];
+    schema.attributes.span = [...(schema.attributes.span || []), ["className"]];
+    schema.attributes.pre = [...(schema.attributes.pre || []), ["className"]];
     return schema;
   }, []);
 
@@ -90,23 +107,62 @@ export function PromptDetailModal({
     [sanitizeSchema],
   );
 
-  const markdownComponents = useMemo(() => ({
-    h1: (props: any) => <h1 className="text-xl font-bold mb-3 text-foreground" {...props} />,
-    h2: (props: any) => <h2 className="text-lg font-semibold mb-2 mt-4 text-foreground" {...props} />,
-    h3: (props: any) => <h3 className="text-base font-semibold mb-2 mt-3 text-foreground" {...props} />,
-    p: (props: any) => <p className="mb-2 leading-relaxed text-foreground/90" {...props} />,
-    ul: (props: any) => <ul className="list-disc pl-5 mb-2 space-y-1" {...props} />,
-    ol: (props: any) => <ol className="list-decimal pl-5 mb-2 space-y-1" {...props} />,
-    li: (props: any) => <li className="leading-relaxed" {...props} />,
-    code: (props: any) => <code className="px-1 py-0.5 rounded bg-muted font-mono text-[12px]" {...props} />,
-    pre: (props: any) => (
-      <pre className="p-3 rounded-lg bg-muted overflow-x-auto text-[12px] leading-relaxed" {...props} />
-    ),
-    blockquote: (props: any) => (
-      <blockquote className="border-l-4 border-border pl-3 text-muted-foreground italic mb-3" {...props} />
-    ),
-    a: (props: any) => <a className="text-primary hover:underline" {...props} target="_blank" rel="noreferrer" />,
-  }), []);
+  const markdownComponents = useMemo(
+    () => ({
+      h1: (props: any) => (
+        <h1 className="text-xl font-bold mb-3 text-foreground" {...props} />
+      ),
+      h2: (props: any) => (
+        <h2
+          className="text-lg font-semibold mb-2 mt-4 text-foreground"
+          {...props}
+        />
+      ),
+      h3: (props: any) => (
+        <h3
+          className="text-base font-semibold mb-2 mt-3 text-foreground"
+          {...props}
+        />
+      ),
+      p: (props: any) => (
+        <p className="mb-2 leading-relaxed text-foreground/90" {...props} />
+      ),
+      ul: (props: any) => (
+        <ul className="list-disc pl-5 mb-2 space-y-1" {...props} />
+      ),
+      ol: (props: any) => (
+        <ol className="list-decimal pl-5 mb-2 space-y-1" {...props} />
+      ),
+      li: (props: any) => <li className="leading-relaxed" {...props} />,
+      code: (props: any) => (
+        <code
+          className="px-1 py-0.5 rounded bg-muted font-mono text-[12px]"
+          {...props}
+        />
+      ),
+      pre: (props: any) => (
+        <pre
+          className="p-3 rounded-lg bg-muted overflow-x-auto text-[12px] leading-relaxed"
+          {...props}
+        />
+      ),
+      blockquote: (props: any) => (
+        <blockquote
+          className="border-l-4 border-border pl-3 text-muted-foreground italic mb-3"
+          {...props}
+        />
+      ),
+      a: (props: any) => (
+        <a
+          className="text-primary hover:underline"
+          {...props}
+          target="_blank"
+          rel="noreferrer"
+        />
+      ),
+    }),
+    [],
+  );
 
   const renderPromptContent = (content?: string) => {
     if (!content) {
@@ -146,7 +202,7 @@ export function PromptDetailModal({
   };
 
   const allVariables = [
-    ...extractVariables(prompt.systemPrompt || ''),
+    ...extractVariables(prompt.systemPrompt || ""),
     ...extractVariables(prompt.userPrompt),
   ].filter((v, i, arr) => arr.indexOf(v) === i);
 
@@ -175,10 +231,9 @@ export function PromptDetailModal({
     }
   };
 
-
   const handleShare = async () => {
     if (!prompt) return;
-    
+
     const data = {
       name: prompt.title,
       description: prompt.description,
@@ -188,17 +243,17 @@ export function PromptDetailModal({
       systemPromptEn: prompt.systemPromptEn,
       tags: prompt.tags,
       variables: allVariables,
-      source: 'prompthub',
-      version: '1.0'
+      source: "prompthub",
+      version: "1.0",
     };
-    
+
     const jsonStr = JSON.stringify(data, null, 2);
     await navigator.clipboard.writeText(jsonStr);
-    
+
     // Set a session flag to prevent the app from detecting its own copy as a new import
     const checksum = `${jsonStr.length}-${jsonStr.substring(0, 10)}`;
-    sessionStorage.setItem('lastCopiedPromptSignature', checksum);
-    
+    sessionStorage.setItem("lastCopiedPromptSignature", checksum);
+
     setShared(true);
     setTimeout(() => setShared(false), 2000);
   };
@@ -206,29 +261,43 @@ export function PromptDetailModal({
   const headerActions = (
     <div className="flex items-center gap-2">
       {/* 语言切换按钮 - 英文界面时隐藏 */}
-      {(prompt.systemPromptEn || prompt.userPromptEn) && !i18n.language.startsWith('en') && (
-        <button
-          onClick={() => setShowEnglish(!showEnglish)}
-          className={`
+      {(prompt.systemPromptEn || prompt.userPromptEn) &&
+        !i18n.language.startsWith("en") && (
+          <button
+            onClick={() => setShowEnglish(!showEnglish)}
+            className={`
             flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all
-            ${showEnglish 
-              ? 'bg-primary text-white' 
-              : 'bg-muted hover:bg-accent text-foreground'
+            ${
+              showEnglish
+                ? "bg-primary text-white"
+                : "bg-muted hover:bg-accent text-foreground"
             }
           `}
-          title={showEnglish ? t('prompt.showLocalized', '显示当前语言') : t('prompt.showEnglish')}
-        >
-          <GlobeIcon className="w-3.5 h-3.5" />
-          {showEnglish ? 'EN' : uiLangTag}
-        </button>
-      )}
+            title={
+              showEnglish
+                ? t("prompt.showLocalized", "显示当前语言")
+                : t("prompt.showEnglish")
+            }
+          >
+            <GlobeIcon className="w-3.5 h-3.5" />
+            {showEnglish ? "EN" : uiLangTag}
+          </button>
+        )}
 
       <button
         onClick={() => setIsFullscreen((v) => !v)}
         className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-        title={isFullscreen ? t('common.exitFullscreen', '退出全屏') : t('common.fullscreen', '全屏')}
+        title={
+          isFullscreen
+            ? t("common.exitFullscreen", "退出全屏")
+            : t("common.fullscreen", "全屏")
+        }
       >
-        {isFullscreen ? <Minimize2Icon className="w-4 h-4" /> : <Maximize2Icon className="w-4 h-4" />}
+        {isFullscreen ? (
+          <Minimize2Icon className="w-4 h-4" />
+        ) : (
+          <Maximize2Icon className="w-4 h-4" />
+        )}
       </button>
 
       <PromptQuickRewriteTrigger
@@ -238,10 +307,14 @@ export function PromptDetailModal({
 
       <button
         onClick={handleShare}
-        className={`p-2 rounded-lg transition-all ${shared ? 'text-green-500 bg-green-500/10' : 'text-muted-foreground hover:text-foreground hover:bg-accent'}`}
-        title={t('prompt.shareJSON', '分享为 JSON')}
+        className={`p-2 rounded-lg transition-all ${shared ? "text-green-500 bg-green-500/10" : "text-muted-foreground hover:text-foreground hover:bg-accent"}`}
+        title={t("prompt.shareJSON", "分享为 JSON")}
       >
-        {shared ? <CheckIcon className="w-4 h-4" /> : <Share2Icon className="w-4 h-4" />}
+        {shared ? (
+          <CheckIcon className="w-4 h-4" />
+        ) : (
+          <Share2Icon className="w-4 h-4" />
+        )}
       </button>
       {onEdit && (
         <button
@@ -253,7 +326,7 @@ export function PromptDetailModal({
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm font-medium"
         >
           <EditIcon className="w-4 h-4" />
-          <span>{t('prompt.edit', '编辑')}</span>
+          <span>{t("prompt.edit", "编辑")}</span>
         </button>
       )}
     </div>
@@ -267,7 +340,7 @@ export function PromptDetailModal({
         onClose();
       }}
       title={prompt.title}
-      size={isFullscreen ? 'fullscreen' : 'xl'}
+      size={isFullscreen ? "fullscreen" : "xl"}
       headerActions={headerActions}
     >
       <div className="space-y-6">
@@ -276,23 +349,31 @@ export function PromptDetailModal({
           {prompt.isFavorite && (
             <div className="flex items-center gap-1">
               <StarIcon className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-              <span>{t('nav.favorites')}</span>
+              <span>{t("nav.favorites")}</span>
             </div>
           )}
           <div className="flex items-center gap-1">
             <ClockIcon className="w-4 h-4" />
-            <span>{t('prompt.updatedAt')}: {formatDate(prompt.updatedAt)}</span>
+            <span>
+              {t("prompt.updatedAt")}: {formatDate(prompt.updatedAt)}
+            </span>
           </div>
           <div className="flex items-center gap-1">
-            <span>{t('prompt.usageCount')}: {prompt.usageCount || 0}</span>
+            <span>
+              {t("prompt.usageCount")}: {prompt.usageCount || 0}
+            </span>
           </div>
         </div>
 
         {/* 描述 */}
         {prompt.description && (
           <div>
-            <h4 className="text-sm font-medium text-muted-foreground mb-2">{t('prompt.description')}</h4>
-            <p className="text-sm bg-muted/30 rounded-lg p-3">{prompt.description}</p>
+            <h4 className="text-sm font-medium text-muted-foreground mb-2">
+              {t("prompt.description")}
+            </h4>
+            <p className="text-sm bg-muted/30 rounded-lg p-3">
+              {prompt.description}
+            </p>
           </div>
         )}
 
@@ -301,11 +382,16 @@ export function PromptDetailModal({
           <div>
             <h4 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
               <GlobeIcon className="w-3.5 h-3.5" />
-              {t('prompt.source')}
+              {t("prompt.source")}
             </h4>
             <div className="text-sm bg-muted/30 rounded-lg p-3 break-all">
-              {prompt.source.startsWith('http') ? (
-                <a href={prompt.source} target="_blank" rel="noreferrer" className="text-primary hover:underline flex items-center gap-1 inline-flex">
+              {prompt.source.startsWith("http") ? (
+                <a
+                  href={prompt.source}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-primary hover:underline flex items-center gap-1 inline-flex"
+                >
                   <span className="truncate max-w-full">{prompt.source}</span>
                 </a>
               ) : (
@@ -318,7 +404,9 @@ export function PromptDetailModal({
         {/* 备注 / Notes */}
         {prompt.notes && (
           <div>
-            <h4 className="text-sm font-medium text-muted-foreground mb-2">{t('prompt.notes')}</h4>
+            <h4 className="text-sm font-medium text-muted-foreground mb-2">
+              {t("prompt.notes")}
+            </h4>
             <div className="text-sm bg-yellow-500/5 border border-yellow-500/10 rounded-lg p-3 text-foreground/80 italic">
               {prompt.notes}
             </div>
@@ -328,10 +416,15 @@ export function PromptDetailModal({
         {/* 图片 */}
         {prompt.images && prompt.images.length > 0 && (
           <div>
-            <h4 className="text-sm font-medium text-muted-foreground mb-2">{t('prompt.referenceImages')}</h4>
+            <h4 className="text-sm font-medium text-muted-foreground mb-2">
+              {t("prompt.referenceImages")}
+            </h4>
             <div className="flex flex-wrap gap-4">
               {prompt.images.map((img, index) => (
-                <div key={index} className="rounded-lg overflow-hidden border border-border shadow-sm">
+                <div
+                  key={index}
+                  className="rounded-lg overflow-hidden border border-border shadow-sm"
+                >
                   <LocalImage
                     src={img}
                     alt={`image-${index}`}
@@ -350,11 +443,14 @@ export function PromptDetailModal({
           <div>
             <h4 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
               <VideoIcon className="w-4 h-4" />
-              {t('prompt.previewVideos', '预览视频')}
+              {t("prompt.previewVideos", "预览视频")}
             </h4>
             <div className="flex flex-wrap gap-4">
               {prompt.videos.map((video, index) => (
-                <div key={index} className="relative rounded-lg overflow-hidden border border-border shadow-sm bg-muted">
+                <div
+                  key={index}
+                  className="relative rounded-lg overflow-hidden border border-border shadow-sm bg-muted"
+                >
                   <video
                     src={resolveLocalVideoSrc(video)}
                     className="max-w-[300px] max-h-[200px] object-cover"
@@ -370,7 +466,9 @@ export function PromptDetailModal({
         {/* 标签 */}
         {prompt.tags && prompt.tags.length > 0 && (
           <div>
-            <h4 className="text-sm font-medium text-muted-foreground mb-2">{t('prompt.tags')}</h4>
+            <h4 className="text-sm font-medium text-muted-foreground mb-2">
+              {t("prompt.tags")}
+            </h4>
             <div className="flex flex-wrap gap-2">
               {prompt.tags.map((tag) => (
                 <span
@@ -390,7 +488,7 @@ export function PromptDetailModal({
           <div>
             <h4 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
               <BracesIcon className="w-4 h-4" />
-              {t('prompt.variables')} ({allVariables.length})
+              {t("prompt.variables")} ({allVariables.length})
             </h4>
             <div className="flex flex-wrap gap-2">
               {allVariables.map((variable) => (
@@ -410,18 +508,30 @@ export function PromptDetailModal({
           <div>
             <div className="flex items-center justify-between mb-2">
               <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-1">
-                {t('prompt.systemPrompt')}
-                {showEnglish && <span className="px-1 py-0.5 rounded bg-primary/10 text-primary text-[10px]">EN</span>}
+                {t("prompt.systemPrompt")}
+                {showEnglish && (
+                  <span className="px-1 py-0.5 rounded bg-primary/10 text-primary text-[10px]">
+                    EN
+                  </span>
+                )}
               </h4>
               <button
                 onClick={handleCopySystem}
                 className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
               >
-                {copiedSystem ? <CheckIcon className="w-3.5 h-3.5" /> : <CopyIcon className="w-3.5 h-3.5" />}
-                {copiedSystem ? t('prompt.copied') : t('prompt.copy')}
+                {copiedSystem ? (
+                  <CheckIcon className="w-3.5 h-3.5" />
+                ) : (
+                  <CopyIcon className="w-3.5 h-3.5" />
+                )}
+                {copiedSystem ? t("prompt.copied") : t("prompt.copy")}
               </button>
             </div>
-            {renderPromptContent(showEnglish ? (prompt.systemPromptEn || '') : (prompt.systemPrompt || ''))}
+            {renderPromptContent(
+              showEnglish
+                ? prompt.systemPromptEn || ""
+                : prompt.systemPrompt || "",
+            )}
           </div>
         )}
 
@@ -429,18 +539,30 @@ export function PromptDetailModal({
         <div>
           <div className="flex items-center justify-between mb-2">
             <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-1">
-              {t('prompt.userPrompt')}
-              {showEnglish && <span className="px-1 py-0.5 rounded bg-primary/10 text-primary text-[10px]">EN</span>}
+              {t("prompt.userPrompt")}
+              {showEnglish && (
+                <span className="px-1 py-0.5 rounded bg-primary/10 text-primary text-[10px]">
+                  EN
+                </span>
+              )}
             </h4>
             <button
               onClick={handleCopyUser}
               className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
             >
-              {copiedUser ? <CheckIcon className="w-3.5 h-3.5" /> : <CopyIcon className="w-3.5 h-3.5" />}
-              {copiedUser ? t('prompt.copied') : t('prompt.copy')}
+              {copiedUser ? (
+                <CheckIcon className="w-3.5 h-3.5" />
+              ) : (
+                <CopyIcon className="w-3.5 h-3.5" />
+              )}
+              {copiedUser ? t("prompt.copied") : t("prompt.copy")}
             </button>
           </div>
-          {renderPromptContent(showEnglish ? (prompt.userPromptEn || prompt.userPrompt) : prompt.userPrompt)}
+          {renderPromptContent(
+            showEnglish
+              ? prompt.userPromptEn || prompt.userPrompt
+              : prompt.userPrompt,
+          )}
         </div>
 
         {/* AI 响应 */}
@@ -449,14 +571,18 @@ export function PromptDetailModal({
             <div className="flex items-center justify-between mb-2">
               <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
                 <SparklesIcon className="w-4 h-4 text-primary" />
-                {t('prompt.aiResponse')}
+                {t("prompt.aiResponse")}
               </h4>
               <button
                 onClick={handleCopyAi}
                 className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
               >
-                {copiedAi ? <CheckIcon className="w-3.5 h-3.5" /> : <CopyIcon className="w-3.5 h-3.5" />}
-                {copiedAi ? t('prompt.copied') : t('prompt.copyResponse')}
+                {copiedAi ? (
+                  <CheckIcon className="w-3.5 h-3.5" />
+                ) : (
+                  <CopyIcon className="w-3.5 h-3.5" />
+                )}
+                {copiedAi ? t("prompt.copied") : t("prompt.copyResponse")}
               </button>
             </div>
             {renderPromptContent(prompt.lastAiResponse)}

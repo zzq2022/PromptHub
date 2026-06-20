@@ -99,7 +99,9 @@ function DesktopModuleItem({
       </button>
       <div className="min-w-0 flex-1">
         <div className="text-sm font-medium text-foreground">{label}</div>
-        <div className="mt-0.5 text-xs text-muted-foreground">{description}</div>
+        <div className="mt-0.5 text-xs text-muted-foreground">
+          {description}
+        </div>
       </div>
       <button
         type="button"
@@ -279,7 +281,9 @@ export function AppearanceSettings() {
         return;
       }
 
-      const savedFileNames = await window.electron?.saveImage?.([nextImagePath]);
+      const savedFileNames = await window.electron?.saveImage?.([
+        nextImagePath,
+      ]);
       const fileName = Array.isArray(savedFileNames)
         ? savedFileNames[0]
         : undefined;
@@ -514,8 +518,16 @@ export function AppearanceSettings() {
             {(
               [
                 { id: "off", labelKey: "settings.motion.off", fallback: "Off" },
-                { id: "reduced", labelKey: "settings.motion.reduced", fallback: "Reduced" },
-                { id: "standard", labelKey: "settings.motion.standard", fallback: "Standard" },
+                {
+                  id: "reduced",
+                  labelKey: "settings.motion.reduced",
+                  fallback: "Reduced",
+                },
+                {
+                  id: "standard",
+                  labelKey: "settings.motion.standard",
+                  fallback: "Standard",
+                },
               ] as const
             ).map((option) => {
               const selected = settings.motionPreference === option.id;
@@ -538,7 +550,9 @@ export function AppearanceSettings() {
       </SettingSection>
 
       {!webRuntime ? (
-        <SettingSection title={t("settings.desktopWorkspace", "Desktop workspace")}>
+        <SettingSection
+          title={t("settings.desktopWorkspace", "Desktop workspace")}
+        >
           <div className="space-y-4 p-4">
             <div>
               <div className="mb-2 text-sm font-medium text-foreground">
@@ -556,6 +570,7 @@ export function AppearanceSettings() {
                   >
                     {homeModules.map((moduleId, index) => {
                       const moduleMeta = desktopModuleMeta[moduleId];
+                      if (!moduleMeta) return null;
                       return (
                         <div
                           key={moduleId}
@@ -588,6 +603,7 @@ export function AppearanceSettings() {
                     (moduleId) => !homeModules.includes(moduleId),
                   ).map((moduleId) => {
                     const moduleMeta = desktopModuleMeta[moduleId];
+                    if (!moduleMeta) return null;
                     return (
                       <div
                         key={moduleId}
@@ -603,7 +619,9 @@ export function AppearanceSettings() {
                         </div>
                         <button
                           type="button"
-                          onClick={() => settings.toggleDesktopHomeModule(moduleId)}
+                          onClick={() =>
+                            settings.toggleDesktopHomeModule(moduleId)
+                          }
                           className="rounded-full bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                         >
                           {t("common.disabled", "Disabled")}
@@ -708,7 +726,10 @@ export function AppearanceSettings() {
                   <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
                     <span className="inline-flex items-center gap-1.5">
                       <ImageIcon className="w-3.5 h-3.5" />
-                      {t("settings.backgroundImageOpacity", "Background visibility")}
+                      {t(
+                        "settings.backgroundImageOpacity",
+                        "Background visibility",
+                      )}
                     </span>
                     <span>{backgroundOpacityPercent}%</span>
                   </div>
@@ -742,7 +763,9 @@ export function AppearanceSettings() {
                     step="0.5"
                     value={settings.backgroundImageBlur}
                     onChange={(event) =>
-                      settings.setBackgroundImageBlur(Number(event.target.value))
+                      settings.setBackgroundImageBlur(
+                        Number(event.target.value),
+                      )
                     }
                     className="w-full accent-primary"
                   />

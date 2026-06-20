@@ -1,13 +1,26 @@
-import { useState, useEffect, createContext, useContext, useCallback, useRef } from 'react';
-import { createPortal } from 'react-dom';
-import { useTranslation } from 'react-i18next';
-import { CheckCircleIcon, XCircleIcon, InfoIcon, AlertTriangleIcon, XIcon } from 'lucide-react';
-import { useSettingsStore } from '../../stores/settings.store';
-import { MOTION_DURATION } from '../../styles/motion-tokens';
+import {
+  useState,
+  useEffect,
+  createContext,
+  useContext,
+  useCallback,
+  useRef,
+} from "react";
+import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
+import {
+  CheckCircleIcon,
+  XCircleIcon,
+  InfoIcon,
+  AlertTriangleIcon,
+  XIcon,
+} from "lucide-react";
+import { useSettingsStore } from "../../stores/settings.store";
+import { MOTION_DURATION } from "../../styles/motion-tokens";
 
 // Toast type
 // Toast 类型
-type ToastType = 'success' | 'error' | 'info' | 'warning';
+type ToastType = "success" | "error" | "info" | "warning";
 
 interface Toast {
   id: string;
@@ -24,7 +37,11 @@ interface Toast {
 }
 
 interface ToastContextType {
-  showToast: (message: string, type?: ToastType, sendSystemNotification?: boolean) => void;
+  showToast: (
+    message: string,
+    type?: ToastType,
+    sendSystemNotification?: boolean,
+  ) => void;
 }
 
 const ToastContext = createContext<ToastContextType | null>(null);
@@ -33,13 +50,19 @@ const ToastContext = createContext<ToastContextType | null>(null);
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
   const [toasts, setToasts] = useState<Toast[]>([]);
-  const enableNotifications = useSettingsStore((state) => state.enableNotifications);
+  const enableNotifications = useSettingsStore(
+    (state) => state.enableNotifications,
+  );
   // Track timers so React strict-mode double-mount and rapid replacements
   // do not orphan setTimeout callbacks. Indexed by toast id.
   // 用 ref 记录定时器，避免 React strict-mode 双挂载与快速替换造成游离
   // setTimeout；以 toast id 为 key。
-  const exitTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
-  const autoDismissTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const exitTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(
+    new Map(),
+  );
+  const autoDismissTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(
+    new Map(),
+  );
   // Monotonic counter so two showToast calls inside the same millisecond
   // still get distinct ids (Date.now().toString() alone collides under
   // batched user actions).
@@ -59,7 +82,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     // 已经处于退场状态就不再重置定时器，避免动画抖动。
     if (exitTimers.current.has(id)) return;
     setToasts((prev) =>
-      prev.map((toast) => (toast.id === id ? { ...toast, leaving: true } : toast)),
+      prev.map((toast) =>
+        toast.id === id ? { ...toast, leaving: true } : toast,
+      ),
     );
     const timer = setTimeout(() => {
       setToasts((prev) => prev.filter((toast) => toast.id !== id));
@@ -68,26 +93,44 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     exitTimers.current.set(id, timer);
   }, []);
 
-  const showToast = useCallback((message: string, type: ToastType = 'success', sendSystemNotification = false) => {
-    idCounter.current += 1;
-    const id = `${Date.now()}-${idCounter.current}`;
-    setToasts((prev) => [...prev, { id, message, type }]);
+  const showToast = useCallback(
+    (
+      message: string,
+      type: ToastType = "success",
+      sendSystemNotification = false,
+    ) => {
+      idCounter.current += 1;
+      const id = `${Date.now()}-${idCounter.current}`;
+      setToasts((prev) => [...prev, { id, message, type }]);
 
-    // Send system notification (if enabled and requested)
-    // 发送系统通知（如果启用且请求）
-    if (sendSystemNotification && enableNotifications && window.electron?.showNotification) {
-      const title = type === 'success' ? 'Success' : type === 'error' ? 'Error' : type === 'warning' ? 'Warning' : 'Info';
-      window.electron.showNotification(`PromptHub - ${title}`, message);
-    }
+      // Send system notification (if enabled and requested)
+      // 发送系统通知（如果启用且请求）
+      if (
+        sendSystemNotification &&
+        enableNotifications &&
+        window.electron?.showNotification
+      ) {
+        const title =
+          type === "success"
+            ? "Success"
+            : type === "error"
+              ? "Error"
+              : type === "warning"
+                ? "Warning"
+                : "Info";
+        window.electron.showNotification(`PromptHub - ${title}`, message);
+      }
 
-    // Auto-dismiss after 3 seconds via the same exit-animation pipeline.
-    // 3 秒后自动通过同一个退场动画管线消失。
-    const dismiss = setTimeout(() => {
-      autoDismissTimers.current.delete(id);
-      removeToast(id);
-    }, 3000);
-    autoDismissTimers.current.set(id, dismiss);
-  }, [enableNotifications, removeToast]);
+      // Auto-dismiss after 3 seconds via the same exit-animation pipeline.
+      // 3 秒后自动通过同一个退场动画管线消失。
+      const dismiss = setTimeout(() => {
+        autoDismissTimers.current.delete(id);
+        removeToast(id);
+      }, 3000);
+      autoDismissTimers.current.set(id, dismiss);
+    },
+    [enableNotifications, removeToast],
+  );
 
   // Clean up timers on unmount.
   useEffect(() => {
@@ -103,13 +146,13 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
   const getIcon = (type: ToastType) => {
     switch (type) {
-      case 'success':
+      case "success":
         return <CheckCircleIcon className="w-5 h-5 text-green-500" />;
-      case 'error':
+      case "error":
         return <XCircleIcon className="w-5 h-5 text-red-500" />;
-      case 'warning':
+      case "warning":
         return <AlertTriangleIcon className="w-5 h-5 text-yellow-500" />;
-      case 'info':
+      case "info":
       default:
         return <InfoIcon className="w-5 h-5 text-blue-500" />;
     }
@@ -117,15 +160,15 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
   const getBgColor = (type: ToastType) => {
     switch (type) {
-      case 'success':
-        return 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800';
-      case 'error':
-        return 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800';
-      case 'warning':
-        return 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800';
-      case 'info':
+      case "success":
+        return "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800";
+      case "error":
+        return "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800";
+      case "warning":
+        return "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800";
+      case "info":
       default:
-        return 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800';
+        return "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800";
     }
   };
 
@@ -144,26 +187,28 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 flex items-center gap-3 px-5 py-3.5 rounded-2xl border shadow-2xl pointer-events-auto
                 ${
                   toast.leaving
-                    ? 'animate-out slide-out-to-right-10 fade-out duration-quick ease-exit'
-                    : 'animate-in slide-in-from-right-10 fade-in duration-base ease-enter'
+                    ? "animate-out slide-out-to-right-10 fade-out duration-quick ease-exit"
+                    : "animate-in slide-in-from-right-10 fade-in duration-base ease-enter"
                 }
                 backdrop-blur-md
                 ${getBgColor(toast.type)}
               `}
             >
               {getIcon(toast.type)}
-              <span className="text-sm font-semibold text-foreground">{toast.message}</span>
+              <span className="text-sm font-semibold text-foreground">
+                {toast.message}
+              </span>
               <button
                 onClick={() => removeToast(toast.id)}
                 className="ml-2 p-1.5 hover:bg-black/10 dark:hover:bg-white/10 rounded-lg transition-colors"
-                title={t('common.close') || 'Close'}
+                title={t("common.close") || "Close"}
               >
                 <XIcon className="w-4 h-4 text-muted-foreground" />
               </button>
             </div>
           ))}
         </div>,
-        document.body
+        document.body,
       )}
     </ToastContext.Provider>
   );
@@ -174,7 +219,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 export function useToast() {
   const context = useContext(ToastContext);
   if (!context) {
-    throw new Error('useToast must be used within a ToastProvider');
+    throw new Error("useToast must be used within a ToastProvider");
   }
   return context;
 }

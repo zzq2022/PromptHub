@@ -200,6 +200,7 @@ describe("SkillAgentsView", () => {
       skillPlatformOrder: ["claude"],
       disabledPlatformIds: [],
       projectSkillImportModePreference: "copy",
+      defaultProjectDeployTargetPath: ".agents/skills",
       projectSkillImportPreferencesByProjectId: {},
     } as Partial<ReturnType<typeof useSettingsStore.getState>>);
 

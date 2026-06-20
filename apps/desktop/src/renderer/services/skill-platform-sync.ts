@@ -83,25 +83,29 @@ export async function syncSkillsToPlatforms(
         platformId,
       });
 
-        try {
-          if (installMode === "symlink") {
-            const result = await window.api.skill.installMdSymlink(
-              skill.id,
-              skillMdContent,
+      try {
+        if (installMode === "symlink") {
+          const result = await window.api.skill.installMdSymlink(
+            skill.id,
+            skillMdContent,
+            platformId,
+          );
+          if (isCopyFallback(result)) {
+            fallbacks.push({
+              skillId: skill.id,
               platformId,
-            );
-            if (isCopyFallback(result)) {
-              fallbacks.push({
-                skillId: skill.id,
-                platformId,
-                requestedMode: result.requestedMode,
-                effectiveMode: result.effectiveMode,
-                reason: result.fallbackReason,
-              });
-            }
-          } else {
-            await window.api.skill.installMd(skill.id, skillMdContent, platformId);
+              requestedMode: result.requestedMode,
+              effectiveMode: result.effectiveMode,
+              reason: result.fallbackReason,
+            });
           }
+        } else {
+          await window.api.skill.installMd(
+            skill.id,
+            skillMdContent,
+            platformId,
+          );
+        }
         successCount += 1;
       } catch (error) {
         failures.push({

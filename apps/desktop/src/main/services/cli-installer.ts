@@ -1,7 +1,11 @@
 import { app } from "electron";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import type { CliInstallMethod, CliInstallResult, CliStatus } from "@prompthub/shared/types";
+import type {
+  CliInstallMethod,
+  CliInstallResult,
+  CliStatus,
+} from "@prompthub/shared/types";
 
 const execFileAsync = promisify(execFile);
 

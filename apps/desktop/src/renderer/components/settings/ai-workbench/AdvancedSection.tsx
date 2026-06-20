@@ -1,8 +1,4 @@
-import {
-  ChevronRightIcon,
-  LanguagesIcon,
-  SparklesIcon,
-} from "lucide-react";
+import { ChevronRightIcon, LanguagesIcon, SparklesIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { Select } from "../../ui/Select";
@@ -26,7 +22,9 @@ export function AdvancedSection({
           <div className="flex items-center gap-3">
             <LanguagesIcon className="h-4 w-4 text-muted-foreground" />
             <div>
-              <div className="text-sm font-medium">{t("settings.translationMode")}</div>
+              <div className="text-sm font-medium">
+                {t("settings.translationMode")}
+              </div>
               <div className="mt-0.5 text-xs text-muted-foreground">
                 {t("settings.translationModeDesc")}
               </div>
@@ -35,9 +33,14 @@ export function AdvancedSection({
           <div className="w-[220px]">
             <Select
               value={translationMode}
-              onChange={(value) => onTranslationModeChange(value as "immersive" | "full")}
+              onChange={(value) =>
+                onTranslationModeChange(value as "immersive" | "full")
+              }
               options={[
-                { value: "immersive", label: t("settings.translationImmersive") },
+                {
+                  value: "immersive",
+                  label: t("settings.translationImmersive"),
+                },
                 { value: "full", label: t("settings.translationFull") },
               ]}
             />
@@ -47,7 +50,9 @@ export function AdvancedSection({
           <div className="flex items-center gap-3">
             <SparklesIcon className="h-4 w-4 text-muted-foreground" />
             <div>
-              <div className="text-sm font-medium">{t("settings.advancedParams")}</div>
+              <div className="text-sm font-medium">
+                {t("settings.advancedParams")}
+              </div>
               <div className="mt-0.5 text-xs text-muted-foreground">
                 {t("settings.aiWorkbenchAdvancedParamsDesc")}
               </div>

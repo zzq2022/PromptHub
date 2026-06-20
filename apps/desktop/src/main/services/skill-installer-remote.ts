@@ -439,10 +439,7 @@ export async function fetchRemoteText(
         const contentLength = Array.isArray(contentLengthHeader)
           ? Number.parseInt(contentLengthHeader[0], 10)
           : Number.parseInt(contentLengthHeader ?? "", 10);
-        if (
-          Number.isFinite(contentLength) &&
-          contentLength > maxBytes
-        ) {
+        if (Number.isFinite(contentLength) && contentLength > maxBytes) {
           response.resume();
           reject(new Error("Remote content exceeds size limit"));
           return;
@@ -594,10 +591,7 @@ export async function fetchRemoteBytes(
         const contentLength = Array.isArray(contentLengthHeader)
           ? Number.parseInt(contentLengthHeader[0], 10)
           : Number.parseInt(contentLengthHeader ?? "", 10);
-        if (
-          Number.isFinite(contentLength) &&
-          contentLength > maxBytes
-        ) {
+        if (Number.isFinite(contentLength) && contentLength > maxBytes) {
           response.resume();
           reject(new Error("Remote content exceeds size limit"));
           return;

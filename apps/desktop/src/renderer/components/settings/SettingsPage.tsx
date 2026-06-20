@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import type { ComponentType, SVGProps } from "react";
+import React, { Component, useEffect, useMemo, useState } from "react";
+import type { ComponentType, SVGProps, ErrorInfo, ReactNode } from "react";
 import {
   SettingsIcon,
   PaletteIcon,
@@ -35,6 +35,50 @@ import { WebWorkspaceSettings } from "./WebWorkspaceSettings";
 import { useSettingsStore } from "../../stores/settings.store";
 import { useUIStore, type SettingsSectionId } from "../../stores/ui.store";
 import { isWebRuntime } from "../../runtime";
+
+interface ErrorBoundaryProps {
+  children: ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  public state: ErrorBoundaryState = {
+    hasError: false,
+    error: null,
+  };
+
+  public static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("Settings Error Boundary caught an error:", error, errorInfo);
+  }
+
+  public render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-5 border border-red-500/30 bg-red-500/10 rounded-2xl text-red-500 max-w-2xl mx-auto my-10 animate-in fade-in duration-300">
+          <h2 className="text-base font-semibold mb-2">
+            渲染设置页面时出错 (Render Error)
+          </h2>
+          <p className="text-sm mb-3 text-red-400">
+            错误信息: {this.state.error?.message}
+          </p>
+          <pre className="text-xs font-mono overflow-auto max-h-96 p-3 bg-black/40 rounded-xl text-red-300 border border-red-500/20 leading-relaxed">
+            {this.state.error?.stack || String(this.state.error)}
+          </pre>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 interface BackupImportControllerLike {
   requestFileSelection: () => void;
@@ -338,7 +382,7 @@ export function SettingsPage({
                 : "animate-in fade-in slide-in-from-bottom-2 duration-base"
             }
           >
-            {renderContent()}
+            <ErrorBoundary key={activeSection}>{renderContent()}</ErrorBoundary>
           </div>
         </div>
       </div>

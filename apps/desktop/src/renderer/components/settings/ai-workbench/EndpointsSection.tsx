@@ -168,7 +168,8 @@ export function EndpointsSection({
       null,
     [endpointGroups, selectedEndpointKey],
   );
-  const selectedApiKey = selectedGroup?.apiKey || selectedGroup?.models[0]?.apiKey || "";
+  const selectedApiKey =
+    selectedGroup?.apiKey || selectedGroup?.models[0]?.apiKey || "";
   const selectedApiUrl = selectedGroup?.apiUrl || "";
   const [credentialDraft, setCredentialDraft] = useState({
     groupKey: selectedGroup?.key ?? "",
@@ -587,7 +588,10 @@ export function EndpointsSection({
                   <div className="rounded-lg border border-border/70 bg-muted/20 p-3">
                     <div className="mb-3 flex items-start justify-between gap-3">
                       <div className="text-xs font-medium text-muted-foreground">
-                        {t("settings.aiWorkbenchEndpointCredentials", "Endpoint credentials")}
+                        {t(
+                          "settings.aiWorkbenchEndpointCredentials",
+                          "Endpoint credentials",
+                        )}
                       </div>
                       {credentialsDirty ? (
                         <div className="flex shrink-0 items-center gap-1">

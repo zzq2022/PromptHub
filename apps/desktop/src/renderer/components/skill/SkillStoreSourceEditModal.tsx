@@ -25,7 +25,10 @@ const TYPE_OPTIONS: Array<{
   { value: "local-dir", icon: <FolderIcon className="w-4 h-4" /> },
 ];
 
-function prioritizeBranchSuggestions(branches: string[], currentBranch: string): string[] {
+function prioritizeBranchSuggestions(
+  branches: string[],
+  currentBranch: string,
+): string[] {
   const current = currentBranch.trim().toLowerCase();
   const priority = new Map<string, number>();
 
@@ -40,8 +43,10 @@ function prioritizeBranchSuggestions(branches: string[], currentBranch: string):
   }
 
   return [...branches].sort((left, right) => {
-    const leftPriority = priority.get(left.toLowerCase()) ?? Number.POSITIVE_INFINITY;
-    const rightPriority = priority.get(right.toLowerCase()) ?? Number.POSITIVE_INFINITY;
+    const leftPriority =
+      priority.get(left.toLowerCase()) ?? Number.POSITIVE_INFINITY;
+    const rightPriority =
+      priority.get(right.toLowerCase()) ?? Number.POSITIVE_INFINITY;
 
     if (leftPriority !== rightPriority) {
       return leftPriority - rightPriority;
@@ -51,7 +56,10 @@ function prioritizeBranchSuggestions(branches: string[], currentBranch: string):
   });
 }
 
-function buildBranchSuggestions(branches: string[], currentBranch: string): string[] {
+function buildBranchSuggestions(
+  branches: string[],
+  currentBranch: string,
+): string[] {
   const current = currentBranch.trim().toLowerCase();
 
   return prioritizeBranchSuggestions(branches, currentBranch).filter(
@@ -124,7 +132,8 @@ export function SkillStoreSourceEditModal({
       const shouldLoad =
         Boolean(parsedRepo) &&
         !isLikelyLocalSource(trimmedUrl) &&
-        (parsedRepo?.protocol === "ssh" || isGitHubHost(parsedRepo?.host ?? ""));
+        (parsedRepo?.protocol === "ssh" ||
+          isGitHubHost(parsedRepo?.host ?? ""));
 
       if (!shouldLoad) {
         setRemoteBranches([]);
@@ -136,14 +145,18 @@ export function SkillStoreSourceEditModal({
       setBranchError(null);
       try {
         const normalizedSource = normalizeGitStoreSourceInput(trimmedUrl);
-        const branches = await window.api.skill.listRemoteBranches(normalizedSource.url);
+        const branches = await window.api.skill.listRemoteBranches(
+          normalizedSource.url,
+        );
         if (!disposed) {
           setRemoteBranches(branches);
         }
       } catch (error) {
         if (!disposed) {
           setRemoteBranches([]);
-          setBranchError(error instanceof Error ? error.message : String(error));
+          setBranchError(
+            error instanceof Error ? error.message : String(error),
+          );
         }
       } finally {
         if (!disposed) {
@@ -208,7 +221,11 @@ export function SkillStoreSourceEditModal({
                 }`}
               >
                 <div className="flex items-center gap-2 text-sm font-semibold">
-                  <span className={active ? "text-primary" : "text-muted-foreground"}>
+                  <span
+                    className={
+                      active ? "text-primary" : "text-muted-foreground"
+                    }
+                  >
                     {option.icon}
                   </span>
                   {label}
@@ -261,16 +278,16 @@ export function SkillStoreSourceEditModal({
                       {t("skill.branchSuggestions", "Suggested branches")}
                     </div>
                     <div className="max-h-40 overflow-y-auto">
-                    {filteredBranches.map((item) => (
-                      <button
-                        key={item}
-                        type="button"
-                        onClick={() => setBranch(item)}
-                        className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-accent"
-                      >
-                        <span>{item}</span>
-                      </button>
-                    ))}
+                      {filteredBranches.map((item) => (
+                        <button
+                          key={item}
+                          type="button"
+                          onClick={() => setBranch(item)}
+                          className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-accent"
+                        >
+                          <span>{item}</span>
+                        </button>
+                      ))}
                     </div>
                   </div>
                 ) : null}
@@ -329,12 +346,7 @@ export function SkillStoreSourceEditModal({
               {t("common.delete", "Delete")}
             </Button>
           </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="md"
-            onClick={onClose}
-          >
+          <Button type="button" variant="ghost" size="md" onClick={onClose}>
             {t("common.cancel", "Cancel")}
           </Button>
           <Button

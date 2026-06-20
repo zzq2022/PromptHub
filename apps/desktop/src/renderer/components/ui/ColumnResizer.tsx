@@ -125,28 +125,25 @@ export function ColumnResizer({
     [max, min, onResize],
   );
 
-  const endDrag = useCallback(
-    (event: ReactPointerEvent<HTMLDivElement>) => {
-      const state = dragStateRef.current;
-      if (!state) return;
-      try {
-        (event.currentTarget as HTMLDivElement).releasePointerCapture?.(
-          state.pointerId,
-        );
-      } catch (error) {
-        // releasePointerCapture can throw if capture was already lost
-        // (for example the pointer was canceled). That is expected, but
-        // we log at debug level so support traces are not blind.
-        console.debug(
-          "ColumnResizer: releasePointerCapture no-op",
-          error instanceof Error ? error.message : error,
-        );
-      }
-      dragStateRef.current = null;
-      setIsDragging(false);
-    },
-    [],
-  );
+  const endDrag = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
+    const state = dragStateRef.current;
+    if (!state) return;
+    try {
+      (event.currentTarget as HTMLDivElement).releasePointerCapture?.(
+        state.pointerId,
+      );
+    } catch (error) {
+      // releasePointerCapture can throw if capture was already lost
+      // (for example the pointer was canceled). That is expected, but
+      // we log at debug level so support traces are not blind.
+      console.debug(
+        "ColumnResizer: releasePointerCapture no-op",
+        error instanceof Error ? error.message : error,
+      );
+    }
+    dragStateRef.current = null;
+    setIsDragging(false);
+  }, []);
 
   const handleDoubleClick = useCallback(() => {
     onResize(clamp(defaultWidth, min, max));

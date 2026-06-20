@@ -19,9 +19,13 @@ export function buildProjectDetailSkill(
     name: scannedSkill.name,
     description: scannedSkill.description,
     instructions:
-      importedSkill?.instructions || importedSkill?.content || scannedSkill.instructions,
+      importedSkill?.instructions ||
+      importedSkill?.content ||
+      scannedSkill.instructions,
     content:
-      importedSkill?.content || importedSkill?.instructions || scannedSkill.instructions,
+      importedSkill?.content ||
+      importedSkill?.instructions ||
+      scannedSkill.instructions,
     mcp_config: importedSkill?.mcp_config,
     protocol_type: importedSkill?.protocol_type ?? "skill",
     version: scannedSkill.version || importedSkill?.version,

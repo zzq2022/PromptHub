@@ -1,8 +1,5 @@
 import type { ScannedSkill, Skill } from "@prompthub/shared/types";
-import type {
-  SkillFilterType,
-  SkillStoreView,
-} from "../stores/skill.store";
+import type { SkillFilterType, SkillStoreView } from "../stores/skill.store";
 
 interface FilterVisibleSkillsOptions {
   deployedSkillNames: Set<string>;
@@ -13,7 +10,10 @@ interface FilterVisibleSkillsOptions {
   storeView: SkillStoreView;
 }
 
-function isSkillDeployed(skill: Skill, deployedSkillNames: Set<string>): boolean {
+function isSkillDeployed(
+  skill: Skill,
+  deployedSkillNames: Set<string>,
+): boolean {
   return deployedSkillNames.has(skill.id) || deployedSkillNames.has(skill.name);
 }
 
@@ -28,15 +28,21 @@ export function filterVisibleSkills({
   let result = skills;
 
   if (storeView === "distribution") {
-    result = result.filter((skill) => isSkillDeployed(skill, deployedSkillNames));
+    result = result.filter((skill) =>
+      isSkillDeployed(skill, deployedSkillNames),
+    );
   } else if (filterType === "favorites") {
     result = result.filter((skill) => skill.is_favorite);
   } else if (filterType === "installed") {
     result = result.filter((skill) => Boolean(skill.registry_slug));
   } else if (filterType === "deployed") {
-    result = result.filter((skill) => isSkillDeployed(skill, deployedSkillNames));
+    result = result.filter((skill) =>
+      isSkillDeployed(skill, deployedSkillNames),
+    );
   } else if (filterType === "pending") {
-    result = result.filter((skill) => !isSkillDeployed(skill, deployedSkillNames));
+    result = result.filter(
+      (skill) => !isSkillDeployed(skill, deployedSkillNames),
+    );
   }
 
   if (filterTags.length > 0) {

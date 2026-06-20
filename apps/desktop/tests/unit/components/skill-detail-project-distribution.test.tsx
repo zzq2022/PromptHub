@@ -184,6 +184,7 @@ function createSettingsState(overrides: Partial<Record<string, unknown>> = {}) {
     ],
     projectSkillImportModePreference: "copy",
     projectSkillImportPreferencesByProjectId: {},
+    defaultProjectDeployTargetPath: ".agents/skills",
     setProjectSkillImportModePreference: vi.fn(),
     setProjectSkillImportPreferences: vi.fn(),
     autoScanInstalledSkills: false,
@@ -567,14 +568,14 @@ describe("Skill detail project distribution", () => {
   it("reuses saved project import target preferences from the detail page", async () => {
     const copyRepoByPathToDirectory = vi
       .fn()
-      .mockResolvedValue("/tmp/workspace/.gemini/skills/write");
+      .mockResolvedValue("/tmp/workspace/skills/write");
     window.api.skill.copyRepoByPathToDirectory = copyRepoByPathToDirectory;
 
     await renderProjectDistribution({
       settingsState: createSettingsState({
         projectSkillImportPreferencesByProjectId: {
           "project-1": {
-            selectedTargetIds: ["/tmp/workspace/.gemini/skills"],
+            selectedTargetIds: ["/tmp/workspace/skills"],
             customTargets: [],
           },
         },
@@ -589,7 +590,7 @@ describe("Skill detail project distribution", () => {
       expect(copyRepoByPathToDirectory).toHaveBeenCalledWith(
         "/Users/demo/skills/write",
         "write",
-        "/tmp/workspace/.gemini/skills",
+        "/tmp/workspace/skills",
         { ifExists: "skip", mode: "copy" },
       );
     });

@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface CheckboxProps {
   checked: boolean;
@@ -8,10 +8,16 @@ interface CheckboxProps {
   disabled?: boolean;
 }
 
-export function Checkbox({ checked, onChange, label, className = '', disabled = false }: CheckboxProps) {
+export function Checkbox({
+  checked,
+  onChange,
+  label,
+  className = "",
+  disabled = false,
+}: CheckboxProps) {
   return (
-    <label 
-      className={`flex items-center gap-2 cursor-pointer select-none ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
+    <label
+      className={`flex items-center gap-2 cursor-pointer select-none ${disabled ? "opacity-50 cursor-not-allowed" : ""} ${className}`}
       onClick={(e) => {
         if (disabled) return;
         e.preventDefault();
@@ -31,12 +37,12 @@ export function Checkbox({ checked, onChange, label, className = '', disabled = 
             inline-flex h-4 w-4 items-center justify-center rounded border border-border bg-background
             transition-colors duration-base
             peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-primary/50
-            ${checked ? 'bg-primary border-primary' : 'hover:border-primary/50'}
+            ${checked ? "bg-primary border-primary" : "hover:border-primary/50"}
           `}
           aria-hidden="true"
         >
           <svg
-            className={`h-3 w-3 text-primary-foreground transition-opacity duration-base ${checked ? 'opacity-100' : 'opacity-0'}`}
+            className={`h-3 w-3 text-primary-foreground transition-opacity duration-base ${checked ? "opacity-100" : "opacity-0"}`}
             viewBox="0 0 12 12"
             fill="none"
           >
@@ -54,5 +60,3 @@ export function Checkbox({ checked, onChange, label, className = '', disabled = 
     </label>
   );
 }
-
-

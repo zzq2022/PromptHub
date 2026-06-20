@@ -101,7 +101,9 @@ export function DataRecoveryDialog({
       return databases[0] ?? null;
     }
     return (
-      databases.find((candidate) => candidate.sourcePath === selectedSourcePath) ??
+      databases.find(
+        (candidate) => candidate.sourcePath === selectedSourcePath,
+      ) ??
       databases[0] ??
       null
     );
@@ -203,7 +205,9 @@ export function DataRecoveryDialog({
       }
     } catch (recoverError) {
       setError(
-        recoverError instanceof Error ? recoverError.message : String(recoverError),
+        recoverError instanceof Error
+          ? recoverError.message
+          : String(recoverError),
       );
       setIsRecovering(false);
     }
@@ -272,7 +276,9 @@ export function DataRecoveryDialog({
                       <button
                         key={candidate.sourcePath}
                         type="button"
-                        onClick={() => setSelectedSourcePath(candidate.sourcePath)}
+                        onClick={() =>
+                          setSelectedSourcePath(candidate.sourcePath)
+                        }
                         className={`rounded-lg border p-3 text-left transition-colors ${
                           isSelected
                             ? "border-primary bg-primary/10"
@@ -293,18 +299,31 @@ export function DataRecoveryDialog({
                           </span>
                         </div>
 
-                        {candidate.promptCount === 0 && candidate.skillCount > 0 && (
-                          <div className="mt-2">
-                            <span className="text-[11px] rounded-full border border-amber-400/40 bg-amber-400/10 px-2 py-0.5 text-amber-600 dark:text-amber-400">
-                              {t("recovery.skillsOnly", "仅含 Skill 数据")}
-                            </span>
-                          </div>
-                        )}
+                        {candidate.promptCount === 0 &&
+                          candidate.skillCount > 0 && (
+                            <div className="mt-2">
+                              <span className="text-[11px] rounded-full border border-amber-400/40 bg-amber-400/10 px-2 py-0.5 text-amber-600 dark:text-amber-400">
+                                {t("recovery.skillsOnly", "仅含 Skill 数据")}
+                              </span>
+                            </div>
+                          )}
 
                         <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-foreground/70">
-                          <span>{t("recovery.promptCount", { count: candidate.promptCount })}</span>
-                          <span>{t("recovery.folderCount", { count: candidate.folderCount })}</span>
-                          <span>{t("recovery.skillCount", { count: candidate.skillCount })}</span>
+                          <span>
+                            {t("recovery.promptCount", {
+                              count: candidate.promptCount,
+                            })}
+                          </span>
+                          <span>
+                            {t("recovery.folderCount", {
+                              count: candidate.folderCount,
+                            })}
+                          </span>
+                          <span>
+                            {t("recovery.skillCount", {
+                              count: candidate.skillCount,
+                            })}
+                          </span>
                         </div>
 
                         <div className="mt-2 flex flex-wrap gap-1.5">
@@ -349,15 +368,21 @@ export function DataRecoveryDialog({
                   <div className="flex flex-wrap gap-3 pt-1">
                     <div className="flex items-center gap-1.5 text-xs text-foreground/70">
                       <DatabaseZap className="w-3.5 h-3.5 text-primary/70" />
-                      {t("recovery.promptCount", { count: selectedCandidate.promptCount })}
+                      {t("recovery.promptCount", {
+                        count: selectedCandidate.promptCount,
+                      })}
                     </div>
                     <div className="flex items-center gap-1.5 text-xs text-foreground/70">
                       <FolderOpen className="w-3.5 h-3.5 text-primary/70" />
-                      {t("recovery.folderCount", { count: selectedCandidate.folderCount })}
+                      {t("recovery.folderCount", {
+                        count: selectedCandidate.folderCount,
+                      })}
                     </div>
                     <div className="flex items-center gap-1.5 text-xs text-foreground/70">
                       <HardDrive className="w-3.5 h-3.5 text-primary/70" />
-                      {t("recovery.skillCount", { count: selectedCandidate.skillCount })}
+                      {t("recovery.skillCount", {
+                        count: selectedCandidate.skillCount,
+                      })}
                     </div>
                   </div>
 
@@ -423,7 +448,9 @@ export function DataRecoveryDialog({
               <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-3 flex items-start gap-2">
                 <AlertTriangle className="w-4 h-4 text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5" />
                 <p className="text-xs text-yellow-700 dark:text-yellow-400">
-                  {t("recovery.overwriteWarning", { count: currentPromptCount })}
+                  {t("recovery.overwriteWarning", {
+                    count: currentPromptCount,
+                  })}
                 </p>
               </div>
             )}

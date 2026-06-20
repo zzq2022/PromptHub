@@ -33,6 +33,7 @@ import { SkillFullDetailPage } from "./SkillFullDetailPage";
 import { buildProjectDetailSkill } from "./project-detail-adapter";
 import { SkillLibraryImportModal } from "./SkillLibraryImportModal";
 import {
+  getProjectDeployTargets as resolveProjectDeployTargets,
   getDeployableProjectTargetDirs,
   getMissingProjectTargetDirs,
   normalizeProjectPathForComparison,
@@ -68,28 +69,7 @@ function getExtraProjectScanPaths(
   );
 }
 
-function getDefaultProjectDeployTargets(rootPath: string): string[] {
-  const normalizedRoot = rootPath.replace(/[\\/]+$/, "");
-  if (!normalizedRoot) {
-    return [];
-  }
-  return [`${normalizedRoot}/.agents/skills`];
-}
 
-function getProjectDeployTargets(project: SkillProject): string[] {
-  const configured = Array.isArray(project.deployTargets)
-    ? project.deployTargets.filter(
-        (entry) => typeof entry === "string" && entry.trim().length > 0,
-      )
-    : [];
-  return Array.from(
-    new Set(
-      configured.length > 0
-        ? configured
-        : getDefaultProjectDeployTargets(project.rootPath),
-    ),
-  );
-}
 
 function getTargetSummary(
   targetDirs: string[],
@@ -411,6 +391,9 @@ export function SkillProjectsView() {
   const loadDeployedStatus = useSkillStore((state) => state.loadDeployedStatus);
   const setStoreView = useSkillStore((state) => state.setStoreView);
   const skillProjects = useSettingsStore((state) => state.skillProjects);
+  const defaultProjectDeployTargetPath = useSettingsStore(
+    (state) => state.defaultProjectDeployTargetPath,
+  );
   const addSkillProject = useSettingsStore((state) => state.addSkillProject);
   const updateSkillProject = useSettingsStore(
     (state) => state.updateSkillProject,
@@ -468,8 +451,8 @@ export function SkillProjectsView() {
   const currentProjectState =
     (selectedProject && projectScanState[selectedProject.id]) || null;
   const currentProjectDeployTargets = useMemo(
-    () => (selectedProject ? getProjectDeployTargets(selectedProject) : []),
-    [selectedProject],
+    () => (selectedProject ? resolveProjectDeployTargets(selectedProject, defaultProjectDeployTargetPath) : []),
+    [selectedProject, defaultProjectDeployTargetPath],
   );
   const visibleProjectSkills = useMemo(() => {
     return filterVisibleScannedSkills(

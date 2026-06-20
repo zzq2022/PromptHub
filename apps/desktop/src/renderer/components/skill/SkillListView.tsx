@@ -439,10 +439,16 @@ export function SkillListView({
                   {skill.visibility === "shared" && (
                     <span
                       className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-300"
-                      title={t("settings.platformWorkbench.statusPublished", "已发布")}
+                      title={t(
+                        "settings.platformWorkbench.statusPublished",
+                        "已发布",
+                      )}
                     >
                       <GlobeIcon className="h-3.5 w-3.5" />
-                      {t("settings.platformWorkbench.statusPublished", "已发布")}
+                      {t(
+                        "settings.platformWorkbench.statusPublished",
+                        "已发布",
+                      )}
                     </span>
                   )}
                   {/* Safety shield icon */}

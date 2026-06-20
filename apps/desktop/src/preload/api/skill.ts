@@ -105,7 +105,10 @@ export const skillApi = {
   getMdInstallStatusDetails: (
     skillId: string,
   ): Promise<SkillPlatformInstallStatusMap> =>
-    ipcRenderer.invoke(IPC_CHANNELS.SKILL_GET_MD_INSTALL_STATUS_DETAILS, skillId),
+    ipcRenderer.invoke(
+      IPC_CHANNELS.SKILL_GET_MD_INSTALL_STATUS_DETAILS,
+      skillId,
+    ),
   installMdSymlink: (
     skillId: string,
     skillMdContent: string,

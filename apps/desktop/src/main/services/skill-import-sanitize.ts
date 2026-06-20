@@ -83,7 +83,11 @@ function sanitizeImportedTags(
   fallback: unknown,
   defaultTags: string[],
 ): string[] {
-  const primary = Array.isArray(value) ? value : Array.isArray(fallback) ? fallback : [];
+  const primary = Array.isArray(value)
+    ? value
+    : Array.isArray(fallback)
+      ? fallback
+      : [];
   const tags = primary
     .filter(
       (tag): tag is string => typeof tag === "string" && tag.trim().length > 0,
@@ -108,8 +112,11 @@ function sanitizeImportedStringList(value: unknown): string[] | undefined {
   return items.length > 0 ? items : undefined;
 }
 
-function sanitizeImportedCategory(value: unknown): Skill["category"] | undefined {
-  return typeof value === "string" && SKILL_CATEGORIES.has(value as SkillCategory)
+function sanitizeImportedCategory(
+  value: unknown,
+): Skill["category"] | undefined {
+  return typeof value === "string" &&
+    SKILL_CATEGORIES.has(value as SkillCategory)
     ? (value as SkillCategory)
     : undefined;
 }
@@ -127,7 +134,10 @@ export function sanitizeImportedSkillDraft(
   const defaultTags = options?.defaultTags ?? [];
 
   return {
-    name: sanitizeImportedString(draft.name, sanitizeImportedString(draft.fallbackName)),
+    name: sanitizeImportedString(
+      draft.name,
+      sanitizeImportedString(draft.fallbackName),
+    ),
     description: sanitizeImportedString(
       draft.description,
       sanitizeImportedString(draft.fallbackDescription),

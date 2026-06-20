@@ -10,10 +10,9 @@ export function getExistingSkillTags(skills: Skill[]): string[] {
   );
 }
 
-export function inferOriginalSkillTags(skill: Pick<
-  Skill,
-  "tags" | "original_tags" | "registry_slug" | "source_url"
->): string[] {
+export function inferOriginalSkillTags(
+  skill: Pick<Skill, "tags" | "original_tags" | "registry_slug" | "source_url">,
+): string[] {
   if (Array.isArray(skill.original_tags)) {
     return skill.original_tags;
   }

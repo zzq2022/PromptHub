@@ -28,9 +28,9 @@ export function hasValidSelfHostedConfig(
 ): boolean {
   return Boolean(
     settings.selfHostedSyncEnabled &&
-      settings.selfHostedSyncUrl?.trim() &&
-      settings.selfHostedSyncUsername?.trim() &&
-      settings.selfHostedSyncPassword?.trim(),
+    settings.selfHostedSyncUrl?.trim() &&
+    settings.selfHostedSyncUsername?.trim() &&
+    settings.selfHostedSyncPassword?.trim(),
   );
 }
 
@@ -41,10 +41,10 @@ export function shouldRunStartupSelfHostedSync(
   return Boolean(
     settings.syncProvider === "self-hosted" &&
     settings.selfHostedSyncOnStartup &&
-      hasValidSelfHostedConfig(settings) &&
-      state.isVisible &&
-      state.isOnline &&
-      !state.isRunning,
+    hasValidSelfHostedConfig(settings) &&
+    state.isVisible &&
+    state.isOnline &&
+    !state.isRunning,
   );
 }
 
@@ -55,9 +55,9 @@ export function shouldRunPeriodicSelfHostedSync(
   return Boolean(
     settings.syncProvider === "self-hosted" &&
     settings.selfHostedAutoSyncInterval > 0 &&
-      hasValidSelfHostedConfig(settings) &&
-      state.isVisible &&
-      state.isOnline &&
-      !state.isRunning,
+    hasValidSelfHostedConfig(settings) &&
+    state.isVisible &&
+    state.isOnline &&
+    !state.isRunning,
   );
 }

@@ -1,11 +1,26 @@
 ## [Unreleased]
 
+### 需求调整 / Changes
+
+- 🗑️ **移除 WebDAV 和 S3 兼容存储同步**：桌面端云备份设置中移除 WebDAV 和 S3 兼容存储两种同步方式，仅保留「自部署 PromptHub」作为唯一云同步源；同步删除主进程 IPC handler、渲染器服务、Zustand store 状态、UI 面板、测试和 `pnpm-lock.yaml` 中相关依赖，共减少约 5800 行冗余代码
+  - **Remove WebDAV and S3 Compatible Storage Sync**: Removed WebDAV and S3 sync providers from the desktop cloud backup settings, keeping only "Self-Hosted PromptHub" as the sole cloud sync source; cleaned up main-process IPC handlers, renderer services, Zustand store state, UI panels, tests, and related `pnpm-lock.yaml` dependencies, removing ~5,800 lines of redundant code
+- 🔀 **按账户隔离用户数据目录**：桌面端登录同步账户后，数据目录自动切换到以用户名命名的子目录（如 `data/accounts/zzq02/`），退出登录恢复到本地访客目录；账户切换时自动重载并对齐数据库和设置状态
+  - **User Data Isolation by Account**: After logging into a sync account, the desktop data directory automatically switches to an account-named subdirectory (e.g. `data/accounts/zzq02/`); logging out restores the local guest directory. Account switches auto-reload and re-align database and settings state
+
 ### 问题修复 / Fixes
 
 - 🚪 **Web 端退出登录修复**：SkillHub 页面顶部新增退出登录按钮，管理员用户额外显示"管理后台"快捷入口
   - **Web Logout Fix**: Added a logout button to the SkillHub page header; admin users also see an "Admin Panel" quick-access link
 - 🔓 **登录/注册验证码移除**：登录和注册页面不再要求输入图形验证码，后端同时跳过 captcha 校验（captcha 接口保留但调用变为可选），简化自托管实例的首次使用流程
   - **Login/Register Captcha Removed**: Login and registration no longer require captcha verification; the captcha endpoint remains available but verification is now optional, simplifying first-use for self-hosted instances
+- 🧩 **Skill 重复发布检查与恢复外键修复**：发布 Skill 到 SkillHub 时新增重复检查，同名 Skill 已存在时提示覆盖或取消；同时修复备份恢复时外键约束失败的问题
+  - **Duplicate Skill Publish Check and Restore FK Fix**: Publishing a Skill to SkillHub now checks for duplicates and prompts to overwrite or cancel; also fixed foreign key constraint failures during backup restore
+- 💥 **桌面端启动崩溃修复（重复 IPC 注册）**：修复账户切换对齐逻辑导致的 IPC handler 重复注册启动崩溃
+  - **Desktop Startup Crash Fix (Duplicate IPC)**: Fixed startup crash caused by duplicate IPC handler registrations during account switch alignment
+- 🔒 **恢复锁定数据库启动错误修复**：修复恢复操作后数据库文件被锁定导致的启动失败，并自动对齐同步账户状态
+  - **Recovery Locked DB Startup Fix**: Fixed startup failure when the database file remained locked after a recovery operation, with automatic sync account state alignment
+- 🖥️ **显示设置页面白屏修复**：修复点击"显示设置"后页面白屏的问题，根因是 `desktopHomeModules` 中存在已过期的模块 ID 导致渲染崩溃；增加 ErrorBoundary 防护和 null 安全检查
+  - **Appearance Settings Blank Screen Fix**: Fixed blank screen when clicking "Appearance Settings"; root cause was stale module IDs in persisted `desktopHomeModules` crashing the render; added ErrorBoundary protection and null-safety guards
 
 ## [0.6.0] - 2026-06-19
 

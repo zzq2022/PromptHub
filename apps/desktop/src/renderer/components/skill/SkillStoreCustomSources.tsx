@@ -92,7 +92,9 @@ export function SkillStoreCustomSources({
               </p>
               {(source.branch || source.directory) && (
                 <p className="mt-1 truncate text-[11px] text-muted-foreground/80">
-                  {source.branch ? `branch: ${source.branch}` : "default branch"}
+                  {source.branch
+                    ? `branch: ${source.branch}`
+                    : "default branch"}
                   {source.directory ? ` | dir: ${source.directory}` : ""}
                 </p>
               )}

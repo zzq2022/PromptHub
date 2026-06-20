@@ -390,7 +390,10 @@ function writeFolderMetadataFiles(
 
   ensureDir(promptsDir);
   for (const folder of folders) {
-    const folderDir = path.join(promptsDir, ...buildFolderSegments(folder.id, folderMap));
+    const folderDir = path.join(
+      promptsDir,
+      ...buildFolderSegments(folder.id, folderMap),
+    );
     ensureDir(folderDir);
 
     const metadataPath = getFolderMetadataPath(folderDir);
@@ -438,7 +441,10 @@ function getPromptParentDirectory(
   folderMap: Map<string, Folder>,
   prompt: Prompt,
 ): string {
-  const folderSegments = buildFolderSegments(prompt.folderId ?? null, folderMap);
+  const folderSegments = buildFolderSegments(
+    prompt.folderId ?? null,
+    folderMap,
+  );
   return path.join(promptsDir, ...folderSegments);
 }
 
@@ -502,7 +508,10 @@ function collectPromptFiles(rootDir: string): string[] {
     }
     const absolutePath = path.join(rootDir, entry.name);
     if (entry.isDirectory()) {
-      if (entry.name === VERSIONS_DIR_NAME || entry.name === VERSION_ROOT_DIR_NAME) {
+      if (
+        entry.name === VERSIONS_DIR_NAME ||
+        entry.name === VERSION_ROOT_DIR_NAME
+      ) {
         continue;
       }
 
@@ -584,7 +593,10 @@ function collectLegacyPromptDirs(rootDir: string): string[] {
   return result;
 }
 
-function cleanupLegacyVersionDirs(workspaceDir: string, promptIds: Set<string>): void {
+function cleanupLegacyVersionDirs(
+  workspaceDir: string,
+  promptIds: Set<string>,
+): void {
   const versionRoot = path.join(workspaceDir, VERSION_ROOT_DIR_NAME);
   if (!fs.existsSync(versionRoot)) {
     return;
@@ -631,7 +643,9 @@ function toEpochMs(value: unknown): number {
 }
 
 function parsePromptFile(filePath: string): Prompt {
-  const { metadata, body } = parseFrontmatter(fs.readFileSync(filePath, "utf8"));
+  const { metadata, body } = parseFrontmatter(
+    fs.readFileSync(filePath, "utf8"),
+  );
   const parsedBody = parsePromptBody(body);
   const now = new Date().toISOString();
 
@@ -675,7 +689,9 @@ function parsePromptFile(filePath: string): Prompt {
 }
 
 function parseVersionFile(filePath: string, promptId: string): PromptVersion {
-  const { metadata, body } = parseFrontmatter(fs.readFileSync(filePath, "utf8"));
+  const { metadata, body } = parseFrontmatter(
+    fs.readFileSync(filePath, "utf8"),
+  );
   const parsedBody = parsePromptBody(body);
 
   return {
@@ -708,7 +724,10 @@ function readPromptVersions(
   promptFilePath: string,
   promptId: string,
 ): PromptVersion[] {
-  const legacyVersionsDir = path.join(path.dirname(promptFilePath), VERSIONS_DIR_NAME);
+  const legacyVersionsDir = path.join(
+    path.dirname(promptFilePath),
+    VERSIONS_DIR_NAME,
+  );
   const versionsDir = fs.existsSync(getPromptVersionDir(workspaceDir, promptId))
     ? getPromptVersionDir(workspaceDir, promptId)
     : legacyVersionsDir;
@@ -723,7 +742,10 @@ function readPromptVersions(
     .map((file) => parseVersionFile(path.join(versionsDir, file), promptId));
 }
 
-function workspaceHasPromptData(promptsDir: string, workspaceDir: string): boolean {
+function workspaceHasPromptData(
+  promptsDir: string,
+  workspaceDir: string,
+): boolean {
   if (collectPromptFiles(promptsDir).length > 0) {
     return true;
   }
@@ -883,7 +905,9 @@ function writePromptToDisk(
     "utf8",
   );
 
-  const sorted = [...versions].sort((left, right) => left.version - right.version);
+  const sorted = [...versions].sort(
+    (left, right) => left.version - right.version,
+  );
   const versionsDir = getPromptVersionDir(workspaceDir, prompt.id);
 
   if (sorted.length > 0) {
@@ -1014,7 +1038,9 @@ export function syncPromptWorkspaceFromDatabase(
   }
 
   for (const legacyDir of collectLegacyPromptDirs(promptsDir)) {
-    const legacyPromptPath = path.resolve(path.join(legacyDir, PROMPT_FILE_NAME));
+    const legacyPromptPath = path.resolve(
+      path.join(legacyDir, PROMPT_FILE_NAME),
+    );
     if (expectedPromptPaths.has(legacyPromptPath)) continue;
     if (skip?.has(legacyPromptPath)) continue;
     moveToTrash(legacyDir);
@@ -1069,7 +1095,9 @@ export function importPromptWorkspaceIntoDatabase(
   const existingFolders = options.onlyIfNewer
     ? new Map(folderDb.getAll().map((folder) => [folder.id, folder] as const))
     : null;
-  const insertedFolderIds = new Set(folderDb.getAll().map((folder) => folder.id));
+  const insertedFolderIds = new Set(
+    folderDb.getAll().map((folder) => folder.id),
+  );
   let importedFolders = 0;
   let skippedFolders = 0;
   const pendingFolders = [...folders];

@@ -1470,6 +1470,7 @@ describe("SkillProjectsView", () => {
     useSettingsStore.setState({
       ...useSettingsStore.getState(),
       projectSkillImportModePreference: "copy",
+      defaultProjectDeployTargetPath: ".agents/skills",
       projectSkillImportPreferencesByProjectId: {},
     });
 

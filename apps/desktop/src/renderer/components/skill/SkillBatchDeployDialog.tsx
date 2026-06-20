@@ -196,8 +196,7 @@ export function SkillBatchDeployDialog({
           t("skill.batchDeployFallback", {
             count: result.fallbacks.length,
             preview,
-            defaultValue:
-              `${result.fallbacks.length} target(s) used copy install because symlinks were unavailable: ${preview}`,
+            defaultValue: `${result.fallbacks.length} target(s) used copy install because symlinks were unavailable: ${preview}`,
           }),
           "warning",
         );
@@ -537,7 +536,8 @@ export function SkillBatchDeployDialog({
                     })}
                   </div>
                   <div className="mt-1 text-xs text-muted-foreground">
-                    {skillNameById.get(progress.skillId) ?? progress.skillId} {"->"} {progress.platformId}
+                    {skillNameById.get(progress.skillId) ?? progress.skillId}{" "}
+                    {"->"} {progress.platformId}
                   </div>
                   <div className="mt-3 h-2 overflow-hidden rounded-full bg-primary/10">
                     <div
@@ -561,8 +561,8 @@ export function SkillBatchDeployDialog({
                   <div className="mt-2 space-y-1 text-xs text-muted-foreground">
                     {lastFailures.slice(0, 6).map((failure) => (
                       <div key={`${failure.skillId}-${failure.platformId}`}>
-                        {skillNameById.get(failure.skillId) ?? failure.skillId} {"->"} {failure.platformId}:{" "}
-                        {failure.reason}
+                        {skillNameById.get(failure.skillId) ?? failure.skillId}{" "}
+                        {"->"} {failure.platformId}: {failure.reason}
                       </div>
                     ))}
                   </div>

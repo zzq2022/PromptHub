@@ -22,10 +22,10 @@ export function resolvePromptContentByLanguage(
 ): ResolvedPromptContent {
   return {
     systemPrompt: showEnglish
-      ? (prompt.systemPromptEn || prompt.systemPrompt)
+      ? prompt.systemPromptEn || prompt.systemPrompt
       : prompt.systemPrompt,
     userPrompt: showEnglish
-      ? (prompt.userPromptEn || prompt.userPrompt)
+      ? prompt.userPromptEn || prompt.userPrompt
       : prompt.userPrompt,
   };
 }

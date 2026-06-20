@@ -1,4 +1,7 @@
-import type { DatabaseBackup, ImportSkippedStats } from "./services/database-backup-format";
+import type {
+  DatabaseBackup,
+  ImportSkippedStats,
+} from "./services/database-backup-format";
 import type { API } from "../preload";
 
 declare global {
@@ -20,7 +23,9 @@ declare global {
         skipVideoContent?: boolean;
         limitMedia?: boolean;
       }) => Promise<DatabaseBackup>;
-      restoreFromBackup: (backup: DatabaseBackup) => Promise<ImportSkippedStats>;
+      restoreFromBackup: (
+        backup: DatabaseBackup,
+      ) => Promise<ImportSkippedStats>;
     };
   }
 }

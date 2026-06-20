@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
-import { createPortal } from 'react-dom';
-import { XIcon, MinusIcon, LogOutIcon } from 'lucide-react';
-import { useSettingsStore } from '../../stores/settings.store';
-import { Checkbox } from './Checkbox';
+import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import { createPortal } from "react-dom";
+import { XIcon, MinusIcon, LogOutIcon } from "lucide-react";
+import { useSettingsStore } from "../../stores/settings.store";
+import { Checkbox } from "./Checkbox";
 
 interface CloseDialogProps {
   isOpen: boolean;
@@ -38,33 +38,33 @@ export function CloseDialog({ isOpen, onClose }: CloseDialogProps) {
   // ESC 关闭
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         handleCancel();
       }
     };
     if (isOpen) {
-      document.addEventListener('keydown', handleEsc);
-      document.body.style.overflow = 'hidden';
+      document.addEventListener("keydown", handleEsc);
+      document.body.style.overflow = "hidden";
     }
     return () => {
-      document.removeEventListener('keydown', handleEsc);
-      document.body.style.overflow = '';
+      document.removeEventListener("keydown", handleEsc);
+      document.body.style.overflow = "";
     };
   }, [isOpen, onClose]);
 
   const handleMinimize = () => {
     if (rememberChoice) {
-      setCloseAction('minimize');
+      setCloseAction("minimize");
     }
-    window.electron?.sendCloseDialogResult?.('minimize', rememberChoice);
+    window.electron?.sendCloseDialogResult?.("minimize", rememberChoice);
     onClose();
   };
 
   const handleExit = () => {
     if (rememberChoice) {
-      setCloseAction('exit');
+      setCloseAction("exit");
     }
-    window.electron?.sendCloseDialogResult?.('exit', rememberChoice);
+    window.electron?.sendCloseDialogResult?.("exit", rememberChoice);
     onClose();
   };
 
@@ -73,14 +73,14 @@ export function CloseDialog({ isOpen, onClose }: CloseDialogProps) {
   const modalContent = (
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
-      style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
+      style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0 }}
     >
       {/* Background mask */}
       {/* 背景遮罩 */}
       <div
         className="absolute inset-0 bg-background/60 backdrop-blur-md animate-in fade-in duration-base ease-enter"
         onClick={handleCancel}
-        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
       />
 
       {/* Dialog content */}
@@ -90,7 +90,7 @@ export function CloseDialog({ isOpen, onClose }: CloseDialogProps) {
         {/* 标题栏 */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
           <h2 className="text-lg font-semibold text-foreground">
-            {t('closeDialog.title')}
+            {t("closeDialog.title")}
           </h2>
           <button
             onClick={handleCancel}
@@ -104,7 +104,7 @@ export function CloseDialog({ isOpen, onClose }: CloseDialogProps) {
         {/* 内容区 */}
         <div className="p-6 space-y-4">
           <p className="text-muted-foreground text-sm">
-            {t('closeDialog.message')}
+            {t("closeDialog.message")}
           </p>
 
           {/* Option buttons */}
@@ -118,7 +118,7 @@ export function CloseDialog({ isOpen, onClose }: CloseDialogProps) {
                 <MinusIcon className="w-5 h-5" />
               </div>
               <span className="font-medium text-foreground">
-                {t('closeDialog.minimizeToTray')}
+                {t("closeDialog.minimizeToTray")}
               </span>
             </button>
 
@@ -130,7 +130,7 @@ export function CloseDialog({ isOpen, onClose }: CloseDialogProps) {
                 <LogOutIcon className="w-5 h-5" />
               </div>
               <span className="font-medium text-foreground">
-                {t('closeDialog.exitApp')}
+                {t("closeDialog.exitApp")}
               </span>
             </button>
           </div>
@@ -141,7 +141,7 @@ export function CloseDialog({ isOpen, onClose }: CloseDialogProps) {
             <Checkbox
               checked={rememberChoice}
               onChange={setRememberChoice}
-              label={t('closeDialog.rememberChoice')}
+              label={t("closeDialog.rememberChoice")}
               className="text-muted-foreground"
             />
           </div>

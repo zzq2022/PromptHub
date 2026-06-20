@@ -9,7 +9,10 @@ import type {
 } from "@prompthub/shared/types";
 
 function createRequestId(): string {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+  if (
+    typeof crypto !== "undefined" &&
+    typeof crypto.randomUUID === "function"
+  ) {
     return crypto.randomUUID();
   }
   return `ai-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
@@ -56,8 +59,14 @@ export const aiApi = {
         requestId,
       });
     } finally {
-      ipcRenderer.removeListener(IPC_CHANNELS.AI_HTTP_STREAM_CHUNK, chunkListener);
-      ipcRenderer.removeListener(IPC_CHANNELS.AI_HTTP_STREAM_ERROR, errorListener);
+      ipcRenderer.removeListener(
+        IPC_CHANNELS.AI_HTTP_STREAM_CHUNK,
+        chunkListener,
+      );
+      ipcRenderer.removeListener(
+        IPC_CHANNELS.AI_HTTP_STREAM_ERROR,
+        errorListener,
+      );
     }
   },
 };

@@ -16,7 +16,10 @@ function unique<T>(values: T[]): T[] {
   return [...new Set(values)];
 }
 
-function getRestoreCandidates(currentDataPath: string, backupPath: string): string[] {
+function getRestoreCandidates(
+  currentDataPath: string,
+  backupPath: string,
+): string[] {
   const snapshotEntries = fs.readdirSync(backupPath, { withFileTypes: true });
   const currentEntries = fs.existsSync(currentDataPath)
     ? fs.readdirSync(currentDataPath, { withFileTypes: true })
@@ -125,12 +128,19 @@ export async function restoreFromUpgradeBackupAsync(
       restoreSnapshotIntoCurrentData(currentDataPath, backupEntry.backupPath);
     } catch (restoreError) {
       try {
-        restoreSnapshotIntoCurrentData(currentDataPath, insuranceBackup.backupPath);
+        restoreSnapshotIntoCurrentData(
+          currentDataPath,
+          insuranceBackup.backupPath,
+        );
       } catch (rollbackError) {
         const restoreMessage =
-          restoreError instanceof Error ? restoreError.message : String(restoreError);
+          restoreError instanceof Error
+            ? restoreError.message
+            : String(restoreError);
         const rollbackMessage =
-          rollbackError instanceof Error ? rollbackError.message : String(rollbackError);
+          rollbackError instanceof Error
+            ? rollbackError.message
+            : String(rollbackError);
         return {
           success: false,
           needsRestart: false,
@@ -144,7 +154,9 @@ export async function restoreFromUpgradeBackupAsync(
         success: false,
         needsRestart: false,
         error:
-          restoreError instanceof Error ? restoreError.message : String(restoreError),
+          restoreError instanceof Error
+            ? restoreError.message
+            : String(restoreError),
       };
     }
 
@@ -155,7 +167,10 @@ export async function restoreFromUpgradeBackupAsync(
         protectedBackupIds: [backupId, insuranceBackup.backupId],
       });
     } catch (pruneError) {
-      console.warn("[upgrade-backup] Failed to prune snapshots after restore:", pruneError);
+      console.warn(
+        "[upgrade-backup] Failed to prune snapshots after restore:",
+        pruneError,
+      );
     }
 
     return {

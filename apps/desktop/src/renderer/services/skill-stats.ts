@@ -32,7 +32,10 @@ export interface SkillStats {
   uniqueUserTags: string[];
 }
 
-function isSkillDeployed(skill: Skill, deployedSkillNames: Set<string>): boolean {
+function isSkillDeployed(
+  skill: Skill,
+  deployedSkillNames: Set<string>,
+): boolean {
   return deployedSkillNames.has(skill.id) || deployedSkillNames.has(skill.name);
 }
 

@@ -1,35 +1,55 @@
-import { useState, useMemo } from 'react';
-import { CuboidIcon } from 'lucide-react';
+import { useState, useMemo } from "react";
+import { CuboidIcon } from "lucide-react";
 
 interface SkillIconProps {
   iconUrl?: string;
   iconEmoji?: string;
   backgroundColor?: string;
   name: string;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: "sm" | "md" | "lg" | "xl";
   className?: string;
 }
 
 const SIZE_MAP = {
-  sm: { container: 'w-8 h-8', icon: 'w-4 h-4', text: 'text-sm', emoji: 'text-lg' },
-  md: { container: 'w-10 h-10', icon: 'w-5 h-5', text: 'text-base', emoji: 'text-xl' },
-  lg: { container: 'w-12 h-12', icon: 'w-6 h-6', text: 'text-lg', emoji: 'text-2xl' },
-  xl: { container: 'w-16 h-16', icon: 'w-8 h-8', text: 'text-xl', emoji: 'text-3xl' },
+  sm: {
+    container: "w-8 h-8",
+    icon: "w-4 h-4",
+    text: "text-sm",
+    emoji: "text-lg",
+  },
+  md: {
+    container: "w-10 h-10",
+    icon: "w-5 h-5",
+    text: "text-base",
+    emoji: "text-xl",
+  },
+  lg: {
+    container: "w-12 h-12",
+    icon: "w-6 h-6",
+    text: "text-lg",
+    emoji: "text-2xl",
+  },
+  xl: {
+    container: "w-16 h-16",
+    icon: "w-8 h-8",
+    text: "text-xl",
+    emoji: "text-3xl",
+  },
 };
 
 // Generate a consistent color from skill name
 // 根据技能名称生成一致的颜色
 const COLORS = [
-  'bg-blue-500/15 text-blue-500',
-  'bg-purple-500/15 text-purple-500',
-  'bg-green-500/15 text-green-500',
-  'bg-orange-500/15 text-orange-500',
-  'bg-pink-500/15 text-pink-500',
-  'bg-cyan-500/15 text-cyan-500',
-  'bg-indigo-500/15 text-indigo-500',
-  'bg-amber-500/15 text-amber-500',
-  'bg-teal-500/15 text-teal-500',
-  'bg-rose-500/15 text-rose-500',
+  "bg-blue-500/15 text-blue-500",
+  "bg-purple-500/15 text-purple-500",
+  "bg-green-500/15 text-green-500",
+  "bg-orange-500/15 text-orange-500",
+  "bg-pink-500/15 text-pink-500",
+  "bg-cyan-500/15 text-cyan-500",
+  "bg-indigo-500/15 text-indigo-500",
+  "bg-amber-500/15 text-amber-500",
+  "bg-teal-500/15 text-teal-500",
+  "bg-rose-500/15 text-rose-500",
 ];
 
 function getColorFromName(name: string): string {
@@ -64,8 +84,8 @@ export function SkillIcon({
   iconEmoji,
   backgroundColor,
   name,
-  size = 'md',
-  className = '',
+  size = "md",
+  className = "",
 }: SkillIconProps) {
   const [imgError, setImgError] = useState(false);
   const sizeConfig = SIZE_MAP[size];
@@ -75,9 +95,7 @@ export function SkillIcon({
   const customForegroundColor = backgroundColor
     ? getAccessibleForegroundColor(backgroundColor)
     : undefined;
-  const containerClass = hasCustomBackground
-    ? 'bg-transparent'
-    : colorClass;
+  const containerClass = hasCustomBackground ? "bg-transparent" : colorClass;
   const containerStyle = backgroundColor
     ? { backgroundColor, color: customForegroundColor }
     : undefined;
@@ -128,10 +146,10 @@ export function SkillIcon({
 
   // Priority 4: Default CuboidIcon
   return (
-      <div
-        className={`${sizeConfig.container} rounded-xl flex items-center justify-center ${hasCustomBackground ? 'bg-transparent' : 'bg-primary/10 text-primary'} ${className}`}
-        style={containerStyle}
-      >
+    <div
+      className={`${sizeConfig.container} rounded-xl flex items-center justify-center ${hasCustomBackground ? "bg-transparent" : "bg-primary/10 text-primary"} ${className}`}
+      style={containerStyle}
+    >
       <CuboidIcon className={sizeConfig.icon} />
     </div>
   );

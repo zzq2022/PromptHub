@@ -7,4 +7,3 @@ export function scheduleAllSaveSync(reason: string): void {
 export function resetWebDAVSaveSyncSchedulerForTests(): void {
   // No-op
 }
-

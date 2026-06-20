@@ -47,7 +47,8 @@ export function AboutSettings() {
   const { showToast } = useToast();
   const webRuntime = isWebRuntime();
   const qqGroupNumber = "704298939";
-  const qqGroupLink = "mqqapi://card/show_pslcard?src_type=internal&version=1&uin=704298939&card_type=group&source=qrcode";
+  const qqGroupLink =
+    "mqqapi://card/show_pslcard?src_type=internal&version=1&uin=704298939&card_type=group&source=qrcode";
 
   // Get application version
   // 获取应用版本号
@@ -115,7 +116,10 @@ export function AboutSettings() {
   const handleCopyQQGroup = async () => {
     try {
       await navigator.clipboard.writeText(qqGroupNumber);
-      showToast(t("settings.communityQQCopied", { group: qqGroupNumber }), "success");
+      showToast(
+        t("settings.communityQQCopied", { group: qqGroupNumber }),
+        "success",
+      );
     } catch (error) {
       console.error("Failed to copy QQ group number:", error);
       showToast(t("common.error", "Error"), "error");
@@ -136,7 +140,8 @@ export function AboutSettings() {
           </div>
           <h2 className="text-lg font-semibold">PromptHub</h2>
           <p className="text-sm text-muted-foreground mt-1">
-            {t("settings.version")} {webRuntime ? (webVersion || "...") : (appVersion || "...")}
+            {t("settings.version")}{" "}
+            {webRuntime ? webVersion || "..." : appVersion || "..."}
           </p>
         </div>
 
@@ -162,7 +167,9 @@ export function AboutSettings() {
                 updateState === "latest"
                   ? t("settings.noUpdateDesc", { version: webVersion })
                   : updateState === "available"
-                    ? t("settings.updateAvailableDesc", { version: latestVersion })
+                    ? t("settings.updateAvailableDesc", {
+                        version: latestVersion,
+                      })
                     : t("settings.webUpdatesManagedDesc")
               }
             >
@@ -302,7 +309,9 @@ export function AboutSettings() {
             </SettingItem>
             <SettingItem
               label={t("settings.communityQQ")}
-              description={t("settings.communityQQDesc", { group: qqGroupNumber })}
+              description={t("settings.communityQQDesc", {
+                group: qqGroupNumber,
+              })}
             >
               <div className="flex items-center gap-2">
                 <a
@@ -351,7 +360,9 @@ export function AboutSettings() {
                   <MailIcon className="w-4 h-4 text-primary" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="text-sm font-medium">legeling567@gmail.com</div>
+                  <div className="text-sm font-medium">
+                    legeling567@gmail.com
+                  </div>
                   <div className="text-xs text-muted-foreground">Email</div>
                 </div>
               </a>

@@ -5,9 +5,9 @@ export function readBooleanSetting(
   key: string,
 ): boolean | null {
   try {
-    const row = db.prepare("SELECT value FROM settings WHERE key = ?").get(key) as
-      | { value: string }
-      | undefined;
+    const row = db
+      .prepare("SELECT value FROM settings WHERE key = ?")
+      .get(key) as { value: string } | undefined;
     if (!row) {
       return null;
     }
@@ -24,9 +24,9 @@ export function getMinimizeOnLaunchSetting(db: Database.Database): boolean {
 
 export function readGithubTokenSetting(db: Database.Database): string | null {
   try {
-    const row = db.prepare("SELECT value FROM settings WHERE key = ?").get(
-      "githubToken",
-    ) as { value: string } | undefined;
+    const row = db
+      .prepare("SELECT value FROM settings WHERE key = ?")
+      .get("githubToken") as { value: string } | undefined;
     if (!row) {
       return null;
     }
@@ -54,11 +54,13 @@ export function readGithubTokenSetting(db: Database.Database): string | null {
   }
 }
 
-export function readSelfHostedSyncUrlSetting(db: Database.Database): string | null {
+export function readSelfHostedSyncUrlSetting(
+  db: Database.Database,
+): string | null {
   try {
-    const row = db.prepare("SELECT value FROM settings WHERE key = ?").get(
-      "selfHostedSyncUrl",
-    ) as { value: string } | undefined;
+    const row = db
+      .prepare("SELECT value FROM settings WHERE key = ?")
+      .get("selfHostedSyncUrl") as { value: string } | undefined;
     if (!row) {
       return null;
     }

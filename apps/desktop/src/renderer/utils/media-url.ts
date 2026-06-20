@@ -4,7 +4,10 @@ function isExternalMediaSrc(src: string): boolean {
   return /^(https?:|data:|blob:)/i.test(src);
 }
 
-function stripProtocol(src: string, protocol: "local-image" | "local-video"): string {
+function stripProtocol(
+  src: string,
+  protocol: "local-image" | "local-video",
+): string {
   const prefix = `${protocol}://`;
   return src.startsWith(prefix) ? src.slice(prefix.length) : src;
 }

@@ -24,7 +24,9 @@ function ensureSkillMdSnapshot(
   fallbackContent: string,
 ): SkillFileSnapshot[] {
   if (
-    snapshots.some((snapshot) => snapshot.relativePath.toLowerCase() === "skill.md")
+    snapshots.some(
+      (snapshot) => snapshot.relativePath.toLowerCase() === "skill.md",
+    )
   ) {
     return snapshots;
   }
@@ -99,9 +101,9 @@ export function buildVersionFileDiffEntries(
     newSnapshots.map((snapshot) => [snapshot.relativePath, snapshot.content]),
   );
 
-  const paths = Array.from(
-    new Set([...oldMap.keys(), ...newMap.keys()]),
-  ).sort(compareFilePath);
+  const paths = Array.from(new Set([...oldMap.keys(), ...newMap.keys()])).sort(
+    compareFilePath,
+  );
 
   return paths.map((path) => {
     const oldContent = oldMap.get(path) || "";

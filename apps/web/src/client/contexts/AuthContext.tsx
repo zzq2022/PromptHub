@@ -40,6 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isBootstrapLoading, setIsBootstrapLoading] = useState(true);
   const [isInitialized, setIsInitialized] = useState(true);
   const [registrationAllowed, setRegistrationAllowed] = useState(false);
+  const [hasLoggedOut, setHasLoggedOut] = useState(false);
 
   function clearSession(): void {
     setToken(null);
@@ -109,6 +110,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
 
     async function loadSession(): Promise<void> {
+      if (hasLoggedOut) {
+        setIsLoading(false);
+        return;
+      }
       try {
         const data = await getMe(token);
         if (!cancelled) {
@@ -139,10 +144,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [token, refreshToken]);
+  }, [token, refreshToken, hasLoggedOut]);
 
   const login = async (credentials: LoginCredentials) => {
     const res = await apiLogin(credentials);
+    setHasLoggedOut(false);
     setToken(res.data.accessToken);
     setRefreshToken(res.data.refreshToken);
     setUser(res.data.user);
@@ -151,6 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = async (credentials: LoginCredentials) => {
     const res = await apiRegister(credentials);
+    setHasLoggedOut(false);
     setToken(res.data.accessToken);
     setRefreshToken(res.data.refreshToken);
     setUser(res.data.user);
@@ -159,6 +166,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
+    setHasLoggedOut(true);
     const currentToken = token;
     const currentRefreshToken = refreshToken;
 

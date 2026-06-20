@@ -29,7 +29,11 @@ export function collectDescendantFolderIds(
   while (changed) {
     changed = false;
     for (const folder of folders) {
-      if (folder.parentId && collected.has(folder.parentId) && !collected.has(folder.id)) {
+      if (
+        folder.parentId &&
+        collected.has(folder.parentId) &&
+        !collected.has(folder.id)
+      ) {
         collected.add(folder.id);
         changed = true;
       }
@@ -70,11 +74,15 @@ export function filterVisiblePrompts({
   if (selectedFolderId === "favorites") {
     result = result.filter((prompt) => prompt.isFavorite);
   } else if (selectedFolderId) {
-    const visibleFolderIds = collectDescendantFolderIds(folders, [selectedFolderId]);
+    const visibleFolderIds = collectDescendantFolderIds(folders, [
+      selectedFolderId,
+    ]);
     const lockedFolderIds = collectDescendantFolderIds(
       folders,
       folders
-        .filter((folder) => folder.isPrivate && !unlockedFolderIds.has(folder.id))
+        .filter(
+          (folder) => folder.isPrivate && !unlockedFolderIds.has(folder.id),
+        )
         .map((folder) => folder.id),
     );
     result = result.filter(
@@ -87,8 +95,7 @@ export function filterVisiblePrompts({
     const privateFolderIds = collectPrivateFolderScopeIds(folders);
     if (privateFolderIds.size > 0) {
       result = result.filter(
-        (prompt) =>
-          !prompt.folderId || !privateFolderIds.has(prompt.folderId),
+        (prompt) => !prompt.folderId || !privateFolderIds.has(prompt.folderId),
       );
     }
   }
@@ -97,7 +104,9 @@ export function filterVisiblePrompts({
   if (trimmedQuery) {
     const queryLower = trimmedQuery.toLowerCase();
     const queryCompact = queryLower.replace(/\s+/g, "");
-    const keywords = queryLower.split(/\s+/).filter((keyword) => keyword.length > 0);
+    const keywords = queryLower
+      .split(/\s+/)
+      .filter((keyword) => keyword.length > 0);
 
     result = result
       .map((prompt) => {

@@ -12,7 +12,10 @@ import { closeDatabase, initDatabase } from "../database";
 type SetDbRef = (db: ReturnType<typeof initDatabase>) => void;
 type RebindAllIpc = (db: ReturnType<typeof initDatabase>) => void;
 
-export function registerBackupIPC(setDbRef: SetDbRef, rebindAllIpc: RebindAllIpc): void {
+export function registerBackupIPC(
+  setDbRef: SetDbRef,
+  rebindAllIpc: RebindAllIpc,
+): void {
   ipcMain.handle(IPC_CHANNELS.UPGRADE_BACKUP_LIST, async () => {
     return listUpgradeBackups(app.getPath("userData"));
   });
@@ -27,17 +30,21 @@ export function registerBackupIPC(setDbRef: SetDbRef, rebindAllIpc: RebindAllIpc
       },
     ) => {
       try {
-        const snapshot = await createUpgradeDataSnapshot(app.getPath("userData"), {
-          fromVersion:
-            typeof options?.fromVersion === "string" &&
-            options.fromVersion.trim().length > 0
-              ? options.fromVersion
-              : app.getVersion(),
-          toVersion:
-            typeof options?.toVersion === "string" && options.toVersion.trim().length > 0
-              ? options.toVersion
-              : undefined,
-        });
+        const snapshot = await createUpgradeDataSnapshot(
+          app.getPath("userData"),
+          {
+            fromVersion:
+              typeof options?.fromVersion === "string" &&
+              options.fromVersion.trim().length > 0
+                ? options.fromVersion
+                : app.getVersion(),
+            toVersion:
+              typeof options?.toVersion === "string" &&
+              options.toVersion.trim().length > 0
+                ? options.toVersion
+                : undefined,
+          },
+        );
 
         return {
           created: true,

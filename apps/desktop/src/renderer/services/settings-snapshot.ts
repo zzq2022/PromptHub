@@ -130,7 +130,8 @@ export function restoreAiConfigSnapshot(
       data.state.modelRouteDefaults = aiConfig.modelRouteDefaults;
     }
     if (aiConfig.aiProvider) data.state.aiProvider = aiConfig.aiProvider;
-    if (aiConfig.aiApiProtocol) data.state.aiApiProtocol = aiConfig.aiApiProtocol;
+    if (aiConfig.aiApiProtocol)
+      data.state.aiApiProtocol = aiConfig.aiApiProtocol;
     if (aiConfig.aiApiKey) data.state.aiApiKey = aiConfig.aiApiKey;
     if (aiConfig.aiApiUrl) data.state.aiApiUrl = aiConfig.aiApiUrl;
     if (aiConfig.aiModel) data.state.aiModel = aiConfig.aiModel;

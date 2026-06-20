@@ -29,7 +29,10 @@ export async function readSkillUserSidecar(
     return null;
   }
 
-  const entry = await window.api.skill.readLocalFile(skillId, USER_SIDECAR_PATH);
+  const entry = await window.api.skill.readLocalFile(
+    skillId,
+    USER_SIDECAR_PATH,
+  );
   if (!entry || entry.isDirectory) {
     return null;
   }

@@ -211,14 +211,20 @@ export function SkillDetailView() {
         delete nextEntries["skillhub"];
         return {
           skills: state.skills.map((s) =>
-            s.id === selectedSkill.id ? { ...s, visibility: "shared" } : s
+            s.id === selectedSkill.id ? { ...s, visibility: "shared" } : s,
           ),
           remoteStoreEntries: nextEntries,
         };
       });
-      showToast(t("skillhub.publishSuccess", "Successfully published to SkillHub"), "success");
+      showToast(
+        t("skillhub.publishSuccess", "Successfully published to SkillHub"),
+        "success",
+      );
     } catch (error) {
-      showToast(`${t("skill.updateFailed")}: ${getErrorMessage(error)}`, "error");
+      showToast(
+        `${t("skill.updateFailed")}: ${getErrorMessage(error)}`,
+        "error",
+      );
     } finally {
       setIsPublishing(false);
     }

@@ -649,9 +649,7 @@ function shouldCloneRegistrySkillPackage(
     .filter((value): value is string => typeof value === "string")
     .map((value) => value.toLowerCase());
   if (
-    publicDirectoryStoreValues.some(
-      (value) => value.includes("clawhub.ai"),
-    ) &&
+    publicDirectoryStoreValues.some((value) => value.includes("clawhub.ai")) &&
     !getRegistrySkillDirectory(regSkill)
   ) {
     return false;
@@ -666,9 +664,7 @@ function shouldCloneRegistrySkillPackage(
     return false;
   }
 
-  if (
-    publicDirectoryStoreValues.some((value) => value.includes("skills.sh"))
-  ) {
+  if (publicDirectoryStoreValues.some((value) => value.includes("skills.sh"))) {
     return true;
   }
 
@@ -1058,10 +1054,10 @@ async function applyRegistrySkillUpdateToInstalledSkill(
   const syncedSkill = isLocalRegistrySkill(regSkill)
     ? await syncLocalRegistrySkillRepo(installedSkill.id, regSkill)
     : await syncRemoteRegistrySkillRepo(
-      installedSkill.id,
-      regSkill,
-      check.remoteContent,
-    );
+        installedSkill.id,
+        regSkill,
+        check.remoteContent,
+      );
 
   return syncedSkill ?? updatedSkill;
 }
@@ -1765,7 +1761,9 @@ export const useSkillStore = create<SkillState>()(
       },
 
       getInstalledSkillSourceUpdateStatus: async (skillId) => {
-        const installedSkill = get().skills.find((skill) => skill.id === skillId);
+        const installedSkill = get().skills.find(
+          (skill) => skill.id === skillId,
+        );
         if (!installedSkill) {
           return null;
         }
@@ -1886,37 +1884,40 @@ export const useSkillStore = create<SkillState>()(
 
           const installedHash = await computeSkillContentHash(effectiveContent);
           const installedAt = Date.now();
-          const newSkill = await window.api.skill.create({
-            name: regSkill.install_name || regSkill.slug,
-            description: regSkill.description,
-            instructions: effectiveContent,
-            content: effectiveContent,
-            protocol_type: "skill",
-            version: regSkill.version,
-            author: regSkill.author,
-            source_url: regSkill.source_url,
-            source_id: regSkill.source_id,
-            source_label: regSkill.source_label,
-            source_branch: regSkill.source_branch,
-            source_directory: regSkill.source_directory,
-            canonical_skill_path: regSkill.canonical_skill_path,
-            tags: [],
-            original_tags: regSkill.tags,
-            is_favorite: false,
-            icon_url: regSkill.icon_url,
-            icon_emoji: regSkill.icon_emoji,
-            category: regSkill.category,
-            is_builtin: true,
-            registry_slug: regSkill.slug,
-            directory_fingerprint: regSkill.directory_fingerprint,
-            content_url: regSkill.content_url,
-            installed_content_hash: installedHash,
-            installed_version: regSkill.version,
-            installed_at: installedAt,
-            updated_from_store_at: installedAt,
-            prerequisites: regSkill.prerequisites,
-            compatibility: regSkill.compatibility,
-          }, ...(options ? [options] : []));
+          const newSkill = await window.api.skill.create(
+            {
+              name: regSkill.install_name || regSkill.slug,
+              description: regSkill.description,
+              instructions: effectiveContent,
+              content: effectiveContent,
+              protocol_type: "skill",
+              version: regSkill.version,
+              author: regSkill.author,
+              source_url: regSkill.source_url,
+              source_id: regSkill.source_id,
+              source_label: regSkill.source_label,
+              source_branch: regSkill.source_branch,
+              source_directory: regSkill.source_directory,
+              canonical_skill_path: regSkill.canonical_skill_path,
+              tags: [],
+              original_tags: regSkill.tags,
+              is_favorite: false,
+              icon_url: regSkill.icon_url,
+              icon_emoji: regSkill.icon_emoji,
+              category: regSkill.category,
+              is_builtin: true,
+              registry_slug: regSkill.slug,
+              directory_fingerprint: regSkill.directory_fingerprint,
+              content_url: regSkill.content_url,
+              installed_content_hash: installedHash,
+              installed_version: regSkill.version,
+              installed_at: installedAt,
+              updated_from_store_at: installedAt,
+              prerequisites: regSkill.prerequisites,
+              compatibility: regSkill.compatibility,
+            },
+            ...(options ? [options] : []),
+          );
           if (newSkill) {
             try {
               if (isLocalRegistrySkill(regSkill)) {

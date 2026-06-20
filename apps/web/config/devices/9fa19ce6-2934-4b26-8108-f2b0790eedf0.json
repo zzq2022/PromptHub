@@ -1,5 +1,15 @@
 [
   {
+    "id": "f37ffde0-42f0-4fcf-babc-33c02510a628",
+    "type": "browser",
+    "name": "Google Chrome",
+    "platform": "Windows",
+    "clientVersion": "self-hosted-web",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+    "firstSeenAt": "2026-06-20T12:48:01.284Z",
+    "lastSeenAt": "2026-06-20T13:34:18.412Z"
+  },
+  {
     "id": "229ae642-b2f1-4199-87f6-7e34a9e359b4",
     "type": "browser",
     "name": "Microsoft Edge",
@@ -7,7 +17,7 @@
     "clientVersion": "self-hosted-web",
     "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0",
     "firstSeenAt": "2026-06-16T13:18:31.146Z",
-    "lastSeenAt": "2026-06-20T02:51:19.720Z"
+    "lastSeenAt": "2026-06-20T13:31:49.924Z"
   },
   {
     "id": "e9ec3047-4da9-4122-9aab-cfe59671aafd",

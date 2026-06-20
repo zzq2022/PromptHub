@@ -28,7 +28,9 @@ export function formatImportSkippedDetails(
     skipped.versions > 0 ? `versions: ${skipped.versions}` : null,
     skipped.rules > 0 ? `rules: ${skipped.rules}` : null,
     skipped.skills > 0 ? `skills: ${skipped.skills}` : null,
-    skipped.skillVersions > 0 ? `skill versions: ${skipped.skillVersions}` : null,
+    skipped.skillVersions > 0
+      ? `skill versions: ${skipped.skillVersions}`
+      : null,
     skipped.skillFiles > 0 ? `skill files: ${skipped.skillFiles}` : null,
   ]
     .filter((part): part is string => part !== null)
@@ -49,7 +51,10 @@ export function useBackupImportController() {
         setImportPreview({ file, summary: preview.summary });
       } catch (error) {
         console.error("Import failed:", error);
-        showToast(`${t("toast.importFailed")}: ${formatBackupImportError(error)}`, "error");
+        showToast(
+          `${t("toast.importFailed")}: ${formatBackupImportError(error)}`,
+          "error",
+        );
       }
     },
     [showToast, t],
@@ -108,7 +113,10 @@ export function useBackupImportController() {
       setTimeout(() => window.location.reload(), 1000);
     } catch (error) {
       console.error("Import failed:", error);
-      showToast(`${t("toast.importFailed")}: ${formatBackupImportError(error)}`, "error");
+      showToast(
+        `${t("toast.importFailed")}: ${formatBackupImportError(error)}`,
+        "error",
+      );
     } finally {
       setConfirmingImport(false);
     }

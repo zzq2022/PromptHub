@@ -105,10 +105,7 @@ export function AgentSkillPreviewSidebar({
               <FolderOpenIcon className="h-5 w-5 shrink-0 text-primary" />
               <div className="min-w-0">
                 <div className="text-sm font-semibold text-foreground">
-                  {t(
-                    "skill.openSourceSkillFolder",
-                    "Open source Skill folder",
-                  )}
+                  {t("skill.openSourceSkillFolder", "Open source Skill folder")}
                 </div>
                 <div className="mt-1 break-words text-xs leading-relaxed text-muted-foreground">
                   {symlinkTargetPath}

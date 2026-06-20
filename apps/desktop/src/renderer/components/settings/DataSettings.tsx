@@ -41,13 +41,12 @@ import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { DataRecoveryDialog } from "../ui/DataRecoveryDialog";
 import { Select } from "../ui/Select";
 import { Checkbox } from "../ui";
-import {
-  SettingItem,
-  ToggleSwitch,
-  PasswordInput,
-} from "./shared";
+import { SettingItem, ToggleSwitch, PasswordInput } from "./shared";
 import { isWebRuntime } from "../../runtime";
-import type { RecoveryCandidate, UpgradeBackupEntry } from "@prompthub/shared/types";
+import type {
+  RecoveryCandidate,
+  UpgradeBackupEntry,
+} from "@prompthub/shared/types";
 import { useBackupImportController } from "../../hooks/useBackupImportController";
 import { BackupImportConfirmDialog } from "./BackupImportConfirmDialog";
 
@@ -55,13 +54,8 @@ const MANUAL_RECOVERY_PATHS_STORAGE_KEY = "prompthub-manual-recovery-paths";
 const DEFAULT_VISIBLE_UPGRADE_BACKUPS = 3;
 const EXPANDED_UPGRADE_BACKUP_MAX_HEIGHT = 420;
 
-
 type DataPathChangeAction = "migrate" | "switch" | "overwrite";
-type DataSettingsSubsection =
-  | "local"
-  | "recovery"
-  | "selfHosted"
-  | "backup";
+type DataSettingsSubsection = "local" | "recovery" | "selfHosted" | "backup";
 type ExportScopeKey =
   | "prompts"
   | "folders"
@@ -161,7 +155,9 @@ function DataSettingsSection({
 }
 
 function getSyncPanelContentClassName(disabled: boolean): string {
-  return disabled ? "space-y-3 pt-2 border-t border-border opacity-60" : "space-y-3 pt-2 border-t border-border";
+  return disabled
+    ? "space-y-3 pt-2 border-t border-border opacity-60"
+    : "space-y-3 pt-2 border-t border-border";
 }
 
 function getSyncProviderOptionLabel(
@@ -191,7 +187,8 @@ export function DataSettings({
   backupImportController,
 }: DataSettingsProps) {
   const { t } = useTranslation();
-  const translateLabel = (key: string, fallback: string): string => t(key, fallback);
+  const translateLabel = (key: string, fallback: string): string =>
+    t(key, fallback);
   const { showToast } = useToast();
   const webRuntime = isWebRuntime();
   const settings = useSettingsStore();
@@ -201,12 +198,18 @@ export function DataSettings({
   const [currentDataPath, setCurrentDataPath] = useState("");
   const [pendingDataPath, setPendingDataPath] = useState<string | null>(null);
   const [currentVersion, setCurrentVersion] = useState("");
-  const [upgradeBackups, setUpgradeBackups] = useState<UpgradeBackupEntry[]>([]);
+  const [upgradeBackups, setUpgradeBackups] = useState<UpgradeBackupEntry[]>(
+    [],
+  );
   const [loadingUpgradeBackups, setLoadingUpgradeBackups] = useState(false);
-  const [upgradeBackupActionId, setUpgradeBackupActionId] = useState<string | null>(null);
+  const [upgradeBackupActionId, setUpgradeBackupActionId] = useState<
+    string | null
+  >(null);
   const [showAllUpgradeBackups, setShowAllUpgradeBackups] = useState(false);
-  const [restoreCandidate, setRestoreCandidate] = useState<UpgradeBackupEntry | null>(null);
-  const [deleteCandidate, setDeleteCandidate] = useState<UpgradeBackupEntry | null>(null);
+  const [restoreCandidate, setRestoreCandidate] =
+    useState<UpgradeBackupEntry | null>(null);
+  const [deleteCandidate, setDeleteCandidate] =
+    useState<UpgradeBackupEntry | null>(null);
   const [manualRecoveryPaths, setManualRecoveryPaths] = useState<string[]>([]);
   const [manualPathInputValue, setManualPathInputValue] = useState("");
   const [scanningRecoverySources, setScanningRecoverySources] = useState(false);
@@ -230,7 +233,8 @@ export function DataSettings({
   const [dataPathActionLoading, setDataPathActionLoading] = useState(false);
   const [cacheSize, setCacheSize] = useState<number | null>(null);
   const [clearingCache, setClearingCache] = useState(false);
-  const [isBackupDropTargetActive, setIsBackupDropTargetActive] = useState(false);
+  const [isBackupDropTargetActive, setIsBackupDropTargetActive] =
+    useState(false);
   const localBackupImportController = useBackupImportController();
   const effectiveBackupImportController =
     backupImportController ?? localBackupImportController;
@@ -244,7 +248,8 @@ export function DataSettings({
     }
     if (runtimePaths && runtimePaths.activeAccountId === null) {
       setLoadingLocalAccounts(true);
-      void window.api?.database?.getLocalAccounts?.()
+      void window.api?.database
+        ?.getLocalAccounts?.()
         .then((accounts) => {
           if (accounts) {
             setLocalAccounts(accounts);
@@ -259,7 +264,9 @@ export function DataSettings({
   }, [webRuntime, runtimePaths?.activeAccountId]);
 
   useEffect(() => {
-    void window.electron?.getCacheSize?.().then((res) => setCacheSize(res.size));
+    void window.electron
+      ?.getCacheSize?.()
+      .then((res) => setCacheSize(res.size));
   }, []);
 
   useEffect(() => {
@@ -335,7 +342,10 @@ export function DataSettings({
       setPendingDataPath(
         status.needsRestart ? status.configuredPath || null : null,
       );
-      if (status.configuredPath && status.configuredPath !== persistedDataPath) {
+      if (
+        status.configuredPath &&
+        status.configuredPath !== persistedDataPath
+      ) {
         setDataPath(status.configuredPath);
       }
       return;
@@ -374,7 +384,8 @@ export function DataSettings({
   const formatBytes = (bytes: number): string => {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    if (bytes < 1024 * 1024 * 1024)
+      return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
     return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
   };
 
@@ -677,13 +688,15 @@ export function DataSettings({
   };
 
   const finishDataPathChange = async (
-    result: {
-      success: boolean;
-      newPath?: string;
-      needsRestart?: boolean;
-      backupPath?: string;
-      error?: string;
-    } | undefined,
+    result:
+      | {
+          success: boolean;
+          newPath?: string;
+          needsRestart?: boolean;
+          backupPath?: string;
+          error?: string;
+        }
+      | undefined,
     action: DataPathChangeAction,
     fallbackPath: string,
   ) => {
@@ -853,9 +866,7 @@ export function DataSettings({
     <>
       <div
         className={
-          webRuntime
-            ? "space-y-6"
-            : "data-settings-shell min-w-0 space-y-6"
+          webRuntime ? "space-y-6" : "data-settings-shell min-w-0 space-y-6"
         }
       >
         {!webRuntime && activeSubsection === "local" ? (
@@ -864,10 +875,13 @@ export function DataSettings({
               <div className="flex items-center gap-3">
                 <FolderIcon className="w-5 h-5 text-muted-foreground" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium">{t("settings.dataPath")}</p>
+                  <p className="text-sm font-medium">
+                    {t("settings.dataPath")}
+                  </p>
                   <button
                     onClick={() =>
-                      currentDataPath && window.electron?.openPath?.(currentDataPath)
+                      currentDataPath &&
+                      window.electron?.openPath?.(currentDataPath)
                     }
                     className="text-xs text-primary font-mono mt-0.5 hover:underline flex items-center gap-1 cursor-pointer"
                     title={t("settings.openFolder")}
@@ -900,7 +914,9 @@ export function DataSettings({
         ) : null}
 
         {!webRuntime && activeSubsection === "recovery" ? (
-          <DataSettingsSection title={t("settings.recoveryScanner", "历史数据急救")}>
+          <DataSettingsSection
+            title={t("settings.recoveryScanner", "历史数据急救")}
+          >
             <div className="p-4 space-y-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
@@ -930,7 +946,10 @@ export function DataSettings({
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <div className="text-sm font-medium">
-                      {t("settings.recoveryExtraPaths", "Extra scan directories")}
+                      {t(
+                        "settings.recoveryExtraPaths",
+                        "Extra scan directories",
+                      )}
                     </div>
                     <div className="text-xs text-muted-foreground mt-0.5">
                       {t(
@@ -1013,7 +1032,9 @@ export function DataSettings({
         ) : null}
 
         {!webRuntime && activeSubsection === "selfHosted" ? (
-          <DataSettingsSection title={t("settings.selfHostedSyncMenu", "Self-Hosted PromptHub")}>
+          <DataSettingsSection
+            title={t("settings.selfHostedSyncMenu", "Self-Hosted PromptHub")}
+          >
             <div className="p-4 space-y-4">
               <div className="rounded-xl border border-border bg-muted/30 px-3 py-3">
                 <div className="flex items-center justify-between gap-4">
@@ -1061,8 +1082,15 @@ export function DataSettings({
                 />
               </div>
 
-              <div className={getSyncPanelContentClassName(!settings.selfHostedSyncEnabled)}>
-                <fieldset disabled={!settings.selfHostedSyncEnabled} className="space-y-3 min-w-0">
+              <div
+                className={getSyncPanelContentClassName(
+                  !settings.selfHostedSyncEnabled,
+                )}
+              >
+                <fieldset
+                  disabled={!settings.selfHostedSyncEnabled}
+                  className="space-y-3 min-w-0"
+                >
                   <div>
                     <label className="text-xs text-muted-foreground mb-1 block">
                       {t(
@@ -1123,17 +1151,25 @@ export function DataSettings({
                             username: settings.selfHostedSyncUsername,
                             password: settings.selfHostedSyncPassword,
                           });
-                          const accountId = settings.selfHostedSyncUsername.trim().replace(/@/g, "_").replace(/[\\/:*?"<>|]/g, "_");
+                          const accountId = settings.selfHostedSyncUsername
+                            .trim()
+                            .replace(/@/g, "_")
+                            .replace(/[\\/:*?"<>|]/g, "_");
 
                           await window.api.database.switchAccount(accountId);
                           await window.api.settings.set({
                             selfHostedSyncEnabled: true,
                             selfHostedSyncUrl: settings.selfHostedSyncUrl,
-                            selfHostedSyncUsername: settings.selfHostedSyncUsername,
-                            selfHostedSyncPassword: settings.selfHostedSyncPassword,
-                            selfHostedSyncOnStartup: settings.selfHostedSyncOnStartup,
-                            selfHostedSyncOnStartupDelay: settings.selfHostedSyncOnStartupDelay,
-                            selfHostedAutoSyncInterval: settings.selfHostedAutoSyncInterval,
+                            selfHostedSyncUsername:
+                              settings.selfHostedSyncUsername,
+                            selfHostedSyncPassword:
+                              settings.selfHostedSyncPassword,
+                            selfHostedSyncOnStartup:
+                              settings.selfHostedSyncOnStartup,
+                            selfHostedSyncOnStartupDelay:
+                              settings.selfHostedSyncOnStartupDelay,
+                            selfHostedAutoSyncInterval:
+                              settings.selfHostedAutoSyncInterval,
                             syncProvider: "self-hosted",
                             sync: {
                               enabled: true,
@@ -1142,7 +1178,7 @@ export function DataSettings({
                               username: settings.selfHostedSyncUsername,
                               password: settings.selfHostedSyncPassword,
                               endpoint: settings.selfHostedSyncUrl,
-                            }
+                            },
                           } as any);
                           settings.setIsSyncVerified(true);
 
@@ -1175,8 +1211,8 @@ export function DataSettings({
                           setSelfHostedTesting(false);
                         }
                       }}
-                        disabled={selfHostedTesting || !selfHostedConfigComplete}
-                        className="h-8 px-4 rounded-lg bg-muted text-sm hover:bg-muted/80 transition-colors flex items-center gap-2 disabled:opacity-50"
+                      disabled={selfHostedTesting || !selfHostedConfigComplete}
+                      className="h-8 px-4 rounded-lg bg-muted text-sm hover:bg-muted/80 transition-colors flex items-center gap-2 disabled:opacity-50"
                     >
                       <RefreshCwIcon
                         className={`w-4 h-4 ${selfHostedTesting ? "animate-spin" : ""}`}
@@ -1218,8 +1254,12 @@ export function DataSettings({
                           setSelfHostedUploading(false);
                         }
                       }}
-                        disabled={selfHostedUploading || !selfHostedConfigComplete || !settings.isSyncVerified}
-                        className="h-8 px-4 rounded-lg bg-primary text-white text-sm hover:bg-primary/90 transition-colors flex items-center gap-2 disabled:opacity-50"
+                      disabled={
+                        selfHostedUploading ||
+                        !selfHostedConfigComplete ||
+                        !settings.isSyncVerified
+                      }
+                      className="h-8 px-4 rounded-lg bg-primary text-white text-sm hover:bg-primary/90 transition-colors flex items-center gap-2 disabled:opacity-50"
                     >
                       <UploadIcon className="w-4 h-4" />
                       {t("settings.backupToRemote", "Back up to remote")}
@@ -1262,15 +1302,22 @@ export function DataSettings({
                           setSelfHostedDownloading(false);
                         }
                       }}
-                        disabled={selfHostedDownloading || !selfHostedConfigComplete || !settings.isSyncVerified}
-                        className="h-8 px-4 rounded-lg bg-muted text-sm hover:bg-muted/80 transition-colors flex items-center gap-2 disabled:opacity-50"
+                      disabled={
+                        selfHostedDownloading ||
+                        !selfHostedConfigComplete ||
+                        !settings.isSyncVerified
+                      }
+                      className="h-8 px-4 rounded-lg bg-muted text-sm hover:bg-muted/80 transition-colors flex items-center gap-2 disabled:opacity-50"
                     >
                       <DownloadIcon className="w-4 h-4" />
                       {t("settings.updateFromRemote", "Update from remote")}
                     </button>
                     {!settings.isSyncVerified && (
                       <span className="text-xs text-amber-500/90 flex items-center gap-1.5 px-1 py-1">
-                        {t("settings.syncNotVerifiedWarning", "请先测试连接并保存配置以启用此功能")}
+                        {t(
+                          "settings.syncNotVerifiedWarning",
+                          "请先测试连接并保存配置以启用此功能",
+                        )}
                       </span>
                     )}
                   </div>
@@ -1392,335 +1439,362 @@ export function DataSettings({
           </DataSettingsSection>
         ) : null}
 
-
         {webRuntime || activeSubsection === "backup" ? (
-        <DataSettingsSection title={t("settings.backup")}>
-          {/* 选择性导出（只导出） */}
-          <div className="p-4 space-y-3">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <div className="text-sm font-semibold">
-                  {t("settings.selectiveExport", "选择性导出")}
-                </div>
-                <div className="text-xs text-muted-foreground mt-0.5">
-                  {t(
-                    "settings.selectiveExportDesc",
-                    "按需导出指定数据（仅导出，不提供导入）",
-                  )}
-                </div>
-              </div>
-              <button
-                onClick={handleSelectiveExport}
-                className="h-9 px-4 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/90 transition-colors"
-              >
-                {t("settings.export", "导出")}
-              </button>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {exportScopeItems.map((item) => {
-                const checked = exportScope[item.key];
-                return (
-                  <div
-                    key={item.key}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-lg border transition-colors cursor-pointer select-none ${
-                      checked
-                        ? "border-primary/40 bg-primary/5"
-                        : "border-border/60 hover:bg-muted/40"
-                    }`}
-                    onClick={() =>
-                      setExportScope((prev) => {
-                        if (item.key === "images") {
-                          return {
-                            ...prev,
-                            images: !checked,
-                            videos: !checked,
-                          };
-                        }
-
-                        return {
-                          ...prev,
-                          [item.key]: !checked,
-                        };
-                      })
-                    }
-                  >
-                    <div className="pointer-events-none">
-                      <Checkbox checked={checked} onChange={() => {}} />
-                    </div>
-                    <span className="text-sm">{item.label}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* 全量备份/恢复 */}
-          <div className="p-4 space-y-3 border-t border-border">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <div className="text-sm font-semibold">
-                  {t("settings.fullBackup", "全量备份 / 恢复")}
-                </div>
-                <div className="text-xs text-muted-foreground mt-0.5">
-                  {t(
-                    "settings.fullBackupDesc",
-                    "用于迁移/跨设备恢复：包含 prompts、图片、AI 配置、系统设置、规则与 Skill",
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => handleFullBackup()}
-                  className="h-9 px-4 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/90 transition-colors"
-                  title={t("settings.fullBackupExport", "全量备份")}
-                >
-                  {t("settings.fullBackupExport", "全量备份")}
-                </button>
-                <button
-                  onClick={handleImportBackup}
-                  title={t("settings.import", "导入数据")}
-                  className="h-9 px-4 rounded-lg bg-muted text-foreground text-sm font-medium hover:bg-muted/80 transition-colors"
-                >
-                  {t("settings.import", "导入数据")}
-                </button>
-              </div>
-            </div>
-
-            <div
-              onDragOver={(event) => {
-                event.preventDefault();
-                if (
-                  Array.from(event.dataTransfer.items).some(
-                    (item) => item.kind === "file",
-                  )
-                ) {
-                  setIsBackupDropTargetActive(true);
-                }
-              }}
-              onDragEnter={(event) => {
-                event.preventDefault();
-                if (
-                  Array.from(event.dataTransfer.items).some(
-                    (item) => item.kind === "file",
-                  )
-                ) {
-                  setIsBackupDropTargetActive(true);
-                }
-              }}
-              onDragLeave={(event) => {
-                if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
-                  setIsBackupDropTargetActive(false);
-                }
-              }}
-              onDrop={(event) => {
-                void handleBackupDrop(event);
-              }}
-              className={`rounded-xl border border-dashed px-4 py-5 transition-colors ${
-                isBackupDropTargetActive
-                  ? "border-primary bg-primary/8"
-                  : "border-border bg-muted/15"
-              }`}
-            >
-              <div className="flex items-start gap-3">
-                <div
-                  className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
-                    isBackupDropTargetActive
-                      ? "bg-primary text-white"
-                      : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  <InboxIcon className="h-5 w-5" />
-                </div>
-                <div className="min-w-0 flex-1 space-y-1">
-                  <div className="text-sm font-medium text-foreground">
-                    {t("settings.backupDropRestore", "拖拽恢复备份")}
-                  </div>
-                  <div className="text-xs leading-5 text-muted-foreground">
-                    {backupDropDescription}
-                  </div>
-                  <div className="text-[11px] text-muted-foreground/80">
-                    {t(
-                      "settings.backupDropRestoreFormats",
-                      "Supported: .json, .phub.gz, .gz, .zip",
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {!webRuntime ? (
-            <div className="p-4 space-y-3 border-t border-border">
-              <div className="flex items-start justify-between gap-3">
+          <DataSettingsSection title={t("settings.backup")}>
+            {/* 选择性导出（只导出） */}
+            <div className="p-4 space-y-3">
+              <div className="flex items-center justify-between gap-3">
                 <div>
                   <div className="text-sm font-semibold">
-                    {t("settings.upgradeBackups", "升级备份")}
+                    {t("settings.selectiveExport", "选择性导出")}
                   </div>
                   <div className="text-xs text-muted-foreground mt-0.5">
                     {t(
-                      "settings.upgradeBackupsDesc",
-                      "升级前自动创建的本地回滚点。恢复某个快照时，会先把当前状态保存为新快照，再回滚并自动重启。",
+                      "settings.selectiveExportDesc",
+                      "按需导出指定数据（仅导出，不提供导入）",
                     )}
                   </div>
                 </div>
                 <button
-                  onClick={() => void refreshUpgradeBackups()}
-                  disabled={loadingUpgradeBackups}
-                  className="h-8 shrink-0 whitespace-nowrap px-3 rounded-lg bg-muted text-sm hover:bg-muted/80 transition-colors flex items-center gap-2 disabled:opacity-50"
+                  onClick={handleSelectiveExport}
+                  className="h-9 px-4 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/90 transition-colors"
                 >
-                  <RefreshCwIcon
-                    className={`w-4 h-4 shrink-0 ${loadingUpgradeBackups ? "animate-spin" : ""}`}
-                  />
-                  {t("common.refresh", "Refresh")}
+                  {t("settings.export", "导出")}
                 </button>
               </div>
 
-              {upgradeBackups.length === 0 ? (
-                <div className="rounded-lg border border-dashed border-border px-4 py-3 text-sm text-muted-foreground">
-                  {loadingUpgradeBackups
-                    ? t("settings.upgradeBackupsLoading", "Loading upgrade backups...")
-                    : t("settings.upgradeBackupsEmpty", "No automatic upgrade backups found yet.")}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                {exportScopeItems.map((item) => {
+                  const checked = exportScope[item.key];
+                  return (
+                    <div
+                      key={item.key}
+                      className={`flex items-center gap-3 px-3 py-2 rounded-lg border transition-colors cursor-pointer select-none ${
+                        checked
+                          ? "border-primary/40 bg-primary/5"
+                          : "border-border/60 hover:bg-muted/40"
+                      }`}
+                      onClick={() =>
+                        setExportScope((prev) => {
+                          if (item.key === "images") {
+                            return {
+                              ...prev,
+                              images: !checked,
+                              videos: !checked,
+                            };
+                          }
+
+                          return {
+                            ...prev,
+                            [item.key]: !checked,
+                          };
+                        })
+                      }
+                    >
+                      <div className="pointer-events-none">
+                        <Checkbox checked={checked} onChange={() => {}} />
+                      </div>
+                      <span className="text-sm">{item.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 全量备份/恢复 */}
+            <div className="p-4 space-y-3 border-t border-border">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-sm font-semibold">
+                    {t("settings.fullBackup", "全量备份 / 恢复")}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-0.5">
+                    {t(
+                      "settings.fullBackupDesc",
+                      "用于迁移/跨设备恢复：包含 prompts、图片、AI 配置、系统设置、规则与 Skill",
+                    )}
+                  </div>
                 </div>
-              ) : (
-                <div className="space-y-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-muted/20 px-3 py-2.5">
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="font-medium text-foreground">
-                        {t(
-                          "settings.upgradeBackupsSummary",
-                          "{{count}} rollback snapshot(s)",
-                          { count: upgradeBackups.length },
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleFullBackup()}
+                    className="h-9 px-4 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/90 transition-colors"
+                    title={t("settings.fullBackupExport", "全量备份")}
+                  >
+                    {t("settings.fullBackupExport", "全量备份")}
+                  </button>
+                  <button
+                    onClick={handleImportBackup}
+                    title={t("settings.import", "导入数据")}
+                    className="h-9 px-4 rounded-lg bg-muted text-foreground text-sm font-medium hover:bg-muted/80 transition-colors"
+                  >
+                    {t("settings.import", "导入数据")}
+                  </button>
+                </div>
+              </div>
+
+              <div
+                onDragOver={(event) => {
+                  event.preventDefault();
+                  if (
+                    Array.from(event.dataTransfer.items).some(
+                      (item) => item.kind === "file",
+                    )
+                  ) {
+                    setIsBackupDropTargetActive(true);
+                  }
+                }}
+                onDragEnter={(event) => {
+                  event.preventDefault();
+                  if (
+                    Array.from(event.dataTransfer.items).some(
+                      (item) => item.kind === "file",
+                    )
+                  ) {
+                    setIsBackupDropTargetActive(true);
+                  }
+                }}
+                onDragLeave={(event) => {
+                  if (
+                    !event.currentTarget.contains(
+                      event.relatedTarget as Node | null,
+                    )
+                  ) {
+                    setIsBackupDropTargetActive(false);
+                  }
+                }}
+                onDrop={(event) => {
+                  void handleBackupDrop(event);
+                }}
+                className={`rounded-xl border border-dashed px-4 py-5 transition-colors ${
+                  isBackupDropTargetActive
+                    ? "border-primary bg-primary/8"
+                    : "border-border bg-muted/15"
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div
+                    className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+                      isBackupDropTargetActive
+                        ? "bg-primary text-white"
+                        : "bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    <InboxIcon className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <div className="text-sm font-medium text-foreground">
+                      {t("settings.backupDropRestore", "拖拽恢复备份")}
+                    </div>
+                    <div className="text-xs leading-5 text-muted-foreground">
+                      {backupDropDescription}
+                    </div>
+                    <div className="text-[11px] text-muted-foreground/80">
+                      {t(
+                        "settings.backupDropRestoreFormats",
+                        "Supported: .json, .phub.gz, .gz, .zip",
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {!webRuntime ? (
+              <div className="p-4 space-y-3 border-t border-border">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-semibold">
+                      {t("settings.upgradeBackups", "升级备份")}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
+                      {t(
+                        "settings.upgradeBackupsDesc",
+                        "升级前自动创建的本地回滚点。恢复某个快照时，会先把当前状态保存为新快照，再回滚并自动重启。",
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => void refreshUpgradeBackups()}
+                    disabled={loadingUpgradeBackups}
+                    className="h-8 shrink-0 whitespace-nowrap px-3 rounded-lg bg-muted text-sm hover:bg-muted/80 transition-colors flex items-center gap-2 disabled:opacity-50"
+                  >
+                    <RefreshCwIcon
+                      className={`w-4 h-4 shrink-0 ${loadingUpgradeBackups ? "animate-spin" : ""}`}
+                    />
+                    {t("common.refresh", "Refresh")}
+                  </button>
+                </div>
+
+                {upgradeBackups.length === 0 ? (
+                  <div className="rounded-lg border border-dashed border-border px-4 py-3 text-sm text-muted-foreground">
+                    {loadingUpgradeBackups
+                      ? t(
+                          "settings.upgradeBackupsLoading",
+                          "Loading upgrade backups...",
+                        )
+                      : t(
+                          "settings.upgradeBackupsEmpty",
+                          "No automatic upgrade backups found yet.",
                         )}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {showAllUpgradeBackups
-                          ? t(
-                              "settings.upgradeBackupsSummaryExpanded",
-                              "Showing full history in a scrollable list",
-                            )
-                          : hiddenUpgradeBackupsCount > 0
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-muted/20 px-3 py-2.5">
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="font-medium text-foreground">
+                          {t(
+                            "settings.upgradeBackupsSummary",
+                            "{{count}} rollback snapshot(s)",
+                            { count: upgradeBackups.length },
+                          )}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {showAllUpgradeBackups
                             ? t(
-                                "settings.upgradeBackupsSummaryCollapsed",
-                                "Latest {{count}} shown by default",
-                                {
-                                  count: DEFAULT_VISIBLE_UPGRADE_BACKUPS,
-                                },
+                                "settings.upgradeBackupsSummaryExpanded",
+                                "Showing full history in a scrollable list",
                               )
+                            : hiddenUpgradeBackupsCount > 0
+                              ? t(
+                                  "settings.upgradeBackupsSummaryCollapsed",
+                                  "Latest {{count}} shown by default",
+                                  {
+                                    count: DEFAULT_VISIBLE_UPGRADE_BACKUPS,
+                                  },
+                                )
+                              : t(
+                                  "settings.upgradeBackupsSummaryCompact",
+                                  "All snapshots fit in the compact list",
+                                )}
+                        </span>
+                      </div>
+
+                      {hiddenUpgradeBackupsCount > 0 ? (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setShowAllUpgradeBackups((current) => !current)
+                          }
+                          className="h-8 px-3 rounded-lg bg-background text-sm hover:bg-accent transition-colors inline-flex items-center gap-2"
+                        >
+                          {showAllUpgradeBackups ? (
+                            <ChevronUpIcon className="w-4 h-4" />
+                          ) : (
+                            <ChevronDownIcon className="w-4 h-4" />
+                          )}
+                          {showAllUpgradeBackups
+                            ? t("common.collapse", "Collapse")
                             : t(
-                                "settings.upgradeBackupsSummaryCompact",
-                                "All snapshots fit in the compact list",
+                                "settings.upgradeBackupsShowAll",
+                                "Show all {{count}}",
+                                { count: upgradeBackups.length },
                               )}
-                      </span>
+                        </button>
+                      ) : null}
                     </div>
 
-                    {hiddenUpgradeBackupsCount > 0 ? (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setShowAllUpgradeBackups((current) => !current)
-                        }
-                        className="h-8 px-3 rounded-lg bg-background text-sm hover:bg-accent transition-colors inline-flex items-center gap-2"
-                      >
-                        {showAllUpgradeBackups ? (
-                          <ChevronUpIcon className="w-4 h-4" />
-                        ) : (
-                          <ChevronDownIcon className="w-4 h-4" />
-                        )}
-                        {showAllUpgradeBackups
-                          ? t("common.collapse", "Collapse")
-                          : t(
-                              "settings.upgradeBackupsShowAll",
-                              "Show all {{count}}",
-                              { count: upgradeBackups.length },
-                            )}
-                      </button>
-                    ) : null}
-                  </div>
-
-                  <div
-                    className="space-y-2 overflow-y-auto pr-1"
-                    style={{
-                      maxHeight:
-                        showAllUpgradeBackups &&
-                        upgradeBackups.length > DEFAULT_VISIBLE_UPGRADE_BACKUPS
-                          ? `${EXPANDED_UPGRADE_BACKUP_MAX_HEIGHT}px`
-                          : undefined,
-                    }}
-                  >
-                  {visibleUpgradeBackups.map((backup) => {
-                    const busy = upgradeBackupActionId === backup.backupId;
-                    return (
-                      <div
-                        key={backup.backupId}
-                        className="rounded-xl border border-border bg-card/60 p-3 space-y-2"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0 flex-1">
-                            <div className="text-sm font-medium truncate">
-                              {backup.manifest.fromVersion}
-                              {backup.manifest.toVersion
-                                ? ` -> ${backup.manifest.toVersion}`
-                                : ""}
-                            </div>
-                            <div className="text-xs text-muted-foreground mt-1 break-all">
-                              {backup.backupId}
-                            </div>
-                          </div>
-                          <div className="text-xs text-muted-foreground shrink-0">
-                            {formatBytes(backup.sizeBytes)}
-                          </div>
-                        </div>
-
-                        <div className="text-xs text-muted-foreground space-y-1">
-                          <div>
-                            {t("settings.upgradeBackupCreatedAt", "快照时间")}：{new Date(backup.manifest.createdAt).toLocaleString()}
-                          </div>
-                          <div>
-                            {t("settings.upgradeBackupItems", "包含项目")}：{backup.manifest.copiedItems
-                              .filter((item) =>
-                                ["prompthub.db", "data", "config", "skills", "workspace"].some(
-                                  (k) => item.includes(k),
-                                ),
-                              )
-                              .join("、") || backup.manifest.copiedItems.join("、")}
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-end gap-2 pt-1">
-                          <button
-                            onClick={() => setDeleteCandidate(backup)}
-                            disabled={busy}
-                            className="h-8 px-3 rounded-lg bg-muted text-sm hover:bg-muted/80 transition-colors disabled:opacity-50"
+                    <div
+                      className="space-y-2 overflow-y-auto pr-1"
+                      style={{
+                        maxHeight:
+                          showAllUpgradeBackups &&
+                          upgradeBackups.length >
+                            DEFAULT_VISIBLE_UPGRADE_BACKUPS
+                            ? `${EXPANDED_UPGRADE_BACKUP_MAX_HEIGHT}px`
+                            : undefined,
+                      }}
+                    >
+                      {visibleUpgradeBackups.map((backup) => {
+                        const busy = upgradeBackupActionId === backup.backupId;
+                        return (
+                          <div
+                            key={backup.backupId}
+                            className="rounded-xl border border-border bg-card/60 p-3 space-y-2"
                           >
-                            {t("common.delete", "Delete")}
-                          </button>
-                          <button
-                            onClick={() => setRestoreCandidate(backup)}
-                            disabled={busy}
-                            className="h-8 px-3 rounded-lg bg-primary text-white text-sm hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2"
-                          >
-                            {busy ? (
-                              <Loader2Icon className="w-4 h-4 animate-spin" />
-                            ) : null}
-                            {t("settings.upgradeBackupRestoreAction", "回滚到此快照")}
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : null}
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0 flex-1">
+                                <div className="text-sm font-medium truncate">
+                                  {backup.manifest.fromVersion}
+                                  {backup.manifest.toVersion
+                                    ? ` -> ${backup.manifest.toVersion}`
+                                    : ""}
+                                </div>
+                                <div className="text-xs text-muted-foreground mt-1 break-all">
+                                  {backup.backupId}
+                                </div>
+                              </div>
+                              <div className="text-xs text-muted-foreground shrink-0">
+                                {formatBytes(backup.sizeBytes)}
+                              </div>
+                            </div>
 
-        </DataSettingsSection>
+                            <div className="text-xs text-muted-foreground space-y-1">
+                              <div>
+                                {t(
+                                  "settings.upgradeBackupCreatedAt",
+                                  "快照时间",
+                                )}
+                                ：
+                                {new Date(
+                                  backup.manifest.createdAt,
+                                ).toLocaleString()}
+                              </div>
+                              <div>
+                                {t("settings.upgradeBackupItems", "包含项目")}：
+                                {backup.manifest.copiedItems
+                                  .filter((item) =>
+                                    [
+                                      "prompthub.db",
+                                      "data",
+                                      "config",
+                                      "skills",
+                                      "workspace",
+                                    ].some((k) => item.includes(k)),
+                                  )
+                                  .join("、") ||
+                                  backup.manifest.copiedItems.join("、")}
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-end gap-2 pt-1">
+                              <button
+                                onClick={() => setDeleteCandidate(backup)}
+                                disabled={busy}
+                                className="h-8 px-3 rounded-lg bg-muted text-sm hover:bg-muted/80 transition-colors disabled:opacity-50"
+                              >
+                                {t("common.delete", "Delete")}
+                              </button>
+                              <button
+                                onClick={() => setRestoreCandidate(backup)}
+                                disabled={busy}
+                                className="h-8 px-3 rounded-lg bg-primary text-white text-sm hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2"
+                              >
+                                {busy ? (
+                                  <Loader2Icon className="w-4 h-4 animate-spin" />
+                                ) : null}
+                                {t(
+                                  "settings.upgradeBackupRestoreAction",
+                                  "回滚到此快照",
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : null}
+          </DataSettingsSection>
         ) : null}
 
         {!webRuntime && activeSubsection === "local" ? (
           <>
-            <DataSettingsSection title={t("settings.currentAccountTitle", "当前本地账户")}>
+            <DataSettingsSection
+              title={t("settings.currentAccountTitle", "当前本地账户")}
+            >
               <div className="p-5 space-y-4">
                 <div className="flex items-center justify-between gap-4">
                   <div className="space-y-1">
@@ -1731,7 +1805,8 @@ export function DataSettings({
                       {runtimePaths?.activeAccountId ? (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-foreground">
                           <CloudIcon className="w-3.5 h-3.5" />
-                          {t("settings.cloudAccount", "云端同步账户")}: {runtimePaths.activeAccountId}
+                          {t("settings.cloudAccount", "云端同步账户")}:{" "}
+                          {runtimePaths.activeAccountId}
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground">
@@ -1748,8 +1823,8 @@ export function DataSettings({
                         const confirmed = window.confirm(
                           t(
                             "settings.confirmLogoutToGuest",
-                            "确认注销当前账户并切回本地访客账户吗？这将会安全断开当前账户的数据连接，并重载到本地离线访客环境。"
-                          )
+                            "确认注销当前账户并切回本地访客账户吗？这将会安全断开当前账户的数据连接，并重载到本地离线访客环境。",
+                          ),
                         );
                         if (confirmed) {
                           // Reset sync verification status, set provider to manual and disable sync targets
@@ -1783,7 +1858,10 @@ export function DataSettings({
                 {!runtimePaths?.activeAccountId && localAccounts.length > 0 ? (
                   <div className="pt-4 border-t border-border space-y-3">
                     <p className="text-xs font-medium text-foreground">
-                      {t("settings.detectedLocalAccounts", "本机已缓存的云端账户")}
+                      {t(
+                        "settings.detectedLocalAccounts",
+                        "本机已缓存的云端账户",
+                      )}
                     </p>
                     <div className="space-y-2">
                       {localAccounts.map((accountId) => (
@@ -1803,16 +1881,24 @@ export function DataSettings({
                               const confirmed = window.confirm(
                                 t(
                                   "settings.confirmLoadAccountData",
-                                  "确认切换并载入账户“{{accountId}}”的本地数据吗？"
-                                ).replace("{{accountId}}", accountId)
+                                  "确认切换并载入账户“{{accountId}}”的本地数据吗？",
+                                ).replace("{{accountId}}", accountId),
                               );
                               if (confirmed) {
                                 if (window.api?.database?.switchAccount) {
-                                  await window.api.database.switchAccount(accountId);
-                                  const newSettings = await window.api.settings.get();
-                                  
-                                  let syncProvider = newSettings.sync?.provider || newSettings.syncProvider;
-                                  if (!syncProvider || syncProvider === "manual") {
+                                  await window.api.database.switchAccount(
+                                    accountId,
+                                  );
+                                  const newSettings =
+                                    await window.api.settings.get();
+
+                                  let syncProvider =
+                                    newSettings.sync?.provider ||
+                                    newSettings.syncProvider;
+                                  if (
+                                    !syncProvider ||
+                                    syncProvider === "manual"
+                                  ) {
                                     syncProvider = "self-hosted";
                                   }
 
@@ -1822,18 +1908,25 @@ export function DataSettings({
                                       enabled: true,
                                       provider: syncProvider,
                                       username: accountId,
-                                    }
+                                    },
                                   };
 
                                   if (syncProvider === "self-hosted") {
                                     updatedSettings.selfHostedSyncEnabled = true;
-                                    updatedSettings.selfHostedSyncUsername = accountId;
-                                    if (!newSettings.selfHostedSyncUrl && settings.selfHostedSyncUrl) {
-                                      updatedSettings.selfHostedSyncUrl = settings.selfHostedSyncUrl;
+                                    updatedSettings.selfHostedSyncUsername =
+                                      accountId;
+                                    if (
+                                      !newSettings.selfHostedSyncUrl &&
+                                      settings.selfHostedSyncUrl
+                                    ) {
+                                      updatedSettings.selfHostedSyncUrl =
+                                        settings.selfHostedSyncUrl;
                                     }
                                   }
 
-                                  await window.api.settings.set(updatedSettings);
+                                  await window.api.settings.set(
+                                    updatedSettings,
+                                  );
 
                                   useSettingsStore.setState({
                                     ...newSettings,
@@ -1841,7 +1934,7 @@ export function DataSettings({
                                     isSyncVerified: true,
                                     syncProvider: syncProvider,
                                   });
-                                  
+
                                   window.location.reload();
                                 }
                               }
@@ -1859,122 +1952,151 @@ export function DataSettings({
             </DataSettingsSection>
 
             <DataSettingsSection title={t("settings.dbInfo", "数据目录")}>
-            <div className="divide-y divide-border">
-              {normalizedDataPath ? (
-                <>
-                  {[
-                    {
-                      label: t("settings.applicationData", "应用数据"),
-                      path: runtimePaths?.userDataPath ?? normalizedDataPath,
-                      actionLabel: t("settings.openFolder"),
-                    },
-                    {
-                      label: t("settings.databaseFile", "主数据库"),
-                      path: runtimePaths?.databasePath ?? `${normalizedDataPath}/data/prompthub.db`,
-                      actionLabel: t("settings.openFolder"),
-                    },
-                    {
-                      label: t("settings.promptsData", "Prompt 文件"),
-                      path: runtimePaths?.promptsDir ?? `${normalizedDataPath}/data/prompts`,
-                      actionLabel: t("settings.openFolder"),
-                    },
-                    {
-                      label: t("settings.applicationLogs", "应用日志"),
-                      path: runtimePaths?.logsDir ?? `${normalizedDataPath}/logs`,
-                      actionLabel: t("settings.openLogs", "打开日志"),
-                    },
-                    {
-                      label: t("settings.rulesData", "规则文件"),
-                      path: runtimePaths?.rulesDir ?? `${normalizedDataPath}/data/rules`,
-                      actionLabel: t("settings.openFolder"),
-                    },
-                    {
-                      label: t("settings.skillsData", "Skills 目录"),
-                      path: runtimePaths?.skillsDir ?? `${normalizedDataPath}/data/skills`,
-                      actionLabel: t("settings.openFolder"),
-                    },
-                    {
-                      label: t("settings.backupsData", "备份目录"),
-                      path: runtimePaths?.backupsDir ?? `${normalizedDataPath}/backups`,
-                      actionLabel: t("settings.openFolder"),
-                    },
-                  ].map((item) => (
-                    <div key={item.label} className="flex items-center justify-between gap-4 px-5 py-3.5">
+              <div className="divide-y divide-border">
+                {normalizedDataPath ? (
+                  <>
+                    {[
+                      {
+                        label: t("settings.applicationData", "应用数据"),
+                        path: runtimePaths?.userDataPath ?? normalizedDataPath,
+                        actionLabel: t("settings.openFolder"),
+                      },
+                      {
+                        label: t("settings.databaseFile", "主数据库"),
+                        path:
+                          runtimePaths?.databasePath ??
+                          `${normalizedDataPath}/data/prompthub.db`,
+                        actionLabel: t("settings.openFolder"),
+                      },
+                      {
+                        label: t("settings.promptsData", "Prompt 文件"),
+                        path:
+                          runtimePaths?.promptsDir ??
+                          `${normalizedDataPath}/data/prompts`,
+                        actionLabel: t("settings.openFolder"),
+                      },
+                      {
+                        label: t("settings.applicationLogs", "应用日志"),
+                        path:
+                          runtimePaths?.logsDir ?? `${normalizedDataPath}/logs`,
+                        actionLabel: t("settings.openLogs", "打开日志"),
+                      },
+                      {
+                        label: t("settings.rulesData", "规则文件"),
+                        path:
+                          runtimePaths?.rulesDir ??
+                          `${normalizedDataPath}/data/rules`,
+                        actionLabel: t("settings.openFolder"),
+                      },
+                      {
+                        label: t("settings.skillsData", "Skills 目录"),
+                        path:
+                          runtimePaths?.skillsDir ??
+                          `${normalizedDataPath}/data/skills`,
+                        actionLabel: t("settings.openFolder"),
+                      },
+                      {
+                        label: t("settings.backupsData", "备份目录"),
+                        path:
+                          runtimePaths?.backupsDir ??
+                          `${normalizedDataPath}/backups`,
+                        actionLabel: t("settings.openFolder"),
+                      },
+                    ].map((item) => (
+                      <div
+                        key={item.label}
+                        className="flex items-center justify-between gap-4 px-5 py-3.5"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-foreground">
+                            {item.label}
+                          </p>
+                          <p className="mt-0.5 break-all font-mono text-xs text-muted-foreground">
+                            {item.path}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            void window.electron?.openPath?.(item.path)
+                          }
+                          className="h-8 shrink-0 rounded-lg border border-border bg-muted px-3 text-sm text-foreground transition-colors hover:bg-muted/80"
+                        >
+                          {item.actionLabel}
+                        </button>
+                      </div>
+                    ))}
+
+                    {/* Cache row */}
+                    <div className="flex items-center justify-between gap-4 px-5 py-3.5">
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-foreground">{item.label}</p>
-                        <p className="mt-0.5 break-all font-mono text-xs text-muted-foreground">
-                          {item.path}
+                        <p className="text-sm font-medium text-foreground">
+                          {t("settings.cacheData", "应用缓存")}
+                          {cacheSize !== null && (
+                            <span className="ml-1.5 text-xs font-normal text-muted-foreground">
+                              ({formatBytes(cacheSize)})
+                            </span>
+                          )}
+                        </p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          {t(
+                            "settings.cacheDataDesc",
+                            "Electron 渲染进程缓存，不影响数据",
+                          )}
                         </p>
                       </div>
                       <button
                         type="button"
-                        onClick={() => void window.electron?.openPath?.(item.path)}
-                        className="h-8 shrink-0 rounded-lg border border-border bg-muted px-3 text-sm text-foreground transition-colors hover:bg-muted/80"
+                        disabled={clearingCache}
+                        onClick={() => {
+                          setClearingCache(true);
+                          void window.electron
+                            ?.clearCache?.()
+                            .then(async () => {
+                              const res =
+                                await window.electron?.getCacheSize?.();
+                              setCacheSize(res?.size ?? 0);
+                              setClearingCache(false);
+                              showToast(
+                                t("settings.cacheClearedToast", "缓存已清除"),
+                                "success",
+                              );
+                            });
+                        }}
+                        className="h-8 shrink-0 rounded-lg border border-border bg-muted px-3 text-sm text-foreground transition-colors hover:bg-muted/80 disabled:opacity-50"
                       >
-                        {item.actionLabel}
+                        {clearingCache
+                          ? t("common.loading", "Loading...")
+                          : t("settings.clearCache", "清除缓存")}
                       </button>
                     </div>
-                  ))}
-
-                  {/* Cache row */}
-                  <div className="flex items-center justify-between gap-4 px-5 py-3.5">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-foreground">
-                        {t("settings.cacheData", "应用缓存")}
-                        {cacheSize !== null && (
-                          <span className="ml-1.5 text-xs font-normal text-muted-foreground">
-                            ({formatBytes(cacheSize)})
-                          </span>
-                        )}
-                      </p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        {t("settings.cacheDataDesc", "Electron 渲染进程缓存，不影响数据")}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      disabled={clearingCache}
-                      onClick={() => {
-                        setClearingCache(true);
-                        void window.electron?.clearCache?.().then(async () => {
-                          const res = await window.electron?.getCacheSize?.();
-                          setCacheSize(res?.size ?? 0);
-                          setClearingCache(false);
-                          showToast(t("settings.cacheClearedToast", "缓存已清除"), "success");
-                        });
-                      }}
-                      className="h-8 shrink-0 rounded-lg border border-border bg-muted px-3 text-sm text-foreground transition-colors hover:bg-muted/80 disabled:opacity-50"
-                    >
-                      {clearingCache ? t("common.loading", "Loading...") : t("settings.clearCache", "清除缓存")}
-                    </button>
+                  </>
+                ) : (
+                  <div className="px-5 py-4">
+                    <p className="text-sm italic text-muted-foreground">
+                      {t("common.loading", "Loading...")}
+                    </p>
                   </div>
-                </>
-              ) : (
-                <div className="px-5 py-4">
-                  <p className="text-sm italic text-muted-foreground">
-                    {t("common.loading", "Loading...")}
-                  </p>
-                </div>
-              )}
-            </div>
-          </DataSettingsSection>
+                )}
+              </div>
+            </DataSettingsSection>
           </>
         ) : null}
 
         {!webRuntime && activeSubsection === "backup" ? (
-        <DataSettingsSection title={t("settings.dangerOperation", "Danger")}>
-          <SettingItem
-            label={t("settings.clear")}
-            description={t("settings.clearDesc")}
-          >
-            <button
-              onClick={handleClearData}
-              className="h-9 px-4 rounded-lg bg-destructive text-white text-sm font-medium hover:bg-destructive/90 transition-colors"
+          <DataSettingsSection title={t("settings.dangerOperation", "Danger")}>
+            <SettingItem
+              label={t("settings.clear")}
+              description={t("settings.clearDesc")}
             >
-              {t("settings.clear")}
-            </button>
-          </SettingItem>
-        </DataSettingsSection>
+              <button
+                onClick={handleClearData}
+                className="h-9 px-4 rounded-lg bg-destructive text-white text-sm font-medium hover:bg-destructive/90 transition-colors"
+              >
+                {t("settings.clear")}
+              </button>
+            </SettingItem>
+          </DataSettingsSection>
         ) : null}
       </div>
 
@@ -2046,7 +2168,10 @@ export function DataSettings({
                 disabled={dataPathActionLoading}
                 className="h-10 px-4 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors text-sm font-medium disabled:opacity-50"
               >
-                {t("settings.switchToExistingDataPath", "Switch to this directory")}
+                {t(
+                  "settings.switchToExistingDataPath",
+                  "Switch to this directory",
+                )}
               </button>
               <button
                 onClick={() => {
@@ -2066,7 +2191,10 @@ export function DataSettings({
                 disabled={dataPathActionLoading}
                 className="h-10 px-4 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors text-sm font-medium disabled:opacity-50"
               >
-                {t("settings.overwriteAndMigrateDataPath", "Overwrite and migrate")}
+                {t(
+                  "settings.overwriteAndMigrateDataPath",
+                  "Overwrite and migrate",
+                )}
               </button>
             </div>
           </div>
@@ -2141,7 +2269,10 @@ export function DataSettings({
         onConfirm={() => {
           void handleConfirmRestoreUpgradeBackup();
         }}
-        title={t("settings.upgradeBackupRestoreTitle", "Restore upgrade backup")}
+        title={t(
+          "settings.upgradeBackupRestoreTitle",
+          "Restore upgrade backup",
+        )}
         message={
           restoreCandidate
             ? t(
@@ -2159,7 +2290,10 @@ export function DataSettings({
               )
             : ""
         }
-        confirmText={t("settings.upgradeBackupRestoreAction", "Restore this snapshot")}
+        confirmText={t(
+          "settings.upgradeBackupRestoreAction",
+          "Restore this snapshot",
+        )}
         cancelText={t("common.cancel", "Cancel")}
         variant="destructive"
       />

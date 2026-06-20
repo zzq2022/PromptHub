@@ -148,7 +148,9 @@ function findProviderForModel(
   model: AIModelConfig,
 ): EndpointGroup | undefined {
   if (model.providerId?.trim()) {
-    return providers.find((provider) => provider.providerConfigId === model.providerId);
+    return providers.find(
+      (provider) => provider.providerConfigId === model.providerId,
+    );
   }
 
   return providers.find(
@@ -603,7 +605,9 @@ export function AISettingsPrototype() {
     const supportsChat = modelForm.capabilities.chat === true;
     const supportsImageGeneration =
       modelForm.capabilities.imageGeneration === true;
-    const nextChatParams = supportsChat ? buildChatParams(modelForm) : undefined;
+    const nextChatParams = supportsChat
+      ? buildChatParams(modelForm)
+      : undefined;
     const nextImageParams = supportsImageGeneration
       ? buildImageParams(modelForm)
       : undefined;

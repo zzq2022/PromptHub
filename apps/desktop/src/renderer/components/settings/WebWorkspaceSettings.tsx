@@ -54,7 +54,9 @@ export function WebWorkspaceSettings({
         const payload = (await response.json().catch(() => null)) as {
           error?: { message?: string };
         } | null;
-        throw new Error(payload?.error?.message || t("settings.webPasswordChangeFailed"));
+        throw new Error(
+          payload?.error?.message || t("settings.webPasswordChangeFailed"),
+        );
       }
       setCurrentPassword("");
       setNewPassword("");
@@ -63,7 +65,9 @@ export function WebWorkspaceSettings({
       showToast(t("settings.webPasswordChangeSuccess"), "success");
     } catch (error) {
       showToast(
-        error instanceof Error ? error.message : t("settings.webPasswordChangeFailed"),
+        error instanceof Error
+          ? error.message
+          : t("settings.webPasswordChangeFailed"),
         "error",
       );
     } finally {
@@ -74,27 +78,31 @@ export function WebWorkspaceSettings({
   const clientLabel =
     typeof navigator === "undefined"
       ? "Browser"
-      : `${/edg\//i.test(navigator.userAgent)
-          ? "Microsoft Edge"
-          : /chrome\//i.test(navigator.userAgent) &&
-              !/edg\//i.test(navigator.userAgent)
-            ? "Google Chrome"
-            : /safari\//i.test(navigator.userAgent) &&
-                !/chrome\//i.test(navigator.userAgent)
-              ? "Safari"
-              : /firefox\//i.test(navigator.userAgent)
-                ? "Firefox"
-                : "Browser"} · ${/mac os x/i.test(navigator.userAgent)
-          ? "macOS"
-          : /windows/i.test(navigator.userAgent)
-            ? "Windows"
-            : /android/i.test(navigator.userAgent)
-              ? "Android"
-              : /(iphone|ipad|ios)/i.test(navigator.userAgent)
-                ? "iOS"
-                : /linux/i.test(navigator.userAgent)
-                  ? "Linux"
-                  : "Unknown OS"}`;
+      : `${
+          /edg\//i.test(navigator.userAgent)
+            ? "Microsoft Edge"
+            : /chrome\//i.test(navigator.userAgent) &&
+                !/edg\//i.test(navigator.userAgent)
+              ? "Google Chrome"
+              : /safari\//i.test(navigator.userAgent) &&
+                  !/chrome\//i.test(navigator.userAgent)
+                ? "Safari"
+                : /firefox\//i.test(navigator.userAgent)
+                  ? "Firefox"
+                  : "Browser"
+        } · ${
+          /mac os x/i.test(navigator.userAgent)
+            ? "macOS"
+            : /windows/i.test(navigator.userAgent)
+              ? "Windows"
+              : /android/i.test(navigator.userAgent)
+                ? "Android"
+                : /(iphone|ipad|ios)/i.test(navigator.userAgent)
+                  ? "iOS"
+                  : /linux/i.test(navigator.userAgent)
+                    ? "Linux"
+                    : "Unknown OS"
+        }`;
 
   return (
     <div className="space-y-6">
@@ -186,7 +194,9 @@ export function WebWorkspaceSettings({
                 onClick={() => setShowPasswordForm((value) => !value)}
                 className="h-9 rounded-lg border border-border px-3 text-sm font-medium hover:bg-muted/60"
               >
-                {showPasswordForm ? t("common.cancel") : t("settings.changePwdBtn")}
+                {showPasswordForm
+                  ? t("common.cancel")
+                  : t("settings.changePwdBtn")}
               </button>
             </div>
 
@@ -213,7 +223,9 @@ export function WebWorkspaceSettings({
                   disabled={isChangingPassword}
                   className="h-10 rounded-lg bg-primary px-4 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50"
                 >
-                  {isChangingPassword ? t("common.loading") : t("settings.confirmChange")}
+                  {isChangingPassword
+                    ? t("common.loading")
+                    : t("settings.confirmChange")}
                 </button>
               </div>
             )}

@@ -102,7 +102,10 @@ async function loginToSelfHostedWeb(
   });
 
   if (!response.ok && captchaBoundaryError) {
-    const message = await extractErrorMessage(response, captchaBoundaryError.message);
+    const message = await extractErrorMessage(
+      response,
+      captchaBoundaryError.message,
+    );
     if (message.includes("captcha")) {
       throw new Error(
         `${captchaBoundaryError.message} The connected PromptHub Web server still requires captcha during login, so update the self-hosted Web deployment and try again.`,
@@ -122,13 +125,15 @@ async function loginToSelfHostedWeb(
  *   1. Try `POST /api/skillhub/:id/publish` directly (same ID may exist if
  *      the user has already synced skills to the Web).
  *   2. On 404 (skill not in Web DB) → import the skill from the local DB
- *      via `POST /api/skills/`, then retry publish.
+ *      via `POST /api/skills`, then retry publish.
  *   3. On import 409 (name conflict) → find the existing Web skill by name
  *      and publish it instead (skips duplicate).
  *
  * NEVER throws — logs and returns. This is fire-and-forget.
  */
-export async function mirrorPublishToSelfHostedWeb(skillId: string): Promise<boolean> {
+export async function mirrorPublishToSelfHostedWeb(
+  skillId: string,
+): Promise<boolean> {
   const settings = useSettingsStore.getState();
   const rawUrl = settings.selfHostedSyncUrl?.trim();
   const username = settings.selfHostedSyncUsername?.trim();
@@ -185,7 +190,7 @@ export async function mirrorPublishToSelfHostedWeb(skillId: string): Promise<boo
     protocol_type: localSkill.protocol_type || ("skill" as const),
   };
 
-  const importRes = await fetch(`${baseUrl}/api/skills/`, {
+  const importRes = await fetch(`${baseUrl}/api/skills`, {
     method: "POST",
     headers: { "Content-Type": "application/json", ...authHeaders },
     cache: "no-store",
@@ -194,10 +199,12 @@ export async function mirrorPublishToSelfHostedWeb(skillId: string): Promise<boo
 
   if (importRes.ok) {
     // Import succeeded — the Web assigned its own ID. Publish by that ID.
-    const importedData = (await importRes.json() as any)?.data;
+    const importedData = ((await importRes.json()) as any)?.data;
     const webSkillId: string | undefined = importedData?.id;
     if (!webSkillId) {
-      throw new Error(`Import succeeded but no id in response. Cannot publish.`);
+      throw new Error(
+        `Import succeeded but no id in response. Cannot publish.`,
+      );
     }
 
     const publishRes = await fetch(
@@ -208,7 +215,10 @@ export async function mirrorPublishToSelfHostedWeb(skillId: string): Promise<boo
       await publishRes.json().catch(() => undefined);
       return true;
     }
-    const pubMsg = await extractErrorMessage(publishRes, `HTTP ${publishRes.status}`);
+    const pubMsg = await extractErrorMessage(
+      publishRes,
+      `HTTP ${publishRes.status}`,
+    );
     throw new Error(pubMsg);
   }
 
@@ -218,7 +228,10 @@ export async function mirrorPublishToSelfHostedWeb(skillId: string): Promise<boo
   }
 
   // Any other import error
-  const importMsg = await extractErrorMessage(importRes, `HTTP ${importRes.status}`);
+  const importMsg = await extractErrorMessage(
+    importRes,
+    `HTTP ${importRes.status}`,
+  );
   throw new Error(importMsg);
 }
 
@@ -244,7 +257,7 @@ export async function publishSkillToSkillHub(
       delete nextEntries["skillhub"];
       return {
         skills: state.skills.map((s) =>
-          s.id === skillId ? { ...s, visibility: "shared" } : s
+          s.id === skillId ? { ...s, visibility: "shared" } : s,
         ),
         remoteStoreEntries: nextEntries,
       };

@@ -1,8 +1,8 @@
-import { ipcMain } from 'electron';
-import { IPC_CHANNELS } from '@prompthub/shared/constants';
-import { PromptDB } from '../database/prompt';
-import { FolderDB } from '../database/folder';
-import type Database from '../database/sqlite';
+import { ipcMain } from "electron";
+import { IPC_CHANNELS } from "@prompthub/shared/constants";
+import { PromptDB } from "../database/prompt";
+import { FolderDB } from "../database/folder";
+import type Database from "../database/sqlite";
 import type {
   CreatePromptDTO,
   Folder,
@@ -10,14 +10,18 @@ import type {
   PromptVersion,
   SearchQuery,
   UpdatePromptDTO,
-} from '@prompthub/shared/types';
+} from "@prompthub/shared/types";
 import { syncPromptWorkspaceFromDatabase } from "../services/prompt-workspace";
 
 /**
  * Register Prompt-related IPC handlers
  * 注册 Prompt 相关 IPC 处理器
  */
-export function registerPromptIPC(db: PromptDB, folderDb: FolderDB, rawDb: Database.Database): void {
+export function registerPromptIPC(
+  db: PromptDB,
+  folderDb: FolderDB,
+  rawDb: Database.Database,
+): void {
   const syncWorkspace = () => {
     syncPromptWorkspaceFromDatabase(db, folderDb);
   };
@@ -31,7 +35,11 @@ export function registerPromptIPC(db: PromptDB, folderDb: FolderDB, rawDb: Datab
       let progressed = false;
 
       for (const [id, folder] of pending) {
-        if (!folder.parentId || emitted.has(folder.parentId) || !pending.has(folder.parentId)) {
+        if (
+          !folder.parentId ||
+          emitted.has(folder.parentId) ||
+          !pending.has(folder.parentId)
+        ) {
           ordered.push(folder);
           emitted.add(id);
           pending.delete(id);
@@ -43,7 +51,9 @@ export function registerPromptIPC(db: PromptDB, folderDb: FolderDB, rawDb: Datab
         continue;
       }
 
-      const remaining = [...pending.values()].sort((left, right) => left.id.localeCompare(right.id));
+      const remaining = [...pending.values()].sort((left, right) =>
+        left.id.localeCompare(right.id),
+      );
       ordered.push(...remaining);
       break;
     }
@@ -56,27 +66,30 @@ export function registerPromptIPC(db: PromptDB, folderDb: FolderDB, rawDb: Datab
     newParentId: string | null,
     newOrder: number,
   ) => {
-    if (typeof promptId !== 'string' || promptId.trim().length === 0) {
-      throw new Error('Prompt id is required');
+    if (typeof promptId !== "string" || promptId.trim().length === 0) {
+      throw new Error("Prompt id is required");
     }
     if (
       newParentId !== null &&
-      (typeof newParentId !== 'string' || newParentId.trim().length === 0)
+      (typeof newParentId !== "string" || newParentId.trim().length === 0)
     ) {
-      throw new Error('Parent prompt id must be null or a non-empty string');
+      throw new Error("Parent prompt id must be null or a non-empty string");
     }
     if (!Number.isFinite(newOrder) || newOrder < 0) {
-      throw new Error('Prompt order must be a non-negative number');
+      throw new Error("Prompt order must be a non-negative number");
     }
   };
 
   // Create Prompt
   // 创建 Prompt
-  ipcMain.handle(IPC_CHANNELS.PROMPT_CREATE, async (_, data: CreatePromptDTO) => {
-    const created = db.create(data);
-    syncWorkspace();
-    return created;
-  });
+  ipcMain.handle(
+    IPC_CHANNELS.PROMPT_CREATE,
+    async (_, data: CreatePromptDTO) => {
+      const created = db.create(data);
+      syncWorkspace();
+      return created;
+    },
+  );
 
   // Get single Prompt
   // 获取单个 Prompt
@@ -94,11 +107,14 @@ export function registerPromptIPC(db: PromptDB, folderDb: FolderDB, rawDb: Datab
     return db.getAllTags();
   });
 
-  ipcMain.handle(IPC_CHANNELS.PROMPT_RENAME_TAG, async (_, oldTag: string, newTag: string) => {
-    db.renameTag(oldTag, newTag);
-    syncWorkspace();
-    return true;
-  });
+  ipcMain.handle(
+    IPC_CHANNELS.PROMPT_RENAME_TAG,
+    async (_, oldTag: string, newTag: string) => {
+      db.renameTag(oldTag, newTag);
+      syncWorkspace();
+      return true;
+    },
+  );
 
   ipcMain.handle(IPC_CHANNELS.PROMPT_DELETE_TAG, async (_, tag: string) => {
     db.deleteTag(tag);
@@ -106,13 +122,16 @@ export function registerPromptIPC(db: PromptDB, folderDb: FolderDB, rawDb: Datab
     return true;
   });
 
-  ipcMain.handle(IPC_CHANNELS.PROMPT_UPDATE, async (_, id: string, data: UpdatePromptDTO) => {
-    const updated = db.update(id, data);
-    if (updated) {
-      syncWorkspace();
-    }
-    return updated;
-  });
+  ipcMain.handle(
+    IPC_CHANNELS.PROMPT_UPDATE,
+    async (_, id: string, data: UpdatePromptDTO) => {
+      const updated = db.update(id, data);
+      if (updated) {
+        syncWorkspace();
+      }
+      return updated;
+    },
+  );
 
   // Delete Prompt
   // 删除 Prompt
@@ -142,7 +161,7 @@ export function registerPromptIPC(db: PromptDB, folderDb: FolderDB, rawDb: Datab
       // 替换变量
       let content = prompt.userPrompt;
       for (const [key, value] of Object.entries(variables)) {
-        content = content.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value);
+        content = content.replace(new RegExp(`\\{\\{${key}\\}\\}`, "g"), value);
       }
 
       // Update usage count
@@ -150,13 +169,16 @@ export function registerPromptIPC(db: PromptDB, folderDb: FolderDB, rawDb: Datab
       db.incrementUsage(id);
 
       return content;
-    }
+    },
   );
 
-  ipcMain.handle(IPC_CHANNELS.PROMPT_INSERT_DIRECT, async (_, prompt: Prompt) => {
-    db.insertPromptDirect(prompt);
-    return true;
-  });
+  ipcMain.handle(
+    IPC_CHANNELS.PROMPT_INSERT_DIRECT,
+    async (_, prompt: Prompt) => {
+      db.insertPromptDirect(prompt);
+      return true;
+    },
+  );
 
   /**
    * Atomic batch IDB→SQLite migration.
@@ -184,21 +206,36 @@ export function registerPromptIPC(db: PromptDB, folderDb: FolderDB, rawDb: Datab
     }> => {
       // Input guard: reject null/non-object payloads.
       // 输入保护：拒绝 null 或非对象入参。
-      if (!payload || typeof payload !== 'object') {
-        return { imported: false, promptCount: 0, folderCount: 0, versionCount: 0 };
+      if (!payload || typeof payload !== "object") {
+        return {
+          imported: false,
+          promptCount: 0,
+          folderCount: 0,
+          versionCount: 0,
+        };
       }
 
       // Guard: if SQLite already has prompts, do not overwrite.
       // 保护：若 SQLite 已有 prompt，不覆盖。
       const existing = db.getAll();
       if (existing.length > 0) {
-        return { imported: false, promptCount: 0, folderCount: 0, versionCount: 0 };
+        return {
+          imported: false,
+          promptCount: 0,
+          folderCount: 0,
+          versionCount: 0,
+        };
       }
 
       const { folders = [], prompts = [], versions = [] } = payload;
 
       if (prompts.length === 0 && folders.length === 0) {
-        return { imported: false, promptCount: 0, folderCount: 0, versionCount: 0 };
+        return {
+          imported: false,
+          promptCount: 0,
+          folderCount: 0,
+          versionCount: 0,
+        };
       }
 
       // Wrap all inserts in a single transaction for atomicity.
@@ -240,21 +277,27 @@ export function registerPromptIPC(db: PromptDB, folderDb: FolderDB, rawDb: Datab
 
   // Create version
   // 创建版本
-  ipcMain.handle(IPC_CHANNELS.VERSION_CREATE, async (_, promptId: string, note?: string) => {
-    const created = db.createVersion(promptId, note);
-    syncWorkspace();
-    return created;
-  });
+  ipcMain.handle(
+    IPC_CHANNELS.VERSION_CREATE,
+    async (_, promptId: string, note?: string) => {
+      const created = db.createVersion(promptId, note);
+      syncWorkspace();
+      return created;
+    },
+  );
 
   // Rollback version
   // 回滚版本
-  ipcMain.handle(IPC_CHANNELS.VERSION_ROLLBACK, async (_, promptId: string, version: number) => {
-    const rolledBack = db.rollback(promptId, version);
-    if (rolledBack) {
-      syncWorkspace();
-    }
-    return rolledBack;
-  });
+  ipcMain.handle(
+    IPC_CHANNELS.VERSION_ROLLBACK,
+    async (_, promptId: string, version: number) => {
+      const rolledBack = db.rollback(promptId, version);
+      if (rolledBack) {
+        syncWorkspace();
+      }
+      return rolledBack;
+    },
+  );
 
   ipcMain.handle(IPC_CHANNELS.VERSION_DELETE, async (_, versionId: string) => {
     const deleted = db.deleteVersion(versionId);
@@ -264,15 +307,26 @@ export function registerPromptIPC(db: PromptDB, folderDb: FolderDB, rawDb: Datab
     return deleted;
   });
 
-  ipcMain.handle(IPC_CHANNELS.VERSION_INSERT_DIRECT, async (_, version: PromptVersion) => {
-    db.insertVersionDirect(version);
-    return true;
-  });
+  ipcMain.handle(
+    IPC_CHANNELS.VERSION_INSERT_DIRECT,
+    async (_, version: PromptVersion) => {
+      db.insertVersionDirect(version);
+      return true;
+    },
+  );
 
-  ipcMain.handle(IPC_CHANNELS.PROMPT_MOVE, async (_, promptId: string, newParentId: string | null, newOrder: number) => {
-    assertPromptMoveInput(promptId, newParentId, newOrder);
-    db.movePrompt(promptId, newParentId, newOrder);
-    syncWorkspace();
-    return true;
-  });
+  ipcMain.handle(
+    IPC_CHANNELS.PROMPT_MOVE,
+    async (
+      _,
+      promptId: string,
+      newParentId: string | null,
+      newOrder: number,
+    ) => {
+      assertPromptMoveInput(promptId, newParentId, newOrder);
+      db.movePrompt(promptId, newParentId, newOrder);
+      syncWorkspace();
+      return true;
+    },
+  );
 }

@@ -195,13 +195,16 @@ function isRootReadmePath(filePath: string): boolean {
 }
 
 function getTreeBackedDirectoryFingerprint(
-  treeEntries: Array<GitHubTreeEntry & { path: string; type: string; sha?: string }>,
+  treeEntries: Array<
+    GitHubTreeEntry & { path: string; type: string; sha?: string }
+  >,
   skillFilePath: string,
 ): string | undefined {
   const normalizedSkillPath = skillFilePath.replace(/^\/+|\/+$/g, "");
   const normalizedLowerPath = normalizedSkillPath.toLowerCase();
   const skillDir =
-    normalizedLowerPath === "skill.md" || normalizedLowerPath.endsWith("/skill.md")
+    normalizedLowerPath === "skill.md" ||
+    normalizedLowerPath.endsWith("/skill.md")
       ? normalizedSkillPath.includes("/")
         ? normalizedSkillPath.slice(0, normalizedSkillPath.lastIndexOf("/"))
         : ""
@@ -299,7 +302,8 @@ export async function loadGitHubSkillRepo(
       const path = item.path;
       const pathParts = path.split("/");
       const directoryPath = pathParts.slice(0, -1).join("/");
-      const directoryName = pathParts.length > 1 ? pathParts[pathParts.length - 2] : "";
+      const directoryName =
+        pathParts.length > 1 ? pathParts[pathParts.length - 2] : "";
       const rawUrl = buildRawUrl(
         parsedRepo.owner,
         parsedRepo.repo,
@@ -324,7 +328,9 @@ export async function loadGitHubSkillRepo(
       const slug = slugify(directoryName || parsed.name || parsedRepo.repo);
       const builtin = builtinBySlug.get(slug);
       const description =
-        parsed.description || builtin?.description || `${toTitleCase(slug)} skill`;
+        parsed.description ||
+        builtin?.description ||
+        `${toTitleCase(slug)} skill`;
       const canonicalSkillPath = directoryPath || "SKILL.md";
       const sourceId = buildSkillSourceId({
         sourceType: "git-repo",
@@ -383,11 +389,11 @@ export async function loadGitHubSkillRepo(
   }
 
   const rawUrl = buildRawUrl(
-      parsedRepo.owner,
-      parsedRepo.repo,
-      resolvedBranch,
-      readmeEntry.path,
-    );
+    parsedRepo.owner,
+    parsedRepo.repo,
+    resolvedBranch,
+    readmeEntry.path,
+  );
   let content: string;
   try {
     content = await options.fetchRemoteContent(rawUrl);

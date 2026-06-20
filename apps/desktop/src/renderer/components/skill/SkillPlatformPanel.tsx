@@ -75,8 +75,8 @@ interface ProjectSkillImportPreferences {
 
 const PROJECT_TARGET_OPTIONS = [
   ".agents/skills",
+  "skills",
   ".claude/skills",
-  ".gemini/skills",
 ] as const;
 
 export function SkillPlatformPanel({
@@ -114,16 +114,17 @@ export function SkillPlatformPanel({
   const showLocalSourceShortcut =
     runtimeCapabilities.desktopWindowControls && sourceMeta?.kind === "local";
   const normalizedProjects = projects ?? [];
-  const hasGlobalIntegration = showPlatformIntegration && availablePlatforms.length > 0;
+  const hasGlobalIntegration =
+    showPlatformIntegration && availablePlatforms.length > 0;
   const hasProjectIntegration =
     showPlatformIntegration &&
     typeof getProjectDeployTargets === "function" &&
     typeof onCreateProject === "function" &&
     typeof onDeployToProjects === "function";
   const showIntegrationSection = hasGlobalIntegration || hasProjectIntegration;
-  const [integrationScope, setIntegrationScope] = useState<"global" | "project">(
-    hasGlobalIntegration ? "global" : "project",
-  );
+  const [integrationScope, setIntegrationScope] = useState<
+    "global" | "project"
+  >(hasGlobalIntegration ? "global" : "project");
   const [selectedProjectIds, setSelectedProjectIds] = useState<Set<string>>(
     () => new Set(),
   );
@@ -133,12 +134,20 @@ export function SkillPlatformPanel({
   >({});
 
   useEffect(() => {
-    if (integrationScope === "global" && !hasGlobalIntegration && hasProjectIntegration) {
+    if (
+      integrationScope === "global" &&
+      !hasGlobalIntegration &&
+      hasProjectIntegration
+    ) {
       setIntegrationScope("project");
       return;
     }
 
-    if (integrationScope === "project" && !hasProjectIntegration && hasGlobalIntegration) {
+    if (
+      integrationScope === "project" &&
+      !hasProjectIntegration &&
+      hasGlobalIntegration
+    ) {
       setIntegrationScope("global");
     }
   }, [hasGlobalIntegration, hasProjectIntegration, integrationScope]);
@@ -151,9 +160,13 @@ export function SkillPlatformPanel({
   }, [hasGlobalIntegration, selectedSkill.id]);
 
   const effectiveSelectedProjectIds = useMemo(() => {
-    const validProjectIds = new Set(normalizedProjects.map((project) => project.id));
+    const validProjectIds = new Set(
+      normalizedProjects.map((project) => project.id),
+    );
     return new Set(
-      Array.from(selectedProjectIds).filter((projectId) => validProjectIds.has(projectId)),
+      Array.from(selectedProjectIds).filter((projectId) =>
+        validProjectIds.has(projectId),
+      ),
     );
   }, [normalizedProjects, selectedProjectIds]);
 
@@ -169,7 +182,10 @@ export function SkillPlatformPanel({
     });
   };
 
-  const buildProjectTargetPath = (project: SkillProject, relativeTarget: string) => {
+  const buildProjectTargetPath = (
+    project: SkillProject,
+    relativeTarget: string,
+  ) => {
     const normalizedRoot = project.rootPath.replace(/[\\/]+$/, "");
     return `${normalizedRoot}/${relativeTarget}`;
   };
@@ -198,7 +214,8 @@ export function SkillPlatformPanel({
       ...getProjectCustomTargets(project),
     ]);
     const savedTargetIds = (
-      projectSkillImportPreferencesByProjectId[project.id]?.selectedTargetIds ?? []
+      projectSkillImportPreferencesByProjectId[project.id]?.selectedTargetIds ??
+      []
     ).filter((targetId) => availableTargetIds.has(targetId));
     if (savedTargetIds.length > 0) {
       return [savedTargetIds[0]];
@@ -215,13 +232,23 @@ export function SkillPlatformPanel({
       : getInitialTargetSelection(project);
   };
 
-  const summarizeTargetDirs = (targetDirs: string[], projectRootPath: string): string => {
-    const normalizedRoot = projectRootPath.replace(/\\/g, "/").replace(/\/+$/, "");
+  const summarizeTargetDirs = (
+    targetDirs: string[],
+    projectRootPath: string,
+  ): string => {
+    const normalizedRoot = projectRootPath
+      .replace(/\\/g, "/")
+      .replace(/\/+$/, "");
     return Array.from(
       new Set(
         targetDirs.map((targetDir) => {
-          const normalizedTarget = targetDir.replace(/\\/g, "/").replace(/\/+$/, "");
-          if (normalizedRoot && normalizedTarget.startsWith(`${normalizedRoot}/`)) {
+          const normalizedTarget = targetDir
+            .replace(/\\/g, "/")
+            .replace(/\/+$/, "");
+          if (
+            normalizedRoot &&
+            normalizedTarget.startsWith(`${normalizedRoot}/`)
+          ) {
             return normalizedTarget.slice(normalizedRoot.length + 1);
           }
           return normalizedTarget;
@@ -240,7 +267,11 @@ export function SkillPlatformPanel({
       return PROJECT_TARGET_OPTIONS[0];
     }
     return summarizeTargetDirs([firstTarget], firstProject.rootPath);
-  }, [normalizedProjects, projectSkillImportPreferencesByProjectId, projectTargetSelections]);
+  }, [
+    normalizedProjects,
+    projectSkillImportPreferencesByProjectId,
+    projectTargetSelections,
+  ]);
 
   const setProjectTargetForAllProjects = (relativeTarget: string) => {
     const nextSelections = Object.fromEntries(
@@ -329,13 +360,18 @@ export function SkillPlatformPanel({
                 <div className="rounded-2xl border border-border app-wallpaper-surface p-3">
                   <button
                     type="button"
-                    onClick={() => setShowProjectAdvanced((previous) => !previous)}
+                    onClick={() =>
+                      setShowProjectAdvanced((previous) => !previous)
+                    }
                     className="flex w-full items-center justify-between gap-3 text-left"
                   >
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 text-sm font-medium text-foreground">
                         <Settings2Icon className="h-4 w-4" />
-                        {t("skill.advancedImportSettings", "Advanced Import Settings")}
+                        {t(
+                          "skill.advancedImportSettings",
+                          "Advanced Import Settings",
+                        )}
                       </div>
                     </div>
                     <ChevronDownIcon
@@ -396,7 +432,9 @@ export function SkillPlatformPanel({
                               <button
                                 key={relativeTarget}
                                 type="button"
-                                onClick={() => setProjectTargetForAllProjects(relativeTarget)}
+                                onClick={() =>
+                                  setProjectTargetForAllProjects(relativeTarget)
+                                }
                                 className={`inline-flex min-w-0 items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-[11px] font-medium transition-colors ${
                                   isTargetSelected
                                     ? "bg-primary text-white shadow-sm"
@@ -407,7 +445,9 @@ export function SkillPlatformPanel({
                                 {isTargetSelected ? (
                                   <CheckIcon className="h-3.5 w-3.5 shrink-0" />
                                 ) : null}
-                                <span className="truncate">{relativeTarget}</span>
+                                <span className="truncate">
+                                  {relativeTarget}
+                                </span>
                               </button>
                             );
                           })}
@@ -440,7 +480,9 @@ export function SkillPlatformPanel({
 
                     <div className="space-y-2">
                       {normalizedProjects.map((project) => {
-                        const isSelected = effectiveSelectedProjectIds.has(project.id);
+                        const isSelected = effectiveSelectedProjectIds.has(
+                          project.id,
+                        );
                         const deployedTargets =
                           getProjectDeployedTargets?.(project) ?? [];
 
@@ -470,9 +512,15 @@ export function SkillPlatformPanel({
                                 </div>
                                 <div
                                   className="mt-2 truncate text-[11px] leading-relaxed text-muted-foreground"
-                                  title={getProjectTargetSelection(project).join("\n")}
+                                  title={getProjectTargetSelection(
+                                    project,
+                                  ).join("\n")}
                                 >
-                                  {t("skill.projectTargetFolders", "Target Folders")}:{" "}
+                                  {t(
+                                    "skill.projectTargetFolders",
+                                    "Target Folders",
+                                  )}
+                                  :{" "}
                                   {summarizeTargetDirs(
                                     getProjectTargetSelection(project),
                                     project.rootPath,
@@ -501,7 +549,10 @@ export function SkillPlatformPanel({
                                       );
                                     }}
                                     onKeyDown={(event) => {
-                                      if (event.key !== "Enter" && event.key !== " ") {
+                                      if (
+                                        event.key !== "Enter" &&
+                                        event.key !== " "
+                                      ) {
                                         return;
                                       }
                                       event.preventDefault();
@@ -532,7 +583,6 @@ export function SkillPlatformPanel({
                                 </div>
                               </div>
                             </button>
-
                           </div>
                         );
                       })}
@@ -541,7 +591,9 @@ export function SkillPlatformPanel({
                     <button
                       type="button"
                       onClick={() => {
-                        const selectedIds = Array.from(effectiveSelectedProjectIds);
+                        const selectedIds = Array.from(
+                          effectiveSelectedProjectIds,
+                        );
                         const targetDirsByProjectId = Object.fromEntries(
                           selectedIds.map((projectId) => {
                             const project = normalizedProjects.find(
@@ -553,10 +605,14 @@ export function SkillPlatformPanel({
                             ];
                           }),
                         );
-                        void onDeployToProjects?.(selectedIds, targetDirsByProjectId);
+                        void onDeployToProjects?.(
+                          selectedIds,
+                          targetDirsByProjectId,
+                        );
                       }}
                       disabled={
-                        effectiveSelectedProjectIds.size === 0 || isProjectDeploying
+                        effectiveSelectedProjectIds.size === 0 ||
+                        isProjectDeploying
                       }
                       className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-primary/90 disabled:opacity-60"
                     >
@@ -626,7 +682,8 @@ export function SkillPlatformPanel({
                         className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors"
                         disabled={isBatchInstalling}
                       >
-                        {selectedPlatforms.size === uninstalledPlatforms.length ? (
+                        {selectedPlatforms.size ===
+                        uninstalledPlatforms.length ? (
                           <>
                             <CheckSquareIcon className="w-4 h-4" />
                             {t("skill.deselectAll")}
@@ -646,7 +703,9 @@ export function SkillPlatformPanel({
                     </div>
                     <button
                       onClick={onBatchInstall}
-                      disabled={selectedPlatforms.size === 0 || isBatchInstalling}
+                      disabled={
+                        selectedPlatforms.size === 0 || isBatchInstalling
+                      }
                       className="w-full px-3 py-2 bg-primary text-white text-xs font-bold rounded-lg shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
                     >
                       {isBatchInstalling ? (
@@ -691,7 +750,9 @@ export function SkillPlatformPanel({
                             <PlatformIcon platformId={platform.id} size={28} />
                           </div>
                           <div>
-                            <h4 className="font-medium text-sm">{platform.name}</h4>
+                            <h4 className="font-medium text-sm">
+                              {platform.name}
+                            </h4>
                             <p className="text-[10px] text-muted-foreground">
                               {isInstalled
                                 ? t("skill.installed")
@@ -748,20 +809,26 @@ export function SkillPlatformPanel({
               </span>
             </div>
             <div className="flex justify-between items-center text-sm gap-4">
-              <span className="text-muted-foreground">{t("skill.protocol")}</span>
+              <span className="text-muted-foreground">
+                {t("skill.protocol")}
+              </span>
               <span className="font-bold uppercase tracking-tight flex items-center gap-1 text-primary text-xs">
                 <ChevronRightIcon className="w-3.5 h-3.5" />
                 {getProtocolDisplayLabel(selectedSkill.protocol_type)}
               </span>
             </div>
             <div className="flex justify-between items-center text-sm gap-4">
-              <span className="text-muted-foreground">{t("skill.createdAt")}</span>
+              <span className="text-muted-foreground">
+                {t("skill.createdAt")}
+              </span>
               <span className="text-xs opacity-80">
                 {new Date(selectedSkill.created_at).toLocaleDateString()}
               </span>
             </div>
             <div className="flex justify-between items-center text-sm gap-4">
-              <span className="text-muted-foreground">{t("skill.updatedAt")}</span>
+              <span className="text-muted-foreground">
+                {t("skill.updatedAt")}
+              </span>
               <span className="text-xs opacity-80">
                 {new Date(selectedSkill.updated_at).toLocaleDateString()}
               </span>

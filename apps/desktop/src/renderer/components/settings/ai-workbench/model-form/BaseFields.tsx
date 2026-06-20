@@ -380,14 +380,14 @@ export function BaseFields({
             title={t("settings.imageModel")}
             description={t("settings.aiWorkbenchRouteImageGenerationDesc")}
             onChange={(checked) => {
-                setModelForm((prev) => ({
-                  ...prev,
-                  type: checked ? "image" : "chat",
-                  capabilities: {
-                    ...prev.capabilities,
-                    imageGeneration: checked,
-                  },
-                }));
+              setModelForm((prev) => ({
+                ...prev,
+                type: checked ? "image" : "chat",
+                capabilities: {
+                  ...prev.capabilities,
+                  imageGeneration: checked,
+                },
+              }));
             }}
           />
 
@@ -400,14 +400,14 @@ export function BaseFields({
             title={t("settings.aiWorkbenchVisionCapability")}
             description={t("settings.aiWorkbenchVisionCapabilityDesc")}
             onChange={(checked) => {
-                setModelForm((prev) => ({
-                  ...prev,
-                  capabilities: {
-                    ...prev.capabilities,
-                    chat: true,
-                    vision: checked,
-                  },
-                }));
+              setModelForm((prev) => ({
+                ...prev,
+                capabilities: {
+                  ...prev.capabilities,
+                  chat: true,
+                  vision: checked,
+                },
+              }));
             }}
           />
 
@@ -420,14 +420,14 @@ export function BaseFields({
             title={t("settings.aiWorkbenchReasoningCapability")}
             description={t("settings.aiWorkbenchReasoningCapabilityDesc")}
             onChange={(checked) => {
-                setModelForm((prev) => ({
-                  ...prev,
-                  capabilities: {
-                    ...prev.capabilities,
-                    chat: true,
-                    reasoning: checked,
-                  },
-                }));
+              setModelForm((prev) => ({
+                ...prev,
+                capabilities: {
+                  ...prev.capabilities,
+                  chat: true,
+                  reasoning: checked,
+                },
+              }));
             }}
           />
         </div>

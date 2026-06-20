@@ -99,7 +99,9 @@ export function normalizeSkill(skill: Skill): Skill {
     compatibility: normalizeStringArray(skill.compatibility),
     created_at: normalizeNumber(skill.created_at) ?? 0,
     updated_at:
-      normalizeNumber(skill.updated_at) ?? normalizeNumber(skill.created_at) ?? 0,
+      normalizeNumber(skill.updated_at) ??
+      normalizeNumber(skill.created_at) ??
+      0,
     currentVersion: normalizeNumber(skill.currentVersion) ?? 0,
     author: normalizeString(skill.author),
     description: normalizeString(skill.description),

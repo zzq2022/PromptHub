@@ -1,4 +1,8 @@
-import type { AIProtocol, AITransportResponse, PromptType } from "@prompthub/shared/types";
+import type {
+  AIProtocol,
+  AITransportResponse,
+  PromptType,
+} from "@prompthub/shared/types";
 
 /**
  * AI Service - Call various AI model APIs
@@ -204,8 +208,14 @@ type ResolvedProtocol = {
   baseUrl: string;
 };
 
-function resolveAIProtocol(config: Pick<AIConfig, "apiProtocol" | "provider" | "apiUrl">): AIProtocol {
-  if (config.apiProtocol === "openai" || config.apiProtocol === "gemini" || config.apiProtocol === "anthropic") {
+function resolveAIProtocol(
+  config: Pick<AIConfig, "apiProtocol" | "provider" | "apiUrl">,
+): AIProtocol {
+  if (
+    config.apiProtocol === "openai" ||
+    config.apiProtocol === "gemini" ||
+    config.apiProtocol === "anthropic"
+  ) {
     return config.apiProtocol;
   }
 
@@ -216,14 +226,21 @@ function resolveAIProtocol(config: Pick<AIConfig, "apiProtocol" | "provider" | "
     return "anthropic";
   }
 
-  if (provider === "google" || provider === "gemini" || apiUrl.includes("generativelanguage.googleapis.com")) {
+  if (
+    provider === "google" ||
+    provider === "gemini" ||
+    apiUrl.includes("generativelanguage.googleapis.com")
+  ) {
     return "gemini";
   }
 
   return "openai";
 }
 
-function resolveProtocolBase(apiUrl: string, protocol: AIProtocol): ResolvedProtocol {
+function resolveProtocolBase(
+  apiUrl: string,
+  protocol: AIProtocol,
+): ResolvedProtocol {
   const trimmed = apiUrl.trim();
   const explicit = trimmed.endsWith("#");
   const rawValue = explicit ? trimmed.slice(0, -1) : trimmed;
@@ -301,7 +318,11 @@ function buildModelsEndpointFromBase(resolved: ResolvedProtocol): string {
 function buildHeadersForProtocol(
   protocol: AIProtocol,
   apiKey: string,
-  options?: { accept?: string; contentType?: boolean; useNativeGeminiAuth?: boolean },
+  options?: {
+    accept?: string;
+    contentType?: boolean;
+    useNativeGeminiAuth?: boolean;
+  },
 ): Record<string, string> {
   const headers: Record<string, string> = {};
   if (options?.contentType !== false) {
@@ -356,15 +377,13 @@ function createFetchResponseLike(response: Response): ResponseLike {
   };
 }
 
-async function requestAIEndpoint(
-  request: {
-    method: "GET" | "POST";
-    url: string;
-    headers: Record<string, string>;
-    body?: string;
-    timeoutMs?: number;
-  },
-): Promise<ResponseLike> {
+async function requestAIEndpoint(request: {
+  method: "GET" | "POST";
+  url: string;
+  headers: Record<string, string>;
+  body?: string;
+  timeoutMs?: number;
+}): Promise<ResponseLike> {
   const transport = getAITransport();
   if (transport) {
     return createResponseLike(await transport.request(request));
@@ -390,7 +409,10 @@ function getResponseHeader(
   return match?.[1] ?? "";
 }
 
-function isHtmlErrorPayload(text: string, headers: Record<string, string>): boolean {
+function isHtmlErrorPayload(
+  text: string,
+  headers: Record<string, string>,
+): boolean {
   const contentType = getResponseHeader(headers, "content-type").toLowerCase();
   const trimmed = text.trimStart().toLowerCase();
   return (
@@ -405,7 +427,10 @@ function extractHtmlTitle(text: string): string | null {
   return match?.[1]?.replace(/\s+/g, " ").trim() || null;
 }
 
-function formatGatewayTimeoutMessage(operation: string, status: number): string {
+function formatGatewayTimeoutMessage(
+  operation: string,
+  status: number,
+): string {
   return `${operation} gateway timed out (${status}). The provider or proxy did not finish before its own timeout.`;
 }
 
@@ -487,7 +512,10 @@ function isGeminiApiHost(apiUrl: string): boolean {
 }
 
 function isGeminiOpenAICompatEndpoint(endpoint: string): boolean {
-  return endpoint.includes("generativelanguage.googleapis.com") && endpoint.includes("/openai/");
+  return (
+    endpoint.includes("generativelanguage.googleapis.com") &&
+    endpoint.includes("/openai/")
+  );
 }
 
 function yieldToEventLoop() {
@@ -588,14 +616,17 @@ function normalizeAssistantContent(content: ChatMessageContent): string {
   }
 
   return content
-    .filter((part): part is Extract<ChatMessageContentPart, { type: "text" }> =>
-      part.type === "text",
+    .filter(
+      (part): part is Extract<ChatMessageContentPart, { type: "text" }> =>
+        part.type === "text",
     )
     .map((part) => part.text)
     .join("");
 }
 
-function toAnthropicMessageContent(content: ChatMessageContent): string | AnthropicMessageContentPart[] {
+function toAnthropicMessageContent(
+  content: ChatMessageContent,
+): string | AnthropicMessageContentPart[] {
   if (typeof content === "string") {
     return content;
   }
@@ -684,7 +715,9 @@ export async function chatCompletion(
     throw new Error("No model selected");
   }
 
-  const endpoint = buildChatEndpointFromBase(resolveProtocolBase(apiUrl, protocol));
+  const endpoint = buildChatEndpointFromBase(
+    resolveProtocolBase(apiUrl, protocol),
+  );
 
   // 合并参数：config.chatParams < options（options 优先级更高）
   // Merge parameters: config.chatParams < options (options takes precedence)
@@ -2176,7 +2209,9 @@ Return JSON with this shape only:
   "notes": "Optional updated notes"
 }`;
 
-function extractJsonObject(responseContent: string): Record<string, unknown> | null {
+function extractJsonObject(
+  responseContent: string,
+): Record<string, unknown> | null {
   const jsonMatch = responseContent.match(/\{[\s\S]*\}/);
 
   if (!jsonMatch) {
@@ -2217,15 +2252,15 @@ ${promptTypeGuidance}
 
 Current draft JSON:
 ${JSON.stringify(
-    {
-      description: input.description || "",
-      systemPrompt: input.systemPrompt || "",
-      userPrompt: input.userPrompt,
-      notes: input.notes || "",
-    },
-    null,
-    2,
-  )}`;
+  {
+    description: input.description || "",
+    systemPrompt: input.systemPrompt || "",
+    userPrompt: input.userPrompt,
+    notes: input.notes || "",
+  },
+  null,
+  2,
+)}`;
 
   const result = await chatCompletion(
     config,
@@ -2656,11 +2691,11 @@ export async function fetchAvailableModels(
           ? "auth"
           : response.status === 0 && /timeout/i.test(errorText)
             ? "network"
-          : response.status === 404 ||
-              response.status === 405 ||
-              response.status === 501
-            ? "unsupported"
-            : "http";
+            : response.status === 404 ||
+                response.status === 405 ||
+                response.status === 501
+              ? "unsupported"
+              : "http";
       return {
         success: false,
         models: [],
@@ -2682,7 +2717,11 @@ export async function fetchAvailableModels(
       | ArrayModelPayloadItem[]
     >();
 
-    if (apiProtocol === "anthropic" && "data" in data && Array.isArray(data.data)) {
+    if (
+      apiProtocol === "anthropic" &&
+      "data" in data &&
+      Array.isArray(data.data)
+    ) {
       const models = data.data
         .filter((m: { id?: string }) => typeof m.id === "string")
         .map(

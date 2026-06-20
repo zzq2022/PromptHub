@@ -57,11 +57,7 @@ export interface RecoverableDatabase {
   hasBrowserStorage?: boolean;
 }
 
-const BROWSER_STORAGE_DIRS = [
-  "IndexedDB",
-  "Local Storage",
-  "Session Storage",
-];
+const BROWSER_STORAGE_DIRS = ["IndexedDB", "Local Storage", "Session Storage"];
 const FILE_STORAGE_DIRS = ["workspace", "data"];
 
 // ── Path resolution ──────────────────────────────────────────────────────────
@@ -150,7 +146,10 @@ function ensurePreUpgradeBackup(dbPath: string): void {
   } catch (error) {
     // Backup is defensive — never let it crash startup.
     // 备份属于防御措施，失败不得阻断启动。
-    console.warn("[startup] ensurePreUpgradeBackup failed (continuing):", error);
+    console.warn(
+      "[startup] ensurePreUpgradeBackup failed (continuing):",
+      error,
+    );
   }
 }
 
@@ -208,7 +207,10 @@ export function detectRecoverableDatabases(
             try {
               fs.rmSync(lockDir, { recursive: true, force: true });
             } catch (err) {
-              console.warn(`[Recovery] Failed to clear lock ${lockDir} during scan:`, err);
+              console.warn(
+                `[Recovery] Failed to clear lock ${lockDir} during scan:`,
+                err,
+              );
             }
           }
           candidateDb = new DatabaseAdapter(dbFile, { readOnly: true });
@@ -247,8 +249,14 @@ export function detectRecoverableDatabases(
       }
     }
 
-    const effectivePromptCount = Math.max(promptCount, workspaceStats.promptCount);
-    const effectiveFolderCount = Math.max(folderCount, workspaceStats.folderCount);
+    const effectivePromptCount = Math.max(
+      promptCount,
+      workspaceStats.promptCount,
+    );
+    const effectiveFolderCount = Math.max(
+      folderCount,
+      workspaceStats.folderCount,
+    );
     const effectiveSkillCount = Math.max(skillCount, fileSkillCount);
 
     // Only surface candidates that appear to contain real user data.
@@ -289,9 +297,7 @@ export function detectRecoverableDatabaseFiles(
   candidateFiles: string[],
 ): RecoverableDatabase[] {
   const results: RecoverableDatabase[] = [];
-  const normalizedCurrentDb = path
-    .resolve(getDatabasePath())
-    .toLowerCase();
+  const normalizedCurrentDb = path.resolve(getDatabasePath()).toLowerCase();
 
   for (const candidateFile of candidateFiles) {
     const normalizedCandidate = path.resolve(candidateFile).toLowerCase();
@@ -324,7 +330,10 @@ export function detectRecoverableDatabaseFiles(
         try {
           fs.rmSync(lockDir, { recursive: true, force: true });
         } catch (err) {
-          console.warn(`[Recovery] Failed to clear lock ${lockDir} during file scan:`, err);
+          console.warn(
+            `[Recovery] Failed to clear lock ${lockDir} during file scan:`,
+            err,
+          );
         }
       }
       candidateDb = new DatabaseAdapter(candidateFile, { readOnly: true });
@@ -392,7 +401,8 @@ export function performDatabaseRecovery(
   const sourceExists = fs.existsSync(sourcePath);
   const sourceStat = sourceExists ? fs.statSync(sourcePath) : null;
   const sourceIsDbFile =
-    sourceStat?.isFile() === true && path.extname(sourcePath).toLowerCase() === ".db";
+    sourceStat?.isFile() === true &&
+    path.extname(sourcePath).toLowerCase() === ".db";
   const sourceDb = sourceIsDbFile ? sourcePath : getCanonicalDbPath(sourcePath);
   const targetDb = getCanonicalDbPath(currentDataPath);
 
@@ -501,7 +511,10 @@ function getWorkspaceRecoveryStats(basePath: string): {
   promptCount: number;
   folderCount: number;
 } {
-  const legacyWorkspaceDir = path.join(basePath, path.basename(getLegacyWorkspaceDir()));
+  const legacyWorkspaceDir = path.join(
+    basePath,
+    path.basename(getLegacyWorkspaceDir()),
+  );
   const legacyPromptsDir = path.join(
     legacyWorkspaceDir,
     path.basename(getLegacyPromptsWorkspaceDir()),
