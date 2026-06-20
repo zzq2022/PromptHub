@@ -41,9 +41,9 @@ import {
 } from './webdav.server.js';
 
 describe('sync-orchestrator', () => {
-  const config = {
+  const config: any = {
     enabled: true,
-    provider: 'webdav' as const,
+    provider: 'webdav' as any,
     endpoint: 'https://dav.example.com/backup',
     username: 'alice',
     password: 'secret',

@@ -193,7 +193,7 @@ const settingsSchema = z.object({
   customSkillPlatformPaths: z.record(z.string()).optional(),
   sync: z.object({
     enabled: z.boolean(),
-    provider: z.enum(['manual', 'webdav', 'self-hosted', 's3']),
+    provider: z.enum(['manual', 'self-hosted']),
     endpoint: z.string().url().optional(),
     username: z.string().optional(),
     password: z.string().optional(),
@@ -343,9 +343,7 @@ function normalizeDesktopSettingsSnapshot(settings: unknown): Settings | undefin
       isRecord(state.sync) &&
       typeof state.sync.enabled === 'boolean' &&
       (state.sync.provider === 'manual' ||
-        state.sync.provider === 'webdav' ||
-        state.sync.provider === 'self-hosted' ||
-        state.sync.provider === 's3')
+        state.sync.provider === 'self-hosted')
         ? {
             enabled: state.sync.enabled,
             provider: state.sync.provider,

@@ -361,7 +361,7 @@ describe('web import/export routes', () => {
             customPlatformRootPaths: { claude: '/tmp/exported-root' },
             sync: {
               enabled: true,
-              provider: 'webdav',
+              provider: 'self-hosted',
               endpoint: 'https://dav.example.com/remote.php/dav/files/roundtrip',
               username: 'roundtrip-user',
               password: 'roundtrip-pass',
@@ -493,7 +493,7 @@ describe('web import/export routes', () => {
         },
         sync: {
           enabled: true,
-          provider: 'webdav',
+          provider: 'self-hosted',
           endpoint: 'https://dav.example.com/remote.php/dav/files/roundtrip',
           username: 'roundtrip-user',
           password: 'roundtrip-pass',

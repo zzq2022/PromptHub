@@ -109,7 +109,7 @@ describe('web settings workspace storage', () => {
       language: 'en',
       sync: {
         enabled: true,
-        provider: 'webdav',
+        provider: 'self-hosted',
         endpoint: 'https://dav.example.com/backups',
         username: 'alice',
         password: 'secret',
@@ -122,7 +122,7 @@ describe('web settings workspace storage', () => {
     expect(settings.language).toBe('en');
     expect(settings.sync).toMatchObject({
       enabled: true,
-      provider: 'webdav',
+      provider: 'self-hosted',
       endpoint: 'https://dav.example.com/backups',
       username: 'alice',
       password: 'secret',
@@ -143,7 +143,7 @@ describe('web settings workspace storage', () => {
     expect(saved.theme).toBe('dark');
     expect(saved.language).toBe('en');
     expect(saved.sync).toMatchObject({
-      provider: 'webdav',
+      provider: 'self-hosted',
       endpoint: 'https://dav.example.com/backups',
     });
   }, TEST_TIMEOUT);

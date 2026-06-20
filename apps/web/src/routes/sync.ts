@@ -28,7 +28,7 @@ const syncImportRequestSchema = z.object({
 
 const syncConfigSchema = z.object({
   enabled: z.boolean(),
-  provider: z.enum(['manual', 'webdav', 'self-hosted', 's3']),
+  provider: z.enum(['manual', 'self-hosted']),
   endpoint: z.string().url().optional(),
   username: z.string().optional(),
   password: z.string().optional(),
@@ -46,9 +46,7 @@ function getSyncSettings(userId: string): SyncSettings {
 }
 
 function assertWebDavConfig(settings: SyncSettings): asserts settings is SyncSettings & { endpoint: string } {
-  if (settings.provider !== 'webdav' || !settings.endpoint) {
-    throw new Error('WebDAV sync is not configured');
-  }
+  throw new Error('WebDAV sync is no longer supported');
 }
 
 function buildSyncStatus(userId: string, payload: { exportedAt: string; prompts: unknown[]; folders: unknown[]; skills: unknown[] }): {
@@ -70,14 +68,8 @@ function buildSyncStatus(userId: string, payload: { exportedAt: string; prompts:
 } {
   const syncSettings = getSyncSettings(userId);
   const providerMessage =
-    syncSettings.provider === 'webdav'
-      ? syncSettings.enabled
-        ? 'WebDAV sync is configured for this account'
-        : 'WebDAV sync is configured but currently disabled'
-      : syncSettings.provider === 'self-hosted'
-        ? 'Self-hosted sync is configured for this account'
-        : syncSettings.provider === 's3'
-          ? 'S3 sync is configured for this account'
+    syncSettings.provider === 'self-hosted'
+      ? 'Self-hosted sync is configured for this account'
       : 'Manual sync is available for this account';
 
   return {
@@ -94,7 +86,7 @@ function buildSyncStatus(userId: string, payload: { exportedAt: string; prompts:
     capabilities: {
       pull: true,
       push: true,
-      autoSync: Boolean(syncSettings.enabled && syncSettings.autoSync && syncSettings.provider === 'webdav'),
+      autoSync: false,
     },
   };
 }

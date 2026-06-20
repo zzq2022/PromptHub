@@ -27,12 +27,13 @@ describe("settings desktop workspace actions", () => {
     useSettingsStore.getState().toggleDesktopHomeModule("prompt");
     useSettingsStore.getState().toggleDesktopHomeModule("skill");
     useSettingsStore.getState().toggleDesktopHomeModule("rules");
+    useSettingsStore.getState().toggleDesktopHomeModule("projects");
 
-    expect(useSettingsStore.getState().desktopHomeModules).toEqual(["rules"]);
+    expect(useSettingsStore.getState().desktopHomeModules).toEqual(["projects"]);
 
-    useSettingsStore.getState().toggleDesktopHomeModule("rules");
+    useSettingsStore.getState().toggleDesktopHomeModule("projects");
 
-    expect(useSettingsStore.getState().desktopHomeModules).toEqual(["rules"]);
+    expect(useSettingsStore.getState().desktopHomeModules).toEqual(["projects"]);
   });
 
   it("reorders enabled desktop modules without introducing hidden entries", async () => {

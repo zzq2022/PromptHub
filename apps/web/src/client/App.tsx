@@ -5,7 +5,6 @@ import { LoginPage } from './pages/Login';
 import { SetupPage } from './pages/Setup';
 import { DesktopWorkspacePage } from './pages/DesktopWorkspace';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { SkillHubPage } from './pages/SkillHub';
 import {
   AdminLayout,
   AdminDashboard,
@@ -54,7 +53,6 @@ export function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/skillhub" element={<SkillHubPage />} />
           <Route path="/setup" element={<SetupRoute><SetupPage /></SetupRoute>} />
           <Route path="/login" element={<LoginPage />} />
           <Route

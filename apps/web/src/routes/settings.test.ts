@@ -178,7 +178,7 @@ describe('web settings routes', () => {
           body: JSON.stringify({
             sync: {
               enabled: true,
-              provider: 'webdav',
+              provider: 'self-hosted',
               endpoint: 'https://dav.example.com/remote.php/dav/files/demo',
               username: 'alice',
               password: 'secret',
@@ -235,7 +235,7 @@ describe('web settings routes', () => {
       });
       expect(ownerSettings.data.sync).toEqual({
         enabled: true,
-        provider: 'webdav',
+        provider: 'self-hosted',
         endpoint: 'https://dav.example.com/remote.php/dav/files/demo',
         username: 'alice',
         password: 'secret',
@@ -332,7 +332,7 @@ describe('web settings routes', () => {
           body: JSON.stringify({
             sync: {
               enabled: true,
-              provider: 'webdav',
+              provider: 'self-hosted',
               endpoint: 'not-a-url',
             },
           }),
