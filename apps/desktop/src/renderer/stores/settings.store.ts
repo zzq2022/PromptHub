@@ -1061,29 +1061,21 @@ function attachProviderIdsToAIModels(
 }
 
 async function computeAccountId(state: any): Promise<string | null> {
-  let str = "";
+  let rawId = "";
   if (state.syncProvider === "webdav") {
-    if (!state.webdavUrl || !state.webdavUsername) return null;
-    str = `${state.webdavUrl.trim()}:${state.webdavUsername.trim()}`;
+    if (!state.webdavUsername) return null;
+    rawId = state.webdavUsername;
   } else if (state.syncProvider === "self-hosted") {
-    if (!state.selfHostedSyncUrl || !state.selfHostedSyncUsername) return null;
-    str = `${state.selfHostedSyncUrl.trim()}:${state.selfHostedSyncUsername.trim()}`;
+    if (!state.selfHostedSyncUsername) return null;
+    rawId = state.selfHostedSyncUsername;
   } else if (state.syncProvider === "s3") {
-    if (!state.s3Endpoint || !state.s3AccessKeyId) return null;
-    str = `${state.s3Endpoint.trim()}:${state.s3AccessKeyId.trim()}`;
+    if (!state.s3AccessKeyId) return null;
+    rawId = state.s3AccessKeyId;
   } else {
     return null;
   }
 
-  try {
-    const msgUint8 = new TextEncoder().encode(str);
-    const hashBuffer = await crypto.subtle.digest("SHA-256", msgUint8);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 16);
-  } catch (err) {
-    console.error("Failed to compute account hash:", err);
-    return null;
-  }
+  return rawId.trim().replace(/@/g, "_").replace(/[\\/:*?"<>|]/g, "_");
 }
 
 export async function loadSettingsFromMainProcess(): Promise<void> {

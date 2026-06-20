@@ -1148,11 +1148,7 @@ export function DataSettings({
                             username: settings.selfHostedSyncUsername,
                             password: settings.selfHostedSyncPassword,
                           });
-                          const str = `${settings.selfHostedSyncUrl.trim()}:${settings.selfHostedSyncUsername.trim()}`;
-                          const msgUint8 = new TextEncoder().encode(str);
-                          const hashBuffer = await crypto.subtle.digest("SHA-256", msgUint8);
-                          const hashArray = Array.from(new Uint8Array(hashBuffer));
-                          const accountId = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 16);
+                          const accountId = settings.selfHostedSyncUsername.trim().replace(/@/g, "_").replace(/[\\/:*?"<>|]/g, "_");
 
                           await window.api.database.switchAccount(accountId);
                           settings.setIsSyncVerified(true);
@@ -1477,11 +1473,7 @@ export function DataSettings({
                           password: settings.webdavPassword,
                         });
                         if (result.success) {
-                          const str = `${settings.webdavUrl.trim()}:${settings.webdavUsername.trim()}`;
-                          const msgUint8 = new TextEncoder().encode(str);
-                          const hashBuffer = await crypto.subtle.digest("SHA-256", msgUint8);
-                          const hashArray = Array.from(new Uint8Array(hashBuffer));
-                          const accountId = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 16);
+                          const accountId = settings.webdavUsername.trim().replace(/@/g, "_").replace(/[\\/:*?"<>|]/g, "_");
 
                           await window.api.database.switchAccount(accountId);
                           settings.setIsSyncVerified(true);
@@ -1918,11 +1910,7 @@ export function DataSettings({
                       backupPrefix: settings.s3BackupPrefix,
                     });
                     if (result.success) {
-                      const str = `${settings.s3AccessKeyId.trim()}:${settings.s3Bucket.trim()}`;
-                      const msgUint8 = new TextEncoder().encode(str);
-                      const hashBuffer = await crypto.subtle.digest("SHA-256", msgUint8);
-                      const hashArray = Array.from(new Uint8Array(hashBuffer));
-                      const accountId = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 16);
+                      const accountId = settings.s3AccessKeyId.trim().replace(/@/g, "_").replace(/[\\/:*?"<>|]/g, "_");
 
                       await window.api.database.switchAccount(accountId);
                       settings.setIsSyncVerified(true);
