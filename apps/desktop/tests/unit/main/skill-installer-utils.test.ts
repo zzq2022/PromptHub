@@ -28,6 +28,10 @@ import {
   invalidateCustomPathsCache,
 } from "../../../src/main/services/skill-installer-utils";
 
+function clean(p: string | null | undefined): string {
+  return (p || "").replace(/\\/g, "/");
+}
+
 describe("skill-installer-utils", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -54,7 +58,7 @@ describe("skill-installer-utils", () => {
       const resolvedPath = getPlatformSkillsDir(platform!);
 
       expect(getMock).toHaveBeenCalledWith("customPlatformRootPaths");
-      expect(resolvedPath).toContain(".trae-cn/skills");
+      expect(clean(resolvedPath)).toContain(".trae-cn/skills");
     });
 
     it("migrates legacy saved skills path back to platform root", () => {
@@ -79,9 +83,9 @@ describe("skill-installer-utils", () => {
 
       expect(getMock).toHaveBeenCalledWith("customPlatformRootPaths");
       expect(getMock).toHaveBeenCalledWith("customSkillPlatformPaths");
-      expect(resolvedRoot).toContain(".trae-cn");
-      expect(resolvedPath).toContain(".trae-cn/skills");
-      expect(resolvedPath.endsWith("/skills/skills")).toBe(false);
+      expect(clean(resolvedRoot)).toContain(".trae-cn");
+      expect(clean(resolvedPath)).toContain(".trae-cn/skills");
+      expect(clean(resolvedPath).endsWith("/skills/skills")).toBe(false);
     });
 
     it("falls back to the built-in platform path when no override exists", () => {
@@ -95,7 +99,7 @@ describe("skill-installer-utils", () => {
 
       const resolvedPath = getPlatformSkillsDir(platform!);
 
-      expect(resolvedPath).toContain(".trae/skills");
+      expect(clean(resolvedPath)).toContain(".trae/skills");
     });
 
     it("resolves the built-in Trae CN path without overrides", () => {
@@ -110,8 +114,8 @@ describe("skill-installer-utils", () => {
       const resolvedRoot = getPlatformRootDir(platform!);
       const resolvedPath = getPlatformSkillsDir(platform!);
 
-      expect(resolvedRoot).toContain(".trae-cn");
-      expect(resolvedPath).toContain(".trae-cn/skills");
+      expect(clean(resolvedRoot)).toContain(".trae-cn");
+      expect(clean(resolvedPath)).toContain(".trae-cn/skills");
     });
 
     it("resolves the built-in Cline path without overrides", () => {
@@ -126,8 +130,8 @@ describe("skill-installer-utils", () => {
       const resolvedRoot = getPlatformRootDir(platform!);
       const resolvedPath = getPlatformSkillsDir(platform!);
 
-      expect(resolvedRoot).toContain(".cline");
-      expect(resolvedPath).toContain(".cline/skills");
+      expect(clean(resolvedRoot)).toContain(".cline");
+      expect(clean(resolvedPath)).toContain(".cline/skills");
     });
 
     it("resolves the built-in Cherry Studio macOS skills path under the production data directory", () => {
@@ -148,10 +152,10 @@ describe("skill-installer-utils", () => {
 
       const platform = getPlatformById("cherry-studio");
       expect(platform).toBeDefined();
-      expect(getPlatformRootDir(platform!)).toBe(
+      expect(clean(getPlatformRootDir(platform!))).toBe(
         "/Users/TestUser/Library/Application Support/CherryStudio",
       );
-      expect(getPlatformSkillsDir(platform!)).toBe(
+      expect(clean(getPlatformSkillsDir(platform!))).toBe(
         "/Users/TestUser/Library/Application Support/CherryStudio/Data/Skills",
       );
 
@@ -221,9 +225,9 @@ describe("skill-installer-utils", () => {
 
       const resolvedPath = getPlatformSkillsDir(platform!);
 
-      expect(resolvedPath).toContain(".gemini");
-      expect(resolvedPath).toContain("antigravity");
-      expect(resolvedPath).toContain("skills");
+      expect(clean(resolvedPath)).toContain(".gemini");
+      expect(clean(resolvedPath)).toContain("antigravity");
+      expect(clean(resolvedPath)).toContain("skills");
     });
 
     it("uses overrides parameter when provided", () => {
@@ -234,7 +238,7 @@ describe("skill-installer-utils", () => {
         claude: "/custom/claude",
       });
 
-      expect(resolvedPath).toBe("/custom/claude/skills");
+      expect(clean(resolvedPath)).toBe("/custom/claude/skills");
     });
 
     it("ignores empty string override and falls back to built-in", () => {
@@ -248,7 +252,7 @@ describe("skill-installer-utils", () => {
 
       const resolvedPath = getPlatformSkillsDir(platform!, { cursor: "  " });
       // Empty/whitespace override should be ignored, falls back to built-in
-      expect(resolvedPath).toContain(".cursor/skills");
+      expect(clean(resolvedPath)).toContain(".cursor/skills");
     });
 
     it("handles DB read failure gracefully (returns built-in path)", () => {
@@ -261,7 +265,7 @@ describe("skill-installer-utils", () => {
 
       // Should not throw — falls back to built-in
       const resolvedPath = getPlatformSkillsDir(platform!);
-      expect(resolvedPath).toContain(".claude/skills");
+      expect(clean(resolvedPath)).toContain(".claude/skills");
     });
 
     it("handles malformed JSON in DB gracefully", () => {
@@ -277,7 +281,7 @@ describe("skill-installer-utils", () => {
 
       // Should not throw — falls back to built-in
       const resolvedPath = getPlatformSkillsDir(platform!);
-      expect(resolvedPath).toContain(".claude/skills");
+      expect(clean(resolvedPath)).toContain(".claude/skills");
     });
   });
 
@@ -288,10 +292,10 @@ describe("skill-installer-utils", () => {
 
       const resolvedPath = getPlatformGlobalRulePath(platform!);
 
-      expect(resolvedPath).toContain(".codeium");
-      expect(resolvedPath).toContain("windsurf");
-      expect(resolvedPath).toContain("memories");
-      expect(resolvedPath).toContain("global_rules.md");
+      expect(clean(resolvedPath)).toContain(".codeium");
+      expect(clean(resolvedPath)).toContain("windsurf");
+      expect(clean(resolvedPath)).toContain("memories");
+      expect(clean(resolvedPath)).toContain("global_rules.md");
     });
 
     it("uses explicit root overrides for the Windsurf global rules file", () => {
@@ -302,7 +306,7 @@ describe("skill-installer-utils", () => {
         windsurf: "/custom/windsurf",
       });
 
-      expect(resolvedPath).toBe("/custom/windsurf/memories/global_rules.md");
+      expect(clean(resolvedPath)).toBe("/custom/windsurf/memories/global_rules.md");
     });
 
     it("uses built-in override relative paths when configured in settings", () => {
@@ -327,11 +331,11 @@ describe("skill-installer-utils", () => {
       const platform = getPlatformById("opencode");
       expect(platform).toBeDefined();
 
-      expect(getPlatformRootDir(platform!)).toBe("/tmp/opencode-root");
-      expect(getPlatformSkillsDir(platform!)).toBe(
+      expect(clean(getPlatformRootDir(platform!))).toBe("/tmp/opencode-root");
+      expect(clean(getPlatformSkillsDir(platform!))).toBe(
         "/tmp/opencode-root/custom-skills",
       );
-      expect(getPlatformGlobalRulePath(platform!)).toBe(
+      expect(clean(getPlatformGlobalRulePath(platform!))).toBe(
         "/tmp/opencode-root/docs/AGENTS.md",
       );
     });

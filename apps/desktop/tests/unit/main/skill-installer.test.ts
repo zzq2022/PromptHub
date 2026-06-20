@@ -2783,6 +2783,7 @@ describe("SkillInstaller.scanLocal (with real DB)", () => {
   let sqliteDb: Database.Database;
   let skillDb: SkillDB;
   let previousHome: string | undefined;
+  let previousAppData: string | undefined;
 
   async function createSkillInDir(
     parentDir: string,
@@ -2798,9 +2799,11 @@ describe("SkillInstaller.scanLocal (with real DB)", () => {
 
   beforeEach(async () => {
     scanTmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "scanlocal-test-"));
-    // Redirect HOME so getDefaultScanEntries() won't find real skills
+    // Redirect HOME and APPDATA so getDefaultScanEntries() won't find real skills
     previousHome = process.env.HOME;
     process.env.HOME = scanTmpDir;
+    previousAppData = process.env.APPDATA;
+    process.env.APPDATA = path.join(scanTmpDir, "AppData", "Roaming");
 
     configureRuntimePaths({ userDataPath: scanTmpDir });
     await SkillInstaller.init();
@@ -2818,6 +2821,7 @@ describe("SkillInstaller.scanLocal (with real DB)", () => {
 
   afterEach(async () => {
     process.env.HOME = previousHome;
+    process.env.APPDATA = previousAppData;
     resetRuntimePaths();
     vi.restoreAllMocks();
     try {
@@ -2825,13 +2829,6 @@ describe("SkillInstaller.scanLocal (with real DB)", () => {
     } catch {
       /* may already be closed */
     }
-    await fs.rm(scanTmpDir, { recursive: true, force: true }).catch(() => {});
-  });
-
-  afterEach(async () => {
-    resetRuntimePaths();
-    vi.restoreAllMocks();
-    sqliteDb?.close();
     await fs.rm(scanTmpDir, { recursive: true, force: true }).catch(() => {});
   });
 

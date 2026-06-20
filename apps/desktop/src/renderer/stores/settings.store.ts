@@ -803,8 +803,10 @@ interface SettingsState {
   autoScanStoreSkillsBeforeInstall: boolean;
 
   githubToken: string;
+  isSyncVerified: boolean;
 
   // Actions
+  setIsSyncVerified: (verified: boolean) => void;
   setThemeMode: (mode: ThemeMode) => void;
   setDarkMode: (isDark: boolean) => void;
   setThemeColor: (colorId: string) => void;
@@ -1143,6 +1145,16 @@ export async function loadSettingsFromMainProcess(): Promise<void> {
     aiApiUrl,
   );
 
+  let isSyncVerified = false;
+  try {
+    const paths = await window.electron?.getRuntimePaths?.();
+    if (paths && paths.activeAccountId) {
+      isSyncVerified = true;
+    }
+  } catch (error) {
+    console.warn("Failed to get runtime paths for active account:", error);
+  }
+
   useSettingsStore.setState({
     customAgents: normalizedCustomAgents,
     builtinAgentOverrides: fallbackBuiltinAgentOverrides,
@@ -1157,6 +1169,7 @@ export async function loadSettingsFromMainProcess(): Promise<void> {
     launchAtStartup,
     minimizeOnLaunch,
     githubToken,
+    isSyncVerified,
     syncProvider,
     aiProvider,
     aiApiProtocol,
@@ -1331,7 +1344,9 @@ export const useSettingsStore = create<SettingsState>()(
         autoScanInstalledSkills: false,
         autoScanStoreSkillsBeforeInstall: false,
         githubToken: "",
+        isSyncVerified: false,
 
+        setIsSyncVerified: (verified) => set({ isSyncVerified: verified }),
         setCreationMode: (mode) => setTouched({ creationMode: mode }),
         setTranslationMode: (mode) => setTouched({ translationMode: mode }),
         setImageReverseAttachReferenceByDefault: (enabled) =>
@@ -1616,12 +1631,27 @@ export const useSettingsStore = create<SettingsState>()(
           syncSettingsToMain({
             sync: buildMainProcessSyncSettings(nextSyncProvider),
           });
+          if (!enabled) {
+            set({ isSyncVerified: false });
+            if (typeof window !== "undefined" && window.api?.database?.switchAccount) {
+              void window.api.database.switchAccount(null).then(() => {
+                window.location.reload();
+              });
+            }
+          }
         },
-        setWebdavUrl: (url) => setTouched({ webdavUrl: url }),
-        setWebdavUsername: (username) =>
-          setTouched({ webdavUsername: username }),
-        setWebdavPassword: (password) =>
-          setTouched({ webdavPassword: password }),
+        setWebdavUrl: (url) => {
+          setTouched({ webdavUrl: url });
+          set({ isSyncVerified: false });
+        },
+        setWebdavUsername: (username) => {
+          setTouched({ webdavUsername: username });
+          set({ isSyncVerified: false });
+        },
+        setWebdavPassword: (password) => {
+          setTouched({ webdavPassword: password });
+          set({ isSyncVerified: false });
+        },
         setWebdavAutoSync: (enabled) =>
           setTouched({ webdavAutoSync: enabled, webdavSyncOnStartup: enabled }),
         setWebdavSyncOnStartup: (enabled) =>
@@ -1657,12 +1687,27 @@ export const useSettingsStore = create<SettingsState>()(
           syncSettingsToMain({
             sync: buildMainProcessSyncSettings(nextSyncProvider),
           });
+          if (!enabled) {
+            set({ isSyncVerified: false });
+            if (typeof window !== "undefined" && window.api?.database?.switchAccount) {
+              void window.api.database.switchAccount(null).then(() => {
+                window.location.reload();
+              });
+            }
+          }
         },
-        setSelfHostedSyncUrl: (url) => setTouched({ selfHostedSyncUrl: url }),
-        setSelfHostedSyncUsername: (username) =>
-          setTouched({ selfHostedSyncUsername: username }),
-        setSelfHostedSyncPassword: (password) =>
-          setTouched({ selfHostedSyncPassword: password }),
+        setSelfHostedSyncUrl: (url) => {
+          setTouched({ selfHostedSyncUrl: url });
+          set({ isSyncVerified: false });
+        },
+        setSelfHostedSyncUsername: (username) => {
+          setTouched({ selfHostedSyncUsername: username });
+          set({ isSyncVerified: false });
+        },
+        setSelfHostedSyncPassword: (password) => {
+          setTouched({ selfHostedSyncPassword: password });
+          set({ isSyncVerified: false });
+        },
         setSelfHostedSyncOnStartup: (enabled) =>
           setTouched({ selfHostedSyncOnStartup: enabled }),
         setSelfHostedSyncOnStartupDelay: (delay) =>
@@ -1686,15 +1731,39 @@ export const useSettingsStore = create<SettingsState>()(
           syncSettingsToMain({
             sync: buildMainProcessSyncSettings(nextSyncProvider),
           });
+          if (!enabled) {
+            set({ isSyncVerified: false });
+            if (typeof window !== "undefined" && window.api?.database?.switchAccount) {
+              void window.api.database.switchAccount(null).then(() => {
+                window.location.reload();
+              });
+            }
+          }
         },
-        setS3Endpoint: (endpoint) => setTouched({ s3Endpoint: endpoint }),
-        setS3Region: (region) => setTouched({ s3Region: region }),
-        setS3Bucket: (bucket) => setTouched({ s3Bucket: bucket }),
-        setS3AccessKeyId: (accessKeyId) =>
-          setTouched({ s3AccessKeyId: accessKeyId }),
-        setS3SecretAccessKey: (secretAccessKey) =>
-          setTouched({ s3SecretAccessKey: secretAccessKey }),
-        setS3BackupPrefix: (prefix) => setTouched({ s3BackupPrefix: prefix }),
+        setS3Endpoint: (endpoint) => {
+          setTouched({ s3Endpoint: endpoint });
+          set({ isSyncVerified: false });
+        },
+        setS3Region: (region) => {
+          setTouched({ s3Region: region });
+          set({ isSyncVerified: false });
+        },
+        setS3Bucket: (bucket) => {
+          setTouched({ s3Bucket: bucket });
+          set({ isSyncVerified: false });
+        },
+        setS3AccessKeyId: (accessKeyId) => {
+          setTouched({ s3AccessKeyId: accessKeyId });
+          set({ isSyncVerified: false });
+        },
+        setS3SecretAccessKey: (secretAccessKey) => {
+          setTouched({ s3SecretAccessKey: secretAccessKey });
+          set({ isSyncVerified: false });
+        },
+        setS3BackupPrefix: (prefix) => {
+          setTouched({ s3BackupPrefix: prefix });
+          set({ isSyncVerified: false });
+        },
         setS3SyncOnStartup: (enabled) =>
           setTouched({ s3SyncOnStartup: enabled }),
         setS3SyncOnStartupDelay: (delay) =>

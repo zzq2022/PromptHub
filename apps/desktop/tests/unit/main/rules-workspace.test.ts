@@ -382,7 +382,7 @@ describe("rules workspace storage", () => {
     const refreshed = await service.listRuleDescriptors();
     const claude = refreshed.find((descriptor) => descriptor.id === "claude-global");
 
-    expect(claude?.path).toContain(".claude-custom/CLAUDE.md");
+    expect(claude?.path.replace(/\\/g, "/")).toContain(".claude-custom/CLAUDE.md");
   });
 
   it("uses the overridden target file name for built-in global rule descriptors", async () => {

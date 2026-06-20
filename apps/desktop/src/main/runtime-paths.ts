@@ -21,16 +21,29 @@ export interface RuntimePathOverrides {
 }
 
 let runtimePathOverrides: RuntimePathOverrides = {};
+let activeAccountId: string | null = null;
+let initialized = false;
+
+interface GlobalConfig {
+  lastActiveAccountId: string | null;
+  updatedAt: string;
+}
 
 export function configureRuntimePaths(overrides: RuntimePathOverrides): void {
   runtimePathOverrides = {
     ...runtimePathOverrides,
     ...overrides,
   };
+  initialized = false;
 }
+
+let testConfig: GlobalConfig = { lastActiveAccountId: null, updatedAt: "" };
 
 export function resetRuntimePaths(): void {
   runtimePathOverrides = {};
+  initialized = false;
+  activeAccountId = null;
+  testConfig = { lastActiveAccountId: null, updatedAt: "" };
 }
 
 function getPlatform(): NodeJS.Platform {
@@ -42,7 +55,7 @@ function getProductName(): string {
 }
 
 function getDefaultAppDataPath(platform: NodeJS.Platform): string {
-  const homeDir = os.homedir();
+  const homeDir = process.env.HOME || os.homedir();
 
   if (platform === "darwin") {
     return path.join(homeDir, "Library", "Application Support");
@@ -61,7 +74,7 @@ export function getAppDataPath(): string {
   );
 }
 
-export function getUserDataPath(): string {
+export function getBaseUserDataPath(): string {
   if (runtimePathOverrides.userDataPath) {
     return path.resolve(runtimePathOverrides.userDataPath);
   }
@@ -76,6 +89,99 @@ export function getUserDataPath(): string {
     isPackaged: runtimePathOverrides.isPackaged ?? false,
     platform: getPlatform(),
   });
+}
+
+export function getOSUsername(): string {
+  try {
+    const userInfo = os.userInfo();
+    if (userInfo && userInfo.username) {
+      return userInfo.username;
+    }
+  } catch (e) {
+    // ignore
+  }
+  return process.env.USERNAME || process.env.USER || "default_user";
+}
+
+export function loadGlobalConfig(): GlobalConfig {
+  if (process.env.NODE_ENV === "test" || process.env.VITEST) {
+    return testConfig;
+  }
+  const baseDir = getBaseUserDataPath();
+  const configPath = path.join(baseDir, "global-config.json");
+  if (!fs.existsSync(configPath)) {
+    return { lastActiveAccountId: null, updatedAt: "" };
+  }
+  try {
+    const content = fs.readFileSync(configPath, "utf8");
+    return JSON.parse(content) as GlobalConfig;
+  } catch (err) {
+    console.error("Failed to read global-config.json:", err);
+    return { lastActiveAccountId: null, updatedAt: "" };
+  }
+}
+
+export function saveGlobalConfig(config: Partial<GlobalConfig>): void {
+  if (process.env.NODE_ENV === "test" || process.env.VITEST) {
+    testConfig = {
+      lastActiveAccountId:
+        config.lastActiveAccountId !== undefined
+          ? config.lastActiveAccountId
+          : testConfig.lastActiveAccountId,
+      updatedAt: new Date().toISOString(),
+    };
+    return;
+  }
+  const baseDir = getBaseUserDataPath();
+  const configPath = path.join(baseDir, "global-config.json");
+  const existing = loadGlobalConfig();
+  const updated: GlobalConfig = {
+    lastActiveAccountId:
+      config.lastActiveAccountId !== undefined
+        ? config.lastActiveAccountId
+        : existing.lastActiveAccountId,
+    updatedAt: new Date().toISOString(),
+  };
+  try {
+    fs.mkdirSync(path.dirname(configPath), { recursive: true });
+    fs.writeFileSync(configPath, JSON.stringify(updated, null, 2), "utf8");
+  } catch (err) {
+    console.error("Failed to write global-config.json:", err);
+  }
+}
+
+export function getActiveAccountId(): string | null {
+  ensureInitialized();
+  return activeAccountId;
+}
+
+export function setActiveAccountId(accountId: string | null): void {
+  activeAccountId = accountId;
+  saveGlobalConfig({ lastActiveAccountId: accountId });
+  initialized = true;
+}
+
+function ensureInitialized() {
+  if (!initialized) {
+    try {
+      const config = loadGlobalConfig();
+      activeAccountId = config.lastActiveAccountId;
+    } catch {
+      activeAccountId = null;
+    }
+    initialized = true;
+  }
+}
+
+export function getUserDataPath(): string {
+  ensureInitialized();
+
+  const baseDir = getBaseUserDataPath();
+  const subFolder = activeAccountId
+    ? `users/${activeAccountId}`
+    : `users/${getOSUsername()}`;
+
+  return path.join(baseDir, subFolder);
 }
 
 function resolvePreferredPath(primaryPath: string, legacyPath?: string): string {

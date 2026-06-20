@@ -1148,6 +1148,15 @@ export function DataSettings({
                             username: settings.selfHostedSyncUsername,
                             password: settings.selfHostedSyncPassword,
                           });
+                          const str = `${settings.selfHostedSyncUrl.trim()}:${settings.selfHostedSyncUsername.trim()}`;
+                          const msgUint8 = new TextEncoder().encode(str);
+                          const hashBuffer = await crypto.subtle.digest("SHA-256", msgUint8);
+                          const hashArray = Array.from(new Uint8Array(hashBuffer));
+                          const accountId = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 16);
+
+                          await window.api.database.switchAccount(accountId);
+                          settings.setIsSyncVerified(true);
+
                           showToast(
                             t(
                               "toast.selfHostedSyncConnectionSuccess",
@@ -1161,8 +1170,18 @@ export function DataSettings({
                             ),
                             "success",
                           );
+                          setTimeout(() => {
+                            window.location.reload();
+                          }, 1000);
                         } catch (error) {
                           showToast(getErrorMessage(error), "error");
+                          if (settings.isSyncVerified) {
+                            settings.setIsSyncVerified(false);
+                            await window.api.database.switchAccount(null);
+                            setTimeout(() => {
+                              window.location.reload();
+                            }, 1000);
+                          }
                         } finally {
                           setSelfHostedTesting(false);
                         }
@@ -1210,7 +1229,7 @@ export function DataSettings({
                           setSelfHostedUploading(false);
                         }
                       }}
-                        disabled={selfHostedUploading || !selfHostedConfigComplete}
+                        disabled={selfHostedUploading || !selfHostedConfigComplete || !settings.isSyncVerified}
                         className="h-8 px-4 rounded-lg bg-primary text-white text-sm hover:bg-primary/90 transition-colors flex items-center gap-2 disabled:opacity-50"
                     >
                       <UploadIcon className="w-4 h-4" />
@@ -1254,12 +1273,17 @@ export function DataSettings({
                           setSelfHostedDownloading(false);
                         }
                       }}
-                        disabled={selfHostedDownloading || !selfHostedConfigComplete}
+                        disabled={selfHostedDownloading || !selfHostedConfigComplete || !settings.isSyncVerified}
                         className="h-8 px-4 rounded-lg bg-muted text-sm hover:bg-muted/80 transition-colors flex items-center gap-2 disabled:opacity-50"
                     >
                       <DownloadIcon className="w-4 h-4" />
                       {t("settings.updateFromRemote", "Update from remote")}
                     </button>
+                    {!settings.isSyncVerified && (
+                      <span className="text-xs text-amber-500/90 flex items-center gap-1.5 px-1 py-1">
+                        {t("settings.syncNotVerifiedWarning", "请先测试连接并保存配置以启用此功能")}
+                      </span>
+                    )}
                   </div>
 
                   <div className="flex items-center justify-between pt-3 border-t border-border">
@@ -1452,12 +1476,32 @@ export function DataSettings({
                           username: settings.webdavUsername,
                           password: settings.webdavPassword,
                         });
-                        showToast(
-                          result.success
-                            ? t("toast.connectionSuccess")
-                            : t("toast.connectionFailed"),
-                          result.success ? "success" : "error",
-                        );
+                        if (result.success) {
+                          const str = `${settings.webdavUrl.trim()}:${settings.webdavUsername.trim()}`;
+                          const msgUint8 = new TextEncoder().encode(str);
+                          const hashBuffer = await crypto.subtle.digest("SHA-256", msgUint8);
+                          const hashArray = Array.from(new Uint8Array(hashBuffer));
+                          const accountId = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 16);
+
+                          await window.api.database.switchAccount(accountId);
+                          settings.setIsSyncVerified(true);
+                          showToast(t("toast.connectionSuccess"), "success");
+                          setTimeout(() => {
+                            window.location.reload();
+                          }, 1000);
+                        } else {
+                          showToast(t("toast.connectionFailed"), "error");
+                          if (settings.isSyncVerified) {
+                            settings.setIsSyncVerified(false);
+                            await window.api.database.switchAccount(null);
+                            setTimeout(() => {
+                              window.location.reload();
+                            }, 1000);
+                          }
+                        }
+                      } catch (err) {
+                        console.error("Test connection failed:", err);
+                        showToast(t("toast.connectionFailed"), "error");
                       } finally {
                         setWebdavTesting(false);
                       }
@@ -1505,7 +1549,7 @@ export function DataSettings({
                         setWebdavUploading(false);
                       }
                     }}
-                    disabled={webdavUploading || !webdavConfigComplete}
+                    disabled={webdavUploading || !webdavConfigComplete || !settings.isSyncVerified}
                     className="h-8 px-4 rounded-lg bg-primary text-white text-sm hover:bg-primary/90 transition-colors flex items-center gap-2 disabled:opacity-50"
                   >
                     <UploadIcon className="w-4 h-4" />
@@ -1547,12 +1591,17 @@ export function DataSettings({
                         setWebdavDownloading(false);
                       }
                     }}
-                    disabled={webdavDownloading || !webdavConfigComplete}
+                    disabled={webdavDownloading || !webdavConfigComplete || !settings.isSyncVerified}
                     className="h-8 px-4 rounded-lg bg-muted text-sm hover:bg-muted/80 transition-colors flex items-center gap-2 disabled:opacity-50"
                   >
                     <DownloadIcon className="w-4 h-4" />
                     {t("settings.updateFromRemote", "Update from remote")}
                   </button>
+                  {!settings.isSyncVerified && (
+                    <span className="text-xs text-amber-500/90 flex items-center gap-1.5 px-1 py-1">
+                      {t("settings.syncNotVerifiedWarning", "请先测试连接并保存配置以启用此功能")}
+                    </span>
+                  )}
                 </div>
 
                 {/* 自动运行（定时同步） */}
@@ -1868,7 +1917,32 @@ export function DataSettings({
                       secretAccessKey: settings.s3SecretAccessKey,
                       backupPrefix: settings.s3BackupPrefix,
                     });
-                    showToast(result.message, result.success ? "success" : "error");
+                    if (result.success) {
+                      const str = `${settings.s3AccessKeyId.trim()}:${settings.s3Bucket.trim()}`;
+                      const msgUint8 = new TextEncoder().encode(str);
+                      const hashBuffer = await crypto.subtle.digest("SHA-256", msgUint8);
+                      const hashArray = Array.from(new Uint8Array(hashBuffer));
+                      const accountId = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 16);
+
+                      await window.api.database.switchAccount(accountId);
+                      settings.setIsSyncVerified(true);
+                      showToast(result.message, "success");
+                      setTimeout(() => {
+                        window.location.reload();
+                      }, 1000);
+                    } else {
+                      showToast(result.message, "error");
+                      if (settings.isSyncVerified) {
+                        settings.setIsSyncVerified(false);
+                        await window.api.database.switchAccount(null);
+                        setTimeout(() => {
+                          window.location.reload();
+                        }, 1000);
+                      }
+                    }
+                  } catch (err) {
+                    console.error("S3 connection check failed:", err);
+                    showToast(t("toast.connectionFailed"), "error");
                   } finally {
                     setS3Testing(false);
                   }
@@ -1910,7 +1984,7 @@ export function DataSettings({
                     setS3Uploading(false);
                   }
                 }}
-                disabled={s3Uploading || !s3ConfigComplete || !settings.s3StorageEnabled}
+                disabled={s3Uploading || !s3ConfigComplete || !settings.s3StorageEnabled || !settings.isSyncVerified}
                 className="h-8 px-4 rounded-lg bg-primary text-white text-sm hover:bg-primary/90 transition-colors flex items-center gap-2 disabled:opacity-50"
               >
                 <UploadIcon className="w-4 h-4" />
@@ -1951,12 +2025,17 @@ export function DataSettings({
                     setS3Downloading(false);
                   }
                 }}
-                disabled={s3Downloading || !s3ConfigComplete || !settings.s3StorageEnabled}
+                disabled={s3Downloading || !s3ConfigComplete || !settings.s3StorageEnabled || !settings.isSyncVerified}
                 className="h-8 px-4 rounded-lg bg-muted text-sm hover:bg-muted/80 transition-colors flex items-center gap-2 disabled:opacity-50"
               >
                 <DownloadIcon className="w-4 h-4" />
                 {t("settings.updateFromRemote", "Update from remote")}
               </button>
+              {!settings.isSyncVerified && (
+                <span className="text-xs text-amber-500/90 flex items-center gap-1.5 px-1 py-1">
+                  {t("settings.syncNotVerifiedWarning", "请先测试连接并保存配置以启用此功能")}
+                </span>
+              )}
             </div>
 
             <div className={getSyncPanelContentClassName(s3ControlsDisabled)}>

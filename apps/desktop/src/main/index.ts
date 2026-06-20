@@ -59,6 +59,8 @@ import {
   getWorkspaceDir,
   getPromptsWorkspaceDir,
   getConfigDir,
+  setActiveAccountId,
+  getActiveAccountId,
 } from "./runtime-paths";
 import { PromptDB } from "./database/prompt";
 import { FolderDB } from "./database/folder";
@@ -498,6 +500,49 @@ ipcMain.handle(IPC_CHANNELS.APP_CLEAR_CACHE, async () => {
   return { success: true };
 });
 
+ipcMain.handle("database:switch-account", async (_event, accountId: string | null) => {
+  try {
+    console.log(`[database] Switching account to: ${accountId}`);
+    // 1. Close current database
+    closeDatabase();
+
+    // 2. Set new active account ID
+    setActiveAccountId(accountId);
+
+    // 3. Initialize database under the new account folder
+    const nextDb = initDatabase();
+
+    // 4. Update the global appDb reference
+    appDb = nextDb;
+
+    // 5. Re-register all DB-dependent IPC handlers with the new DB instance
+    registerAllIPC(nextDb, (newDb) => {
+      appDb = newDb;
+    });
+
+    // 6. Run bootstrap logic for workspace prompts and rules
+    try {
+      await bootstrapRuleWorkspace();
+    } catch (bootstrapRuleError) {
+      console.error("[database] bootstrapRuleWorkspace failed during account switch:", bootstrapRuleError);
+    }
+
+    try {
+      bootstrapPromptWorkspace(new PromptDB(nextDb), new FolderDB(nextDb));
+    } catch (bootstrapPromptError) {
+      console.error("[database] bootstrapPromptWorkspace failed during account switch:", bootstrapPromptError);
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("[database] Failed to switch account:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+});
+
 // Configure minimize-to-tray behavior
 // 设置最小化到托盘
 ipcMain.on("app:setMinimizeToTray", (_event, enabled: boolean) => {
@@ -518,6 +563,7 @@ ipcMain.handle(IPC_CHANNELS.APP_GET_RUNTIME_PATHS, async () => ({
   skillsDir: getSkillsDir(),
   backupsDir: path.join(app.getPath("userData"), "backups"),
   logsDir: path.join(app.getPath("userData"), "logs"),
+  activeAccountId: getActiveAccountId(),
 }));
 
 // Set close action (Windows)

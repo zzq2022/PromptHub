@@ -82,6 +82,12 @@ const api = {
   close: () => ipcRenderer.send("window:close"),
   prompt: promptApi,
 
+  // Database
+  database: {
+    switchAccount: (accountId: string | null) =>
+      ipcRenderer.invoke("database:switch-account", accountId),
+  },
+
   // Security
   security: {
     status: () => ipcRenderer.invoke(IPC_CHANNELS.SECURITY_STATUS),
@@ -175,6 +181,7 @@ contextBridge.exposeInMainWorld("electron", {
       skillsDir: string;
       backupsDir: string;
       logsDir: string;
+      activeAccountId: string | null;
     }>,
   setDebugMode: (enabled: boolean) =>
     ipcRenderer.send("app:setDebugMode", enabled),
@@ -457,6 +464,7 @@ declare global {
         skillsDir: string;
         backupsDir: string;
         logsDir: string;
+        activeAccountId: string | null;
       }>;
       setDebugMode?: (enabled: boolean) => void;
       toggleDevTools?: () => void;

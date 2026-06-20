@@ -292,7 +292,7 @@ export function gitListRemoteBranches(url: string): Promise<string[]> {
 }
 
 export function resolvePlatformPath(template: string): string {
-  const home = os.homedir();
+  const home = process.env.HOME || os.homedir();
   const appData = process.env.APPDATA || path.join(home, "AppData", "Roaming");
   return template
     .replace(/^~/, home)

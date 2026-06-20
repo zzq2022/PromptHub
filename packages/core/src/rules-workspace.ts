@@ -265,12 +265,14 @@ export function createRulesWorkspaceService(
   }
 
   function getManagedCustomRulePath(template: ExtraGlobalRuleTemplate): string {
-    return path.join(deps.getRulesDir(), "global", template.platformId, template.name);
+    const platformFolder = template.platformId.replace(/:/g, "_");
+    return path.join(deps.getRulesDir(), "global", platformFolder, template.name);
   }
 
   function getManagedCopyPathForGlobal(ruleId: KnownRuleFileId): string {
     const template = KNOWN_RULE_FILE_TEMPLATES[ruleId];
-    return path.join(deps.getRulesDir(), "global", template.platformId, template.name);
+    const platformFolder = template.platformId.replace(/:/g, "_");
+    return path.join(deps.getRulesDir(), "global", platformFolder, template.name);
   }
 
   function buildGlobalMeta(ruleId: KnownRuleFileId): StoredRuleMeta {
