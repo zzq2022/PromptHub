@@ -133,22 +133,33 @@ export function registerAllIPC(
   db: Database.Database,
   setDbRef: (db: Database.Database) => void,
 ): void {
-  resetAllRegisteredIpcHandlers();
+  const originalHandle = ipcMain.handle.bind(ipcMain);
+  ipcMain.handle = (channel: string, listener: any) => {
+    ipcMain.removeHandler(channel);
+    return originalHandle(channel, listener);
+  };
 
-  const promptDB = new PromptDB(db);
-  const folderDB = new FolderDB(db);
-  const skillDB = new SkillDB(db);
+  try {
+    resetAllRegisteredIpcHandlers();
 
-  registerIpcGroup("prompt", () => registerPromptIPC(promptDB, folderDB, db));
-  registerIpcGroup("folder", () => registerFolderIPC(folderDB, promptDB));
-  registerIpcGroup("rules", () => registerRulesIPC());
-  registerIpcGroup("settings", () => registerSettingsIPC(db));
-  registerIpcGroup("security", () => registerSecurityIPC(db));
-  registerIpcGroup("backup", () =>
-    registerBackupIPC(setDbRef, (nextDb) => registerAllIPC(nextDb, setDbRef)),
-  );
-  registerIpcGroup("cli", () => registerCliIPC());
-  registerIpcGroup("skill", () => registerSkillIPC(skillDB));
-  registerIpcGroup("image", () => registerImageIPC());
-  registerIpcGroup("ai", () => registerAIIPC());
+    const promptDB = new PromptDB(db);
+    const folderDB = new FolderDB(db);
+    const skillDB = new SkillDB(db);
+
+    registerIpcGroup("prompt", () => registerPromptIPC(promptDB, folderDB, db));
+    registerIpcGroup("folder", () => registerFolderIPC(folderDB, promptDB));
+    registerIpcGroup("rules", () => registerRulesIPC());
+    registerIpcGroup("settings", () => registerSettingsIPC(db));
+    registerIpcGroup("security", () => registerSecurityIPC(db));
+    registerIpcGroup("backup", () =>
+      registerBackupIPC(setDbRef, (nextDb) => registerAllIPC(nextDb, setDbRef)),
+    );
+    registerIpcGroup("cli", () => registerCliIPC());
+    registerIpcGroup("skill", () => registerSkillIPC(skillDB));
+    registerIpcGroup("image", () => registerImageIPC());
+    registerIpcGroup("ai", () => registerAIIPC());
+  } finally {
+    ipcMain.handle = originalHandle;
+  }
 }
+

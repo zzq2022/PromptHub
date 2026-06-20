@@ -11,6 +11,7 @@ import {
   session,
   protocol,
 } from "electron";
+
 import { IPC_CHANNELS } from "@prompthub/shared/constants/ipc-channels";
 import path from "path";
 import fs from "fs";
