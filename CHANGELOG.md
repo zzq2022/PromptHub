@@ -1,5 +1,41 @@
 ## [Unreleased]
 
+### 问题修复 / Fixes
+
+- 🚪 **Web 端退出登录修复**：SkillHub 页面顶部新增退出登录按钮，管理员用户额外显示"管理后台"快捷入口
+  - **Web Logout Fix**: Added a logout button to the SkillHub page header; admin users also see an "Admin Panel" quick-access link
+- 🔓 **登录/注册验证码移除**：登录和注册页面不再要求输入图形验证码，后端同时跳过 captcha 校验（captcha 接口保留但调用变为可选），简化自托管实例的首次使用流程
+  - **Login/Register Captcha Removed**: Login and registration no longer require captcha verification; the captcha endpoint remains available but verification is now optional, simplifying first-use for self-hosted instances
+
+## [0.6.0] - 2026-06-19
+
+### 新功能 / Features
+
+- 🔐 **SkillHub 管理员审核流程**：Skill 发布到 SkillHub 改为提交审核机制，用户点击"提交审核"后 skill 进入 pending 状态，需管理员在后台审核通过后才会公开上架；支持驳回操作，驳回后 skill 回到私有状态
+  - **SkillHub Admin Approval Workflow**: Skill publishing to SkillHub now requires admin review. Users click "Submit for Review" to set a skill to pending status; an admin must approve it before it becomes publicly listed. Rejection returns the skill to private status
+- 🛡️ **管理员后台面板**：新增独立管理后台（`/admin`），包含仪表盘统计、待审核技能列表、全量技能管理（筛选/搜索/下架/删除）和用户管理（角色升降/删除）四个页面，非 admin 用户无权访问
+  - **Admin Panel Dashboard**: Added a standalone admin panel (`/admin`) with dashboard statistics, pending skill review, full skill management (filter/search/hide/delete), and user management (role promotion/demotion/delete). Non-admin users are redirected
+- 👥 **用户角色管理**：管理员可在后台查看所有用户列表，提升或撤销其他用户的角色（admin/user），支持防误操作保护（不能删除自己、不能撤销最后一个 admin 的角色）
+  - **User Role Management**: Admins can view all users, promote or demote roles (admin/user), with safety guards preventing self-deletion and last-admin demotion
+- 📊 **管理员仪表盘**：管理后台首页展示技能总数、公开数、待审核数、已通过数、用户总数和管理员数六项统计卡片，待审核数大于零时高亮提醒
+  - **Admin Dashboard Stats**: The admin home page shows six stat cards — total skills, public skills, pending review, approved skills, total users, and admin users — with attention highlighting when pending skills exist
+- 🗄️ **Skill 审核状态字段**：数据库 skills 表新增 `approval_status` 列（pending / approved / rejected），支持完整的审核状态流转，包含 schema 迁移和类型定义
+  - **Skill Approval Status Column**: Added `approval_status` column to the skills table (pending / approved / rejected) for the full approval lifecycle, with schema migration and shared type definitions
+
+### 问题修复 / Fixes
+
+- 🧩 **桌面端启动外键约束失败修复**：修复桌面端 `pnpm dev` 启动时 `FOREIGN KEY constraint failed` 错误，根因是 skills 表中 `ownerUserId` 引用了 `users` 表中不存在的用户记录；现在在创建和导入 skill 时会先验证用户是否存在，不存在则回退为 null
+  - **Desktop Startup FK Constraint Fix**: Fixed `FOREIGN KEY constraint failed` error on desktop `pnpm dev` startup. Root cause was skills with `ownerUserId` referencing non-existent users in the `users` table; now validates user existence before insert, falling back to null if not found
+- 🔗 **桌面→Web SkillHub 发布链路修复**：修复从桌面端发布 skill 到自托管 Web 后 SkillHub 不显示的问题；之前桌面端只修改本地 DB 的 visibility，不推送到 Web；现在会自动将 skill 导入到 Web DB 后再提交审核
+  - **Desktop→Web SkillHub Publish Pipeline Fix**: Fixed skills published from desktop not appearing in the web SkillHub; the desktop now imports the skill to the Web DB and submits it for review as a best-effort mirror operation
+
+### 优化 / Improvements
+
+- 🌐 **7 语言国际化补全**：桌面端和 Web 端同步更新 7 种语言（en / zh / zh-TW / ja / fr / de / es），覆盖审核流程、管理后台导航、表格列标题、操作按钮、确认弹窗和状态提示等全部新增界面文本
+  - **Full 7-Locale i18n Coverage**: Both desktop and web locales updated across all 7 languages (en / zh / zh-TW / ja / fr / de / es), covering approval workflow, admin panel navigation, table headers, action buttons, confirmation dialogs, and status messages
+- 🎨 **管理后台暗色主题适配**：管理后台样式与现有 SkillHub 页面保持一致的暗色设计语言，使用 CSS 变量适配明暗模式，sidebar 固定导航 + 右侧内容区布局
+  - **Admin Panel Dark Theme**: Admin panel styles align with the existing SkillHub page dark design language, using CSS variables for light/dark mode support with a fixed sidebar + content area layout
+
 ## [0.5.8] - 2026-06-04
 
 ### 新功能 / Features

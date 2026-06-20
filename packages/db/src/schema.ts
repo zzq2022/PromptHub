@@ -117,6 +117,7 @@ CREATE TABLE IF NOT EXISTS skills (
   safety_score INTEGER,
   safety_report TEXT,
   safety_scanned_at INTEGER,
+  approval_status TEXT CHECK(approval_status IN ('pending', 'approved', 'rejected')),
   current_version INTEGER DEFAULT 0,
   version_tracking_enabled INTEGER DEFAULT 0,
   created_at INTEGER NOT NULL,

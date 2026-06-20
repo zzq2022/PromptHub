@@ -23,6 +23,7 @@ import { getAuthUser } from '../middleware/auth.js';
 import { SkillCatalogService, SkillCatalogServiceError } from '../services/skill-catalog.service.js';
 import { SkillDownloadService, SkillDownloadError } from '../services/skill-download.service.js';
 import { SkillPublisher, SkillPublisherError } from '../services/skill-publisher.service.js';
+import { SkillAdminService, SkillAdminError } from '../services/skill-admin.service.js';
 import { error, success } from '../utils/response.js';
 import type { Actor } from '@prompthub/core/skillhub';
 
@@ -33,6 +34,7 @@ import type { Actor } from '@prompthub/core/skillhub';
 const catalogService = new SkillCatalogService();
 const downloadService = new SkillDownloadService();
 const publisher = new SkillPublisher();
+const adminService = new SkillAdminService();
 
 // ---------------------------------------------------------------------------
 // Public routes — mounted directly on `app` (no authMiddleware)
@@ -94,7 +96,7 @@ skillhubPublicRoutes.get('/:id/download', optionalAuth(), (c) => {
     c.header('Content-Type', 'application/zip');
     c.header('Content-Disposition', `attachment; filename="${encodeURIComponent(result.fileName)}"`);
     c.header('Content-Length', String(result.byteLength));
-    return c.body(result.body);
+    return c.body(result.body as any);
   } catch (err) {
     return toDownloadErrorResponse(c, err);
   }
@@ -120,13 +122,12 @@ skillhubPrivateRoutes.get('/private', (c) => {
 });
 
 /**
- * POST /:id/publish — publish a private skill (owner-based authorization).
- * Requirements: 6.1, 6.3
+ * POST /:id/publish — submit a private skill for admin review (owner-based authorization).
  */
 skillhubPrivateRoutes.post('/:id/publish', (c) => {
   const actor = toActor(c);
   try {
-    return success(c, publisher.publish(actor, c.req.param('id')));
+    return success(c, publisher.submitForApproval(actor, c.req.param('id')));
   } catch (err) {
     return toPublisherErrorResponse(c, err);
   }
@@ -175,5 +176,55 @@ function toPublisherErrorResponse(c: Context, err: unknown): Response {
   }
   return error(c, 500, 'INTERNAL_ERROR', 'Internal server error');
 }
+
+/** Map `SkillAdminError` to a uniform HTTP error response. */
+function toAdminErrorResponse(c: Context, err: unknown): Response {
+  if (err instanceof SkillAdminError) {
+    return error(c, err.status, err.code, err.message);
+  }
+  return error(c, 500, 'INTERNAL_ERROR', 'Internal server error');
+}
+
+// ---------------------------------------------------------------------------
+// Admin review routes — mounted under protectedApi (authMiddleware + admin check)
+// ---------------------------------------------------------------------------
+
+export const skillhubAdminRoutes = new Hono();
+
+/**
+ * GET /admin/pending — list skills awaiting admin review.
+ */
+skillhubAdminRoutes.get('/admin/pending', (c) => {
+  const page = Number(c.req.query('page') ?? '1');
+  try {
+    return success(c, adminService.listPending(page));
+  } catch (err) {
+    return toAdminErrorResponse(c, err);
+  }
+});
+
+/**
+ * POST /admin/:id/approve — approve a pending skill, making it shared.
+ */
+skillhubAdminRoutes.post('/admin/:id/approve', (c) => {
+  const actor = toActor(c);
+  try {
+    return success(c, adminService.review(actor, c.req.param('id'), 'approved'));
+  } catch (err) {
+    return toAdminErrorResponse(c, err);
+  }
+});
+
+/**
+ * POST /admin/:id/reject — reject a pending skill.
+ */
+skillhubAdminRoutes.post('/admin/:id/reject', (c) => {
+  const actor = toActor(c);
+  try {
+    return success(c, adminService.review(actor, c.req.param('id'), 'rejected'));
+  } catch (err) {
+    return toAdminErrorResponse(c, err);
+  }
+});
 
 export default skillhubPublicRoutes;

@@ -71,6 +71,7 @@ import {
   getDeployedProjectSkillTargets,
   getDeployableProjectTargetDirs,
   getMissingProjectTargetDirs,
+  getProjectDeployTargets,
   type ProjectDeployedSkillTarget,
 } from "../../services/project-skill-targets";
 import {
@@ -88,20 +89,6 @@ import { AgentSkillDetailActions } from "./AgentSkillDetailActions";
 
 const OPEN_CREATE_SKILL_PROJECT_MODAL_EVENT = "open-create-skill-project-modal";
 
-function getProjectDeployTargets(project: SkillProject): string[] {
-  const configured = Array.isArray(project.deployTargets)
-    ? project.deployTargets.filter(
-        (entry) => typeof entry === "string" && entry.trim().length > 0,
-      )
-    : [];
-
-  if (configured.length > 0) {
-    return Array.from(new Set(configured));
-  }
-
-  const normalizedRoot = project.rootPath.replace(/[\\/]+$/, "");
-  return normalizedRoot ? [`${normalizedRoot}/.agents/skills`] : [];
-}
 
 /**
  * Full-width Skill Detail Page

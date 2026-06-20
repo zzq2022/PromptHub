@@ -3,6 +3,7 @@ import { IPC_CHANNELS } from "@prompthub/shared/constants/ipc-channels";
 import type {
   CreateSkillParams,
   MCPServerConfig,
+  PublishResult,
   SkillPlatformInstallResult,
   SkillPlatformInstallStatusMap,
   SkillSafetyReport,
@@ -20,7 +21,7 @@ import type {
 export const skillApi = {
   create: (
     data: CreateSkillParams,
-    options?: { skipInitialVersion?: boolean },
+    options?: { skipInitialVersion?: boolean; overwriteExisting?: boolean },
   ) => ipcRenderer.invoke(IPC_CHANNELS.SKILL_CREATE, data, options),
   get: (id: string) => ipcRenderer.invoke(IPC_CHANNELS.SKILL_GET, id),
   getAll: () => ipcRenderer.invoke(IPC_CHANNELS.SKILL_GET_ALL),
@@ -315,4 +316,14 @@ export const skillApi = {
   deleteAll: () => ipcRenderer.invoke(IPC_CHANNELS.SKILL_DELETE_ALL, true),
   insertVersionDirect: (version: SkillVersion) =>
     ipcRenderer.invoke(IPC_CHANNELS.SKILL_INSERT_VERSION_DIRECT, version),
+  /**
+   * Atomic publish-to-SkillHub. Local-first: flips the local skill's
+   * `visibility` to `'shared'`. Returns `null` when the skill is missing,
+   * `{ alreadyPublic: true, skill }` when it was already shared, or
+   * `{ published: true, skill }` on a first-time publish. Mirrors the web
+   * `SkillPublisher.publish` contract — see
+   * `apps/web/src/services/skill-publisher.service.ts`.
+   */
+  publish: (id: string): Promise<PublishResult | null> =>
+    ipcRenderer.invoke(IPC_CHANNELS.SKILL_PUBLISH, id),
 };

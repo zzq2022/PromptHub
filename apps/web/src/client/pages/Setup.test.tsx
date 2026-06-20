@@ -8,12 +8,6 @@ const { translate } = vi.hoisted(() => ({
   translate: (key: string) => key,
 }));
 
-const getCaptchaMock = vi.fn().mockResolvedValue({
-  captchaId: '550e8400-e29b-41d4-a716-446655440000',
-  expiresInSeconds: 300,
-  imageData: 'data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=',
-});
-
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: translate,
@@ -31,7 +25,6 @@ function renderSetup(
 ) {
   vi.spyOn(AuthContext, 'useAuth').mockReturnValue({
     login: vi.fn(),
-    getCaptcha: getCaptchaMock,
     register: registerMock,
     isAuthenticated: false,
     user: null,
@@ -59,11 +52,6 @@ function renderSetup(
 describe('SetupPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    getCaptchaMock.mockResolvedValue({
-      captchaId: '550e8400-e29b-41d4-a716-446655440000',
-      expiresInSeconds: 300,
-      imageData: 'data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=',
-    });
   });
 
   afterEach(() => {
@@ -83,10 +71,6 @@ describe('SetupPage', () => {
     fireEvent.change(screen.getByLabelText('auth.confirmPassword'), {
       target: { value: 'debugpass001' },
     });
-    const captchaInput = await screen.findByLabelText('auth.captchaLabel', { selector: 'input' });
-    fireEvent.change(captchaInput, {
-      target: { value: '7' },
-    });
 
     fireEvent.click(screen.getByRole('button', { name: 'auth.completeSetup' }));
 
@@ -94,8 +78,6 @@ describe('SetupPage', () => {
       expect(registerMock).toHaveBeenCalledWith({
         username: 'owner',
         password: 'debugpass001',
-        captchaId: '550e8400-e29b-41d4-a716-446655440000',
-        captchaAnswer: '7',
       });
     });
   });
@@ -111,9 +93,6 @@ describe('SetupPage', () => {
     });
     fireEvent.change(screen.getByLabelText('auth.confirmPassword'), {
       target: { value: 'debugpass002' },
-    });
-    fireEvent.change(await screen.findByLabelText('auth.captchaLabel', { selector: 'input' }), {
-      target: { value: '7' },
     });
 
     fireEvent.click(screen.getByRole('button', { name: 'auth.completeSetup' }));

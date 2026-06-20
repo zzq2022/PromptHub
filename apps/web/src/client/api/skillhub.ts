@@ -12,6 +12,7 @@ import type {
   SkillPrivateSummary,
   SkillPublicSummary,
 } from '@prompthub/shared';
+import type { SkillApprovalStatus } from '@prompthub/shared/types/skill';
 import { fetchWithAuthRetry } from './auth-session';
 
 // ---------------------------------------------------------------------------
@@ -31,7 +32,9 @@ interface ApiErrorPayload {
 
 export interface PublishResult {
   published?: true;
-  alreadyPublic?: true;
+  alreadyPublic?: boolean;
+  alreadyPending?: boolean;
+  pendingApproval?: boolean;
   skill?: SkillPublicSummary;
 }
 
@@ -153,7 +156,7 @@ export async function fetchPrivateSkills(
 }
 
 /**
- * Publish a private skill to make it publicly browsable/downloadable.
+ * Submit a private skill for admin review.
  */
 export async function publishSkill(
   token: string,
@@ -167,8 +170,95 @@ export async function publishSkill(
     },
   );
   if (!response.ok) {
-    throw new Error(await extractErrorMessage(response, 'Publish failed'));
+    throw new Error(await extractErrorMessage(response, 'Submit for review failed'));
   }
   const envelope = (await response.json()) as ApiEnvelope<PublishResult>;
+  return envelope.data;
+}
+
+// ---------------------------------------------------------------------------
+// Admin endpoints (auth required + admin role)
+// ---------------------------------------------------------------------------
+
+export interface PendingSkillSummary {
+  id: string;
+  name: string;
+  description: string;
+  ownerUserId: string | null;
+}
+
+export interface PendingReviewResult {
+  items: PendingSkillSummary[];
+  total: number;
+  page: number;
+  pageSize: number;
+  startIndex: number;
+  endIndex: number;
+}
+
+export interface AdminReviewResult {
+  id: string;
+  name: string;
+  approvalStatus: SkillApprovalStatus;
+  visibility: string;
+}
+
+/**
+ * List skills pending admin review (admin only).
+ */
+export async function fetchPendingSkills(
+  token: string,
+  page = 1,
+): Promise<PendingReviewResult> {
+  const response = await fetchWithAuthRetry(
+    `/api/skillhub/admin/pending?page=${page}`,
+    { headers: getAuthHeaders(token) },
+  );
+  if (!response.ok) {
+    throw new Error(await extractErrorMessage(response, 'Failed to load pending skills'));
+  }
+  const envelope = (await response.json()) as ApiEnvelope<PendingReviewResult>;
+  return envelope.data;
+}
+
+/**
+ * Approve a pending skill (admin only).
+ */
+export async function approveSkill(
+  token: string,
+  id: string,
+): Promise<AdminReviewResult> {
+  const response = await fetchWithAuthRetry(
+    `/api/skillhub/admin/${encodeURIComponent(id)}/approve`,
+    {
+      method: 'POST',
+      headers: getAuthHeaders(token),
+    },
+  );
+  if (!response.ok) {
+    throw new Error(await extractErrorMessage(response, 'Approve failed'));
+  }
+  const envelope = (await response.json()) as ApiEnvelope<AdminReviewResult>;
+  return envelope.data;
+}
+
+/**
+ * Reject a pending skill (admin only).
+ */
+export async function rejectSkill(
+  token: string,
+  id: string,
+): Promise<AdminReviewResult> {
+  const response = await fetchWithAuthRetry(
+    `/api/skillhub/admin/${encodeURIComponent(id)}/reject`,
+    {
+      method: 'POST',
+      headers: getAuthHeaders(token),
+    },
+  );
+  if (!response.ok) {
+    throw new Error(await extractErrorMessage(response, 'Reject failed'));
+  }
+  const envelope = (await response.json()) as ApiEnvelope<AdminReviewResult>;
   return envelope.data;
 }

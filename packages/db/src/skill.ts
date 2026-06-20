@@ -8,10 +8,13 @@ import type {
   SkillFileSnapshot,
   SkillSafetyReport,
   SkillVisibility,
+  SkillApprovalStatus,
 } from "@prompthub/shared/types";
 
 interface SkillRow {
   id: string;
+  owner_user_id: string | null;
+  visibility: SkillVisibility;
   name: string;
   description: string | null;
   content: string | null;
@@ -43,6 +46,7 @@ interface SkillRow {
   content_url: string | null;
   prerequisites: string | null;
   compatibility: string | null;
+  approval_status: SkillApprovalStatus | null;
   current_version: number | null;
   version_tracking_enabled: number | null;
   created_at: number;
@@ -99,6 +103,14 @@ export class SkillDB {
     return row ? this.rowToSkill(row) : null;
   }
 
+  getByOwnerAndName(ownerUserId: string, name: string): Skill | null {
+    const stmt = this.db.prepare(
+      "SELECT * FROM skills WHERE owner_user_id = ? AND LOWER(name) = LOWER(?)",
+    );
+    const row = stmt.get(ownerUserId, name) as SkillRow | undefined;
+    return row ? this.rowToSkill(row) : null;
+  }
+
   getBySourceId(sourceId: string): Skill | null {
     const normalizedSourceId = sourceId.trim();
     if (!normalizedSourceId) {
@@ -131,9 +143,11 @@ export class SkillDB {
       );
     }
 
-    const existing = data.source_id
-      ? this.getBySourceId(data.source_id)
-      : this.getByName(normalizedName);
+    const existing = data.ownerUserId
+      ? this.getByOwnerAndName(data.ownerUserId, normalizedName)
+      : (data.source_id
+          ? this.getBySourceId(data.source_id)
+          : this.getByName(normalizedName));
     if (existing) {
       if (options?.overwriteExisting) {
         return (
@@ -157,19 +171,19 @@ export class SkillDB {
 
     const stmt = this.db.prepare(`
       INSERT INTO skills (
-        id, name, description, content, mcp_config,
+        id, owner_user_id, visibility, name, description, content, mcp_config,
         protocol_type, version, author, tags, original_tags, is_favorite,
         source_url, source_id, source_label, source_branch, source_directory, canonical_skill_path, local_repo_path, directory_fingerprint, icon_url, icon_emoji, icon_background, category, is_builtin,
         registry_slug, content_url, installed_content_hash, installed_version, installed_at,
-        updated_from_store_at, prerequisites, compatibility, current_version,
+        updated_from_store_at, prerequisites, compatibility, approval_status, current_version,
         version_tracking_enabled, safety_level, safety_score, safety_report, safety_scanned_at,
         created_at, updated_at
       ) VALUES (
-        @id, @name, @description, @content, @mcp_config,
+        @id, @owner_user_id, @visibility, @name, @description, @content, @mcp_config,
         @protocol_type, @version, @author, @tags, @original_tags, @is_favorite,
         @source_url, @source_id, @source_label, @source_branch, @source_directory, @canonical_skill_path, @local_repo_path, @directory_fingerprint, @icon_url, @icon_emoji, @icon_background, @category, @is_builtin,
         @registry_slug, @content_url, @installed_content_hash, @installed_version, @installed_at,
-        @updated_from_store_at, @prerequisites, @compatibility, @current_version,
+        @updated_from_store_at, @prerequisites, @compatibility, @approval_status, @current_version,
         @version_tracking_enabled, @safety_level, @safety_score, @safety_report, @safety_scanned_at,
         @created_at, @updated_at
       )
@@ -179,6 +193,8 @@ export class SkillDB {
 
     stmt.run({
       "@id": id,
+      "@owner_user_id": this.resolveOwnerUserId(data.ownerUserId),
+      "@visibility": data.visibility || "private",
       "@name": normalizedName,
       "@description": data.description || null,
       "@content": data.content || data.instructions || null,
@@ -216,6 +232,7 @@ export class SkillDB {
       "@compatibility": data.compatibility
         ? JSON.stringify(data.compatibility)
         : null,
+      "@approval_status": data.approvalStatus || null,
       "@current_version": data.currentVersion ?? 0,
       "@version_tracking_enabled":
         (data.versionTrackingEnabled ?? true) ? 1 : 0,
@@ -328,6 +345,18 @@ export class SkillDB {
     if (data.tags !== undefined) {
       updates.push("tags = ?");
       values.push(JSON.stringify(data.tags));
+    }
+    if (data.ownerUserId !== undefined) {
+      updates.push("owner_user_id = ?");
+      values.push(this.resolveOwnerUserId(data.ownerUserId));
+    }
+    if (data.visibility !== undefined) {
+      updates.push("visibility = ?");
+      values.push(data.visibility);
+    }
+    if (data.approvalStatus !== undefined) {
+      updates.push("approval_status = ?");
+      values.push(data.approvalStatus);
     }
     if (data.is_favorite !== undefined) {
       updates.push("is_favorite = ?");
@@ -454,6 +483,9 @@ export class SkillDB {
     const updatedSkill: Skill = {
       ...existingSkill,
       updated_at: now,
+      ...(data.ownerUserId !== undefined && { ownerUserId: data.ownerUserId }),
+      ...(data.visibility !== undefined && { visibility: data.visibility }),
+      ...(data.approvalStatus !== undefined && { approvalStatus: data.approvalStatus }),
       ...(data.name !== undefined && { name: data.name.trim() }),
       ...(data.description !== undefined && { description: data.description }),
       ...((data.content !== undefined || data.instructions !== undefined) && {
@@ -698,7 +730,7 @@ export class SkillDB {
    */
   listShared(limit: number, offset: number): SkillCatalogRow[] {
     const stmt = this.db.prepare(
-      `SELECT id, name, description, owner_user_id, visibility
+      `SELECT id, name, description, owner_user_id, visibility, registry_slug
        FROM skills
        WHERE visibility = 'shared'
        ORDER BY name COLLATE NOCASE ASC, id ASC
@@ -732,7 +764,7 @@ export class SkillDB {
    */
   searchShared(likePattern: string, escape: string): SkillCatalogRow[] {
     const stmt = this.db.prepare(
-      `SELECT id, name, description, owner_user_id, visibility
+      `SELECT id, name, description, owner_user_id, visibility, registry_slug
        FROM skills
        WHERE visibility = 'shared'
          AND (name LIKE ? ESCAPE ? OR description LIKE ? ESCAPE ?)
@@ -756,7 +788,7 @@ export class SkillDB {
    */
   listPrivateByOwner(ownerUserId: string): SkillCatalogRow[] {
     const stmt = this.db.prepare(
-      `SELECT id, name, description, owner_user_id, visibility
+      `SELECT id, name, description, owner_user_id, visibility, registry_slug
        FROM skills
        WHERE owner_user_id IS NOT NULL
          AND owner_user_id = ?
@@ -774,7 +806,7 @@ export class SkillDB {
    */
   getOwnership(id: string): SkillCatalogRow | null {
     const stmt = this.db.prepare(
-      `SELECT id, name, description, owner_user_id, visibility
+      `SELECT id, name, description, owner_user_id, visibility, registry_slug
        FROM skills
        WHERE id = ?`,
     );
@@ -802,31 +834,70 @@ export class SkillDB {
     return txn();
   }
 
+  /**
+   * Set approval status for a skill (SkillHub review workflow).
+   */
+  setApprovalStatus(id: string, status: SkillApprovalStatus | null): boolean {
+    const txn = this.db.transaction(() => {
+      const result = this.db
+        .prepare("UPDATE skills SET approval_status = ?, updated_at = ? WHERE id = ?")
+        .run(status, Date.now(), id);
+      return result.changes > 0;
+    });
+    return txn();
+  }
+
+  /**
+   * List skills awaiting admin review (approval_status = 'pending').
+   */
+  listPendingApproval(limit: number, offset: number): SkillCatalogRow[] {
+    const stmt = this.db.prepare(
+      `SELECT id, name, description, owner_user_id, visibility, registry_slug
+       FROM skills
+       WHERE approval_status = 'pending'
+       ORDER BY updated_at ASC, id ASC
+       LIMIT ? OFFSET ?`,
+    );
+    return stmt.all(limit, offset) as SkillCatalogRow[];
+  }
+
+  /**
+   * Count skills awaiting admin review.
+   */
+  countPendingApproval(): number {
+    const row = this.db.get(
+      "SELECT COUNT(*) AS count FROM skills WHERE approval_status = 'pending'",
+    ) as { count: number } | undefined;
+    return row?.count ?? 0;
+  }
+
   insertSkillDirect(skill: Skill): void {
     const safetyReport = skill.safetyReport;
 
     this.db
       .prepare(
         `INSERT OR REPLACE INTO skills (
-          id, name, description, content, mcp_config,
+          id, owner_user_id, visibility, name, description, content, mcp_config,
           protocol_type, version, author, tags, original_tags, is_favorite,
           source_url, source_id, source_label, source_branch, source_directory, canonical_skill_path, local_repo_path, directory_fingerprint, icon_url, icon_emoji, icon_background, category, is_builtin,
           registry_slug, content_url, installed_content_hash, installed_version, installed_at,
-          updated_from_store_at, prerequisites, compatibility, current_version,
+          updated_from_store_at, prerequisites, compatibility, approval_status, current_version,
           version_tracking_enabled, safety_level, safety_score, safety_report, safety_scanned_at,
           created_at, updated_at
         ) VALUES (
-          @id, @name, @description, @content, @mcp_config,
+          @id, @owner_user_id, @visibility, @name, @description, @content, @mcp_config,
           @protocol_type, @version, @author, @tags, @original_tags, @is_favorite,
           @source_url, @source_id, @source_label, @source_branch, @source_directory, @canonical_skill_path, @local_repo_path, @directory_fingerprint, @icon_url, @icon_emoji, @icon_background, @category, @is_builtin,
           @registry_slug, @content_url, @installed_content_hash, @installed_version, @installed_at,
-          @updated_from_store_at, @prerequisites, @compatibility, @current_version,
+          @updated_from_store_at, @prerequisites, @compatibility, @approval_status, @current_version,
           @version_tracking_enabled, @safety_level, @safety_score, @safety_report, @safety_scanned_at,
           @created_at, @updated_at
         )`,
       )
       .run({
         "@id": skill.id,
+        "@owner_user_id": this.resolveOwnerUserId(skill.ownerUserId),
+        "@visibility": skill.visibility ?? "private",
         "@name": skill.name,
         "@description": skill.description ?? null,
         "@content": skill.content ?? skill.instructions ?? null,
@@ -959,6 +1030,9 @@ export class SkillDB {
       compatibility: parseJsonArray<string>(row.compatibility),
       original_tags: parseJsonArray<string>(row.original_tags),
       safetyReport,
+      ownerUserId: row.owner_user_id || undefined,
+      visibility: row.visibility,
+      approvalStatus: row.approval_status || undefined,
     };
   }
 
@@ -976,5 +1050,19 @@ export class SkillDB {
       ...(row.note !== null && { note: row.note }),
       createdAt: new Date(row.created_at).toISOString(),
     };
+  }
+
+  private resolveOwnerUserId(ownerUserId: string | null | undefined): string | null {
+    if (!ownerUserId) {
+      return null;
+    }
+    try {
+      const row = this.db
+        .prepare("SELECT id FROM users WHERE id = ?")
+        .get(ownerUserId) as { id: string } | undefined;
+      return row?.id ?? null;
+    } catch {
+      return null;
+    }
   }
 }

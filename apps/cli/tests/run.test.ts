@@ -1122,7 +1122,7 @@ describe("standalone cli wiring", () => {
         expect.objectContaining({ path: "SKILL.md", isDirectory: false }),
         expect.objectContaining({ path: "guide.md", isDirectory: false }),
         expect.objectContaining({ path: "notes", isDirectory: true }),
-        expect.objectContaining({ path: "notes/final.md", isDirectory: false }),
+        expect.objectContaining({ path: path.join("notes", "final.md"), isDirectory: false }),
       ]),
     );
 
@@ -1404,6 +1404,7 @@ describe("standalone cli wiring", () => {
   it("installs platform skills as full directories instead of only SKILL.md", async () => {
     const root = makeTempRoot(tempDirs);
     const originalHome = process.env.HOME;
+    const originalUserProfile = process.env.USERPROFILE;
     const skillDir = path.join(root, "directory-platform-skill");
     fs.mkdirSync(path.join(skillDir, "assets"), { recursive: true });
     fs.writeFileSync(
@@ -1423,8 +1424,10 @@ describe("standalone cli wiring", () => {
     fs.writeFileSync(path.join(skillDir, "assets", "helper.txt"), "helper", "utf8");
 
     try {
-      process.env.HOME = path.join(root, "home");
-      fs.mkdirSync(process.env.HOME, { recursive: true });
+      const tempHome = path.join(root, "home");
+      process.env.HOME = tempHome;
+      process.env.USERPROFILE = tempHome;
+      fs.mkdirSync(tempHome, { recursive: true });
 
       const installRes = await execCli([
         ...withDataDir(root),
@@ -1445,7 +1448,7 @@ describe("standalone cli wiring", () => {
       expect(installMdRes.exitCode).toBe(0);
 
       const platformDir = path.join(
-        process.env.HOME,
+        tempHome,
         ".claude",
         "skills",
         "directory-platform-skill",
@@ -1457,6 +1460,7 @@ describe("standalone cli wiring", () => {
       ).toBe("helper");
     } finally {
       process.env.HOME = originalHome;
+      process.env.USERPROFILE = originalUserProfile;
     }
   });
 

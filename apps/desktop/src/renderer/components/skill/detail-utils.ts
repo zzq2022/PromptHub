@@ -106,6 +106,20 @@ export function formatSkillInstallError(error: unknown, t: TFunction): string {
   return `${t("skill.storeInstallFailed", "Install failed")}: ${rawMessage}`;
 }
 
+/**
+ * Check whether an install error is a "skill already exists" duplicate-name
+ * conflict thrown by `SkillDB.create`.
+ *
+ * 检查安装错误是否为「技能已存在」的同名冲突（由 `SkillDB.create` 抛出）。
+ */
+export function isSkillDuplicateError(error: unknown): boolean {
+  const msg = getErrorMessage(error).toLowerCase();
+  return (
+    msg.includes("skill already exists") ||
+    msg.includes("skill source already exists")
+  );
+}
+
 export interface SkillSourceMeta {
   kind: "github" | "remote" | "local";
   value: string;

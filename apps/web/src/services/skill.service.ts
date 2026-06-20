@@ -51,10 +51,14 @@ export class SkillService {
     const visibility = data.visibility ?? 'shared';
     this.assertCanCreate(actor, visibility);
 
+    const existing = this.skillDb.getByOwnerAndName(actor.userId, data.name);
+    const overwriteExisting = !!existing;
+
     const skill = this.skillDb.create({
       ...data,
+      ownerUserId: actor.userId,
       visibility,
-    });
+    }, { overwriteExisting });
 
     this.db
       .prepare('UPDATE skills SET owner_user_id = ?, visibility = ? WHERE id = ?')

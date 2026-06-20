@@ -938,8 +938,14 @@ interface SkillState {
     skillId: string,
     options?: { overwriteLocalChanges?: boolean },
   ) => Promise<RegistrySkillUpdateResult | null>;
-  installRegistrySkill: (skill: RegistrySkill) => Promise<Skill | null>;
-  installFromRegistry: (sourceId: string) => Promise<Skill | null>;
+  installRegistrySkill: (
+    skill: RegistrySkill,
+    options?: { overwriteExisting?: boolean },
+  ) => Promise<Skill | null>;
+  installFromRegistry: (
+    sourceId: string,
+    options?: { overwriteExisting?: boolean },
+  ) => Promise<Skill | null>;
   uninstallRegistrySkill: (sourceId: string) => Promise<boolean>;
   setStoreCategory: (category: SkillCategory | "all") => void;
   setStoreSearchQuery: (query: string) => void;
@@ -1860,7 +1866,7 @@ export const useSkillStore = create<SkillState>()(
         return { status: "updated", skill: updatedSkill, check };
       },
 
-      installRegistrySkill: async (regSkill) => {
+      installRegistrySkill: async (regSkill, options) => {
         try {
           let effectiveContent = regSkill.content;
           try {
@@ -1910,7 +1916,7 @@ export const useSkillStore = create<SkillState>()(
             updated_from_store_at: installedAt,
             prerequisites: regSkill.prerequisites,
             compatibility: regSkill.compatibility,
-          });
+          }, ...(options ? [options] : []));
           if (newSkill) {
             try {
               if (isLocalRegistrySkill(regSkill)) {
@@ -1948,11 +1954,11 @@ export const useSkillStore = create<SkillState>()(
         }
       },
 
-      installFromRegistry: async (sourceId) => {
+      installFromRegistry: async (sourceId, options) => {
         const { installRegistrySkill } = get();
         const regSkill = findRegistrySkillCandidateByKey(get(), sourceId);
         if (!regSkill) return null;
-        return installRegistrySkill(regSkill);
+        return installRegistrySkill(regSkill, options);
       },
 
       uninstallRegistrySkill: async (sourceId) => {

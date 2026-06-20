@@ -1,12 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { AuthProvider, useAuth } from './AuthContext';
-import { getBootstrapStatus, getCaptcha, getMe, login, logout, refresh } from '../api/auth';
+import { getBootstrapStatus, getMe, login, logout, refresh } from '../api/auth';
 import { clearStoredAuthSession, getStoredAccessToken, getStoredRefreshToken, storeAuthSession } from '../api/auth-session';
 
 vi.mock('../api/auth', () => ({
   getBootstrapStatus: vi.fn(),
-  getCaptcha: vi.fn(),
   getMe: vi.fn(),
   login: vi.fn(),
   logout: vi.fn(),
@@ -23,7 +22,7 @@ vi.mock('../api/auth-session', () => ({
 }));
 
 function TestComponent() {
-  const { user, token, isAuthenticated, isLoading, getCaptcha, login, register, logout } = useAuth();
+  const { user, token, isAuthenticated, isLoading, login, register, logout } = useAuth();
   
   if (isLoading) return <div data-testid="loading">Loading</div>;
   
@@ -32,15 +31,12 @@ function TestComponent() {
       <div data-testid="token">{token ?? 'none'}</div>
       <div data-testid="auth">{isAuthenticated ? 'yes' : 'no'}</div>
       <div data-testid="user">{user?.username ?? 'none'}</div>
-      <button data-testid="btn-captcha" onClick={() => void getCaptcha()}>Captcha</button>
       <button
         data-testid="btn-login"
         onClick={() =>
           void login({
             username: 'test',
             password: 'pw',
-            captchaId: '550e8400-e29b-41d4-a716-446655440000',
-            captchaAnswer: '7',
           })
         }
       >
@@ -52,8 +48,6 @@ function TestComponent() {
           void register({
             username: 'new',
             password: 'pw',
-            captchaId: '550e8400-e29b-41d4-a716-446655440000',
-            captchaAnswer: '7',
           })
         }
       >
@@ -71,13 +65,6 @@ describe('AuthContext', () => {
       data: {
         initialized: true,
         registrationAllowed: true,
-      },
-    });
-    vi.mocked(getCaptcha).mockResolvedValue({
-      data: {
-        captchaId: '550e8400-e29b-41d4-a716-446655440000',
-        expiresInSeconds: 300,
-        imageData: 'data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=',
       },
     });
   });
@@ -208,25 +195,6 @@ describe('AuthContext', () => {
       expect(screen.getByTestId('user').textContent).toBe('loguser');
     });
     expect(storeAuthSession).toHaveBeenCalledWith('login-acc', 'login-ref');
-  });
-
-  it('exposes captcha loading through the auth context API wrapper', async () => {
-    vi.mocked(getStoredAccessToken).mockReturnValue(null);
-    vi.mocked(getStoredRefreshToken).mockReturnValue(null);
-    vi.mocked(getMe).mockRejectedValueOnce(new Error('No session'));
-    vi.mocked(refresh).mockRejectedValueOnce(new Error('No refresh session'));
-
-    render(<AuthProvider><TestComponent /></AuthProvider>);
-
-    await waitFor(() => {
-      expect(screen.getByTestId('auth').textContent).toBe('no');
-    });
-
-    fireEvent.click(screen.getByTestId('btn-captcha'));
-
-    await waitFor(() => {
-      expect(getCaptcha).toHaveBeenCalled();
-    });
   });
 
   it('handles logout even if api logout fails', async () => {

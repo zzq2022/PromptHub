@@ -63,6 +63,25 @@ describe("buildSkillSyncUpdateFromRepo", () => {
     expect(next?.content).toContain("Updated body.");
   });
 
+  it("detects only name change", () => {
+    const md = [
+      "---",
+      "name: New Name",
+      "description: Old description",
+      "version: 1.0.0",
+      "author: Local",
+      "tags: [general]",
+      "---",
+      "",
+      "# Write",
+    ].join("\n");
+    const next = buildSkillSyncUpdateFromRepo(baseSkill, md);
+    expect(next).not.toBeNull();
+    expect(next?.name).toBe("New Name");
+    expect(next).not.toHaveProperty("description");
+    expect(next).not.toHaveProperty("version");
+  });
+
   it("returns null when repo content matches current stored fields", () => {
     const next = buildSkillSyncUpdateFromRepo(
       baseSkill,

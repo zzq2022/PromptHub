@@ -35,6 +35,7 @@ export function buildSkillSyncUpdateFromRepo(
   const parsed = parseSkillMd(skillMdContent);
   const sanitized = sanitizeImportedSkillDraft(
     {
+      name: parsed?.frontmatter.name,
       description: parsed?.frontmatter.description,
       version: parsed?.frontmatter.version,
       author: parsed?.frontmatter.author,
@@ -48,6 +49,14 @@ export function buildSkillSyncUpdateFromRepo(
 
   const update: UpdateSkillParams = {};
   let changed = false;
+
+  if (
+    sanitized.name !== undefined &&
+    sanitized.name !== skill.name
+  ) {
+    update.name = sanitized.name;
+    changed = true;
+  }
 
   const nextContent = sanitized.instructions ?? skillMdContent;
   if ((skill.instructions ?? skill.content ?? "") !== nextContent) {

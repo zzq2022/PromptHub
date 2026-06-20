@@ -36,14 +36,15 @@ const passwordSchema = z
   .min(8, 'password must be at least 8 characters')
   .max(512, 'password must be at most 512 characters');
 
-const captchaIdSchema = z.string().uuid('captchaId must be a valid captcha challenge id');
+const captchaIdSchema = z.string().uuid('captchaId must be a valid captcha challenge id').optional();
 
 const captchaAnswerSchema = z
   .string()
   .trim()
   .min(1, 'captchaAnswer is required')
   .max(16, 'captchaAnswer must be at most 16 characters')
-  .regex(/^[a-zA-Z0-9]+$/, 'captchaAnswer must contain only letters and numbers');
+  .regex(/^[a-zA-Z0-9]+$/, 'captchaAnswer must contain only letters and numbers')
+  .optional();
 
 const registerSchema = z.object({
   username: usernameSchema,
@@ -146,7 +147,9 @@ auth.post('/register', async (c) => {
   }
 
   try {
-    verifyAuthCaptcha(clientId, parsed.data.captchaId, parsed.data.captchaAnswer);
+    if (parsed.data.captchaId && parsed.data.captchaAnswer) {
+      verifyAuthCaptcha(clientId, parsed.data.captchaId, parsed.data.captchaAnswer);
+    }
     const result = await authService.register(parsed.data.username, parsed.data.password);
     setAuthCookies(c, result.accessToken, result.refreshToken);
     clearRateLimit(rateLimitKeys);
@@ -181,7 +184,9 @@ auth.post('/login', async (c) => {
   }
 
   try {
-    verifyAuthCaptcha(clientId, parsed.data.captchaId, parsed.data.captchaAnswer);
+    if (parsed.data.captchaId && parsed.data.captchaAnswer) {
+      verifyAuthCaptcha(clientId, parsed.data.captchaId, parsed.data.captchaAnswer);
+    }
     const result = await authService.login(parsed.data.username, parsed.data.password);
     setAuthCookies(c, result.accessToken, result.refreshToken);
     clearRateLimit(rateLimitKeys);

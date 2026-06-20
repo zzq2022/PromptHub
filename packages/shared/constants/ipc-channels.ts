@@ -143,6 +143,16 @@ export const IPC_CHANNELS = {
   SKILL_SAVE_REMOTE_ZIP_TO_REPO: "skill:saveRemoteZipToRepo",
   SKILL_GET_REPO_PATH: "skill:getRepoPath",
   SKILL_SYNC_FROM_REPO: "skill:syncFromRepo",
+  /**
+   * Atomic publish-to-SkillHub: flips local skill visibility to 'shared' and
+   * (when self-hosted sync is configured) best-effort mirrors the same
+   * visibility change to the self-hosted PromptHub Web. Mirrors
+   * `apps/web/src/services/skill-publisher.service.ts` contract: returns
+   * `{ published: true, skill }` on first publish or `{ alreadyPublic: true }`
+   * when the skill was already shared. Web push is fire-and-forget and never
+   * rolls back the local visibility.
+   */
+  SKILL_PUBLISH: "skill:publish",
 
   // Skill Version
   SKILL_VERSION_GET_ALL: "skill:version:getAll",

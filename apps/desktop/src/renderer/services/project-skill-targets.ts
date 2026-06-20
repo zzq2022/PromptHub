@@ -1,4 +1,4 @@
-import type { ScannedSkill } from "@prompthub/shared/types";
+import type { ScannedSkill, SkillProject } from "@prompthub/shared/types";
 
 export function normalizeProjectPathForComparison(value: string): string {
   return value.replace(/\\/g, "/").replace(/\/+$/, "").toLowerCase();
@@ -97,4 +97,19 @@ export function getDeployableProjectTargetDirs(
   return targetDirs.filter((targetDir) =>
     isProjectDeployTargetCompatible(sourcePath, skillName, targetDir),
   );
+}
+
+export function getProjectDeployTargets(project: SkillProject): string[] {
+  const configured = Array.isArray(project.deployTargets)
+    ? project.deployTargets.filter(
+        (entry) => typeof entry === "string" && entry.trim().length > 0,
+      )
+    : [];
+
+  if (configured.length > 0) {
+    return Array.from(new Set(configured));
+  }
+
+  const normalizedRoot = project.rootPath.replace(/[\\/]+$/, "");
+  return normalizedRoot ? [`${normalizedRoot}/.agents/skills`] : [];
 }

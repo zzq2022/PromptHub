@@ -4,6 +4,7 @@ import {
   generateTextDiff,
   getSkillSourceMeta,
   groupSkillSafetyFindings,
+  isSkillDuplicateError,
   resolveGitHubMarkdownBase,
   resolveGitHubMarkdownUrl,
   resolveSkillDescription,
@@ -300,6 +301,52 @@ description: |
       configurable: true,
       writable: true,
       value: originalRevokeObjectURL,
+    });
+  });
+
+  describe("isSkillDuplicateError", () => {
+    it("returns true for 'Skill already exists: <name>' errors", () => {
+      expect(
+        isSkillDuplicateError(new Error("Skill already exists: my-skill")),
+      ).toBe(true);
+    });
+
+    it("returns true for 'Skill source already exists: <id>' errors", () => {
+      expect(
+        isSkillDuplicateError(
+          new Error("Skill source already exists: github/org/repo"),
+        ),
+      ).toBe(true);
+    });
+
+    it("returns true when the message is wrapped by the store error wrapper", () => {
+      // The store wraps the DB error via getErrorMessage, so it may be nested.
+      expect(
+        isSkillDuplicateError(
+          new Error(
+            "Failed to install skill: Skill already exists: duplicate-name",
+          ),
+        ),
+      ).toBe(true);
+    });
+
+    it("returns true for case-insensitive matching", () => {
+      expect(
+        isSkillDuplicateError(new Error("SKILL ALREADY EXISTS: FOO")),
+      ).toBe(true);
+    });
+
+    it("returns false for unrelated errors", () => {
+      expect(isSkillDuplicateError(new Error("Network error"))).toBe(false);
+      expect(isSkillDuplicateError(new Error("skill:create requires a non-empty name field"))).toBe(false);
+      expect(isSkillDuplicateError(new Error(""))).toBe(false);
+    });
+
+    it("handles non-Error values gracefully", () => {
+      expect(isSkillDuplicateError("Skill already exists: x")).toBe(true);
+      expect(isSkillDuplicateError(42)).toBe(false);
+      expect(isSkillDuplicateError(null)).toBe(false);
+      expect(isSkillDuplicateError(undefined)).toBe(false);
     });
   });
 });

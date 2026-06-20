@@ -19,7 +19,8 @@ import mediaRoutes from './routes/media.js';
 import syncRoutes from './routes/sync.js';
 import importExportRoutes from './routes/import-export.js';
 import devicesRoutes from './routes/devices.js';
-import skillhubPublicRoutes, { skillhubPrivateRoutes } from './routes/skillhub-routes.js';
+import skillhubPublicRoutes, { skillhubPrivateRoutes, skillhubAdminRoutes } from './routes/skillhub-routes.js';
+import adminRoutes from './routes/admin-routes.js';
 import { bootstrapPromptWorkspace } from './services/prompt-workspace.js';
 import { bootstrapRuleWorkspace } from './services/rule-workspace.js';
 import { bootstrapSkillWorkspace } from './services/skill-workspace.js';
@@ -59,6 +60,8 @@ export function createApp(): Hono {
   protectedApi.route('/devices', devicesRoutes);
   protectedApi.route('/', importExportRoutes);
   protectedApi.route('/skillhub', skillhubPrivateRoutes);
+  protectedApi.route('/skillhub', skillhubAdminRoutes);
+  protectedApi.route('/admin', adminRoutes);
 
   app.route('/api', protectedApi);
 

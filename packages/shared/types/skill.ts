@@ -3,6 +3,31 @@ import type { SkillPlatform } from "../constants/platforms";
 
 export type SkillVisibility = "private" | "shared";
 
+export type SkillApprovalStatus = "pending" | "approved" | "rejected";
+
+/**
+ * Successful publish of a previously `private` skill on the desktop side.
+ * Mirrors `apps/web/src/services/skill-publisher.service.ts` `SkillPublishedResult`.
+ */
+export interface SkillPublishedResult {
+  published: true;
+  /** The now-shared skill, as currently stored in the local DB. */
+  skill: Skill;
+}
+
+/**
+ * Idempotent publish of an already-`shared` skill: no DB write occurs and the
+ * stored visibility is left unchanged. Mirrors web's `SkillAlreadyPublicResult`.
+ */
+export interface SkillAlreadyPublicResult {
+  alreadyPublic: true;
+  /** The current (already-shared) skill. */
+  skill: Skill;
+}
+
+/** Result of `SkillPublisher.publish` (desktop) / `SKILL_PUBLISH` IPC. */
+export type PublishResult = SkillPublishedResult | SkillAlreadyPublicResult;
+
 export interface Skill {
   id: string;
   ownerUserId?: string | null;
@@ -48,6 +73,9 @@ export interface Skill {
   updated_from_store_at?: number; // Timestamp of the latest store update
   prerequisites?: string[]; // Prerequisites for using this skill
   compatibility?: string[]; // Compatible platforms
+
+  // SkillHub approval (admin review before going public)
+  approvalStatus?: SkillApprovalStatus | null;
 
   // Safety fields (persisted to DB)
   safetyReport?: SkillSafetyReport; // Latest safety scan result

@@ -1361,6 +1361,9 @@
     "copied": "已复制",
     "visitRepo": "访问 Skill 仓库",
     "updateFailed": "更新失败",
+    "overwriteConfirmTitle": "覆蓋本地技能？",
+    "overwriteConfirmMessage": "本地已存在同名技能「{{name}}」。覆蓋安裝將替換本地的所有指令和對應文件，是否確認覆蓋？",
+    "overwriteConfirmAction": "確認覆蓋安裝",
     "allSkills": "全部 Skill",
     "favorites": "收藏",
     "create": "建立 Skill",
@@ -1379,6 +1382,7 @@
     "galleryColumnsCount": "{{count}} 欄",
     "quickInstall": "安裝到平台",
     "selectPlatforms": "選擇要安裝的平台",
+    "selectProjects": "選擇要安裝的項目",
     "installSelected": "安裝選取項",
     "noPlatformsDetected": "未偵測到可用平台",
     "allPlatformsInstalled": "已安裝到所有平台",
@@ -2270,5 +2274,8 @@
       "skill": "Skill"
     },
     "skillsOnly": "僅含 Skill 資料"
+  },
+  "skillhub": {
+    "publishNameConflict": "遠端已存在同名技能，請修改名稱後再試。"
   }
 }

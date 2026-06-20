@@ -6,6 +6,13 @@ import { SetupPage } from './pages/Setup';
 import { DesktopWorkspacePage } from './pages/DesktopWorkspace';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { SkillHubPage } from './pages/SkillHub';
+import {
+  AdminLayout,
+  AdminDashboard,
+  AdminSkillReview,
+  AdminSkillManage,
+  AdminUserManage,
+} from './pages/admin';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, isBootstrapLoading, isInitialized } = useAuth();
@@ -50,6 +57,15 @@ export function App() {
           <Route path="/skillhub" element={<SkillHubPage />} />
           <Route path="/setup" element={<SetupRoute><SetupPage /></SetupRoute>} />
           <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="/admin"
+            element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}
+          >
+            <Route index element={<AdminDashboard />} />
+            <Route path="skills" element={<AdminSkillManage />} />
+            <Route path="skills/review" element={<AdminSkillReview />} />
+            <Route path="users" element={<AdminUserManage />} />
+          </Route>
           <Route path="/" element={<ProtectedRoute><DesktopWorkspacePage /></ProtectedRoute>} />
           <Route path="*" element={<ProtectedRoute><DesktopWorkspacePage /></ProtectedRoute>} />
         </Routes>

@@ -175,6 +175,7 @@ export class SkillCatalogService {
       ownerUserId: row.owner_user_id,
       skillMd,
       skillMdAvailable: skillMd !== null,
+      slug: row.registry_slug ?? undefined,
     };
   }
 

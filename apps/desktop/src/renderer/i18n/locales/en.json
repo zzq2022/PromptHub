@@ -1372,6 +1372,9 @@
     "copied": "Copied",
     "visitRepo": "Visit Skill Repository",
     "updateFailed": "Update failed",
+    "overwriteConfirmTitle": "Overwrite Local Skill?",
+    "overwriteConfirmMessage": "A skill with the same name \"{{name}}\" already exists locally. Overwriting will replace all instructions and files. Do you want to continue?",
+    "overwriteConfirmAction": "Confirm Overwrite",
     "allSkills": "All Skills",
     "favorites": "Favorites",
     "create": "Create Skill",
@@ -1390,6 +1393,7 @@
     "galleryColumnsCount": "{{count}} columns",
     "quickInstall": "Install to Platforms",
     "selectPlatforms": "Select platforms to install",
+    "selectProjects": "Select projects to install",
     "installSelected": "Install Selected",
     "noPlatformsDetected": "No platforms detected",
     "allPlatformsInstalled": "Installed on all platforms",
@@ -2318,7 +2322,8 @@
   "skillhub": {
     "title": "SkillHub Community",
     "hint": "Browse and install public shared skills from the SkillHub community.",
-    "publish": "Publish to SkillHub",
-    "publishSuccess": "Successfully published to SkillHub community"
+    "publish": "Submit for Review",
+    "publishSuccess": "Skill submitted for review. An admin will approve it shortly.",
+    "publishNameConflict": "A skill with the same name already exists on the remote SkillHub. Please rename your skill and try again."
   }
 }

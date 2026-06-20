@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
@@ -9,13 +9,8 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
-  const [captchaId, setCaptchaId] = useState('');
-  const [captchaAnswer, setCaptchaAnswer] = useState('');
-  const [captchaImageData, setCaptchaImageData] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [captchaLoading, setCaptchaLoading] = useState(true);
   const {
-    getCaptcha,
     login,
     register,
     isAuthenticated,
@@ -28,52 +23,6 @@ export function LoginPage() {
 
   const state = location.state as { from?: { pathname?: string } } | null;
   const from = state?.from?.pathname || '/';
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadCaptcha = async () => {
-      setCaptchaLoading(true);
-      try {
-        const captcha = await getCaptcha();
-        if (!cancelled) {
-          setCaptchaId(captcha.captchaId);
-          setCaptchaImageData(captcha.imageData);
-          setCaptchaAnswer('');
-        }
-      } catch (captchaError: unknown) {
-        if (!cancelled) {
-          setError(
-            captchaError instanceof Error
-              ? captchaError.message
-              : t('common.requestFailed'),
-          );
-        }
-      } finally {
-        if (!cancelled) {
-          setCaptchaLoading(false);
-        }
-      }
-    };
-
-    void loadCaptcha();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [getCaptcha, t]);
-
-  const refreshCaptcha = async () => {
-    setCaptchaLoading(true);
-    try {
-      const captcha = await getCaptcha();
-      setCaptchaId(captcha.captchaId);
-      setCaptchaImageData(captcha.imageData);
-      setCaptchaAnswer('');
-    } finally {
-      setCaptchaLoading(false);
-    }
-  };
 
   if (isBootstrapLoading) {
     return <div className="loading-screen">{t('dashboard.loading')}</div>;
@@ -96,17 +45,12 @@ export function LoginPage() {
     }
     try {
       if (isRegistering) {
-        await register({ username, password, captchaId, captchaAnswer });
+        await register({ username, password });
       } else {
-        await login({ username, password, captchaId, captchaAnswer });
+        await login({ username, password });
       }
       navigate(from, { replace: true });
     } catch (err: unknown) {
-      try {
-        await refreshCaptcha();
-      } catch (captchaRefreshError: unknown) {
-        console.error('Failed to refresh captcha after login error:', captchaRefreshError);
-      }
       if (err instanceof Error) {
         setError(err.message || (isRegistering ? t('auth.registerError') : t('auth.loginError')));
       } else {
@@ -172,46 +116,7 @@ export function LoginPage() {
             </div>
           )}
 
-          <div className="form-group">
-            <label htmlFor="captcha" className="text-sm font-semibold text-slate-700">
-              {t('auth.captchaLabel')}
-            </label>
-            <div className="web-auth-captcha-row">
-              <div className="web-auth-captcha-prompt" aria-live="polite">
-                {captchaLoading ? (
-                  <span>{t('auth.captchaLoading')}</span>
-                ) : (
-                  <img
-                    src={captchaImageData}
-                    alt={t('auth.captchaImageAlt')}
-                    className="web-auth-captcha-image"
-                  />
-                )}
-              </div>
-              <button
-                type="button"
-                className="secondary-button web-auth-captcha-refresh"
-                onClick={() => void refreshCaptcha()}
-                disabled={captchaLoading}
-              >
-                {t('auth.captchaRefresh')}
-              </button>
-            </div>
-            <input
-              id="captcha"
-              type="text"
-              autoCapitalize="characters"
-              autoCorrect="off"
-              spellCheck={false}
-              value={captchaAnswer}
-              onChange={(e) => setCaptchaAnswer(e.target.value)}
-              required
-              className="web-auth-input web-auth-captcha-answer"
-              placeholder={t('auth.captchaPlaceholder')}
-            />
-          </div>
-
-          <button type="submit" className="login-submit web-auth-submit" disabled={captchaLoading}>
+          <button type="submit" className="login-submit web-auth-submit">
             <span className="text-white">
               {isRegistering ? t('auth.register') : t('auth.signIn')}
             </span>

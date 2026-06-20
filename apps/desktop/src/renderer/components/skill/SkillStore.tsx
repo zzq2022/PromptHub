@@ -53,6 +53,7 @@ import {
   formatSkillInstallError,
   formatSkillSafetyScanError,
   getSafetyScanAIConfig,
+  isSkillDuplicateError,
 } from "./detail-utils";
 import { findInstalledRegistrySkill } from "../../services/skill-store-update";
 import { filterRegistrySkills } from "../../services/skill-store-search";
@@ -527,6 +528,8 @@ export function SkillStore() {
   const [sourceBranch, setSourceBranch] = useState("");
   const [sourceDirectory, setSourceDirectory] = useState("");
   const { showToast } = useToast();
+  const [pendingOverwriteQuickInstall, setPendingOverwriteQuickInstall] =
+    useState<RegistrySkill | null>(null);
   const autoScanBeforeInstall = useSettingsStore(
     (state) => state.autoScanStoreSkillsBeforeInstall,
   );
@@ -867,6 +870,7 @@ export function SkillStore() {
   const handleQuickInstall = async (
     skill: RegistrySkill,
     e: React.MouseEvent,
+    overwriteExisting = false,
   ) => {
     e.stopPropagation();
     const pendingKey = getRegistrySkillPendingKey(skill);
@@ -875,18 +879,27 @@ export function SkillStore() {
     }
     setInstallPending(skill, true);
     try {
-      const canInstall = await scanStoreSkillBeforeInstall(skill);
-      if (!canInstall) {
-        return;
+      if (!overwriteExisting) {
+        const canInstall = await scanStoreSkillBeforeInstall(skill);
+        if (!canInstall) {
+          return;
+        }
       }
-      const result = await installRegistrySkill({
-        ...skill,
-        source_label: selectedCustomSource?.name || skill.source_label,
-      });
+      const result = await installRegistrySkill(
+        {
+          ...skill,
+          source_label: selectedCustomSource?.name || skill.source_label,
+        },
+        overwriteExisting ? { overwriteExisting: true } : undefined,
+      );
       if (result) {
         showToast(`${t("skill.addedToLibrary")}: ${skill.name}`, "success");
       }
     } catch (error: unknown) {
+      if (!overwriteExisting && isSkillDuplicateError(error)) {
+        setPendingOverwriteQuickInstall(skill);
+        return;
+      }
       showToast(formatSkillInstallError(error, t), "error");
     } finally {
       setInstallPending(skill, false);
@@ -2045,6 +2058,30 @@ export function SkillStore() {
           onClose={() => selectRegistrySkill(null)}
         />
       )}
+
+      <ConfirmDialog
+        isOpen={pendingOverwriteQuickInstall !== null}
+        onClose={() => setPendingOverwriteQuickInstall(null)}
+        onConfirm={() => {
+          const skill = pendingOverwriteQuickInstall;
+          if (!skill) return;
+          setPendingOverwriteQuickInstall(null);
+          // Create a synthetic mouse event for the overwrite retry
+          const syntheticEvent = {
+            stopPropagation: () => {},
+          } as React.MouseEvent;
+          void handleQuickInstall(skill, syntheticEvent, true);
+        }}
+        title={t("skill.overwriteConfirmTitle", "Overwrite Local Skill?")}
+        message={t(
+          "skill.overwriteConfirmMessage",
+          'A skill with the same name "{{name}}" already exists locally. Overwriting will replace all instructions and files. Do you want to continue?',
+          { name: pendingOverwriteQuickInstall?.name ?? "" },
+        )}
+        confirmText={t("skill.overwriteConfirmAction", "Confirm Overwrite")}
+        cancelText={t("common.cancel", "Cancel")}
+        variant="destructive"
+      />
     </div>
   );
 }

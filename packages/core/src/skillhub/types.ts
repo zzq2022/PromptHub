@@ -30,4 +30,5 @@ export interface SkillCatalogRow {
   description: string | null;
   owner_user_id: string | null;
   visibility: string | null;
+  registry_slug?: string | null;
 }

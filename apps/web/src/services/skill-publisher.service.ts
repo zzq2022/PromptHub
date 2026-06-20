@@ -9,39 +9,38 @@ import { ErrorCode } from '../utils/response.js';
 /**
  * SkillHub skill publisher service (Skill_Publisher).
  *
- * SkillHub-specific publishing path that turns an owner's `private` skill into a
- * `shared` (public) one. It is intentionally INDEPENDENT of the existing
- * `skill.service.ts` admin-only contract (`assertCanCreate`/`assertCanWrite`):
- * that service keeps its admin-only create/modify/publish behaviour unchanged,
- * while SkillHub publishing uses the confirmed OWNER-BASED model (Conflict A).
+ * SkillHub-specific publishing path that submits an owner's `private` skill
+ * for admin review. The skill is NOT immediately made public — instead its
+ * `approval_status` is set to `'pending'`. An admin must approve it via
+ * {@link SkillAdminService.approve} before visibility flips to `'shared'`.
  *
- * Authorization is decided by the pure core policy `canPublish(actor, owner)`
- * (`owner === actor.userId`), NOT by role. Reusing the core policy keeps the
- * durable rule in `packages/core` and the I/O/orchestration here.
- *
- * Visibility is the only field changed by publishing; `owner_user_id`, `id`,
- * `name`, `description`, SKILL.md content, and the on-disk directory tree are
- * left untouched (Requirement 6.5). The visibility write is performed inside a
- * single transaction by `SkillDB.setVisibility` (Requirements 6.6 / 6.8).
+ * Authorization is decided by the pure core policy `canPublish(actor, owner)`.
+ * Visibility is NOT changed during submit — only `approval_status` is set.
  */
 
-/** Successful publish of a previously `private` skill (Requirement 6.1). */
-export interface SkillPublishedResult {
-  published: true;
-  /** The now-public skill, mapped to its public summary shape. */
-  skill: SkillPublicSummary;
+/** Submit request accepted, awaiting admin review. */
+export interface SkillPendingApprovalResult {
+  pendingApproval: true;
 }
 
 /**
- * Idempotent publish of an already-`shared` skill: no database write occurs and
- * the stored visibility is left unchanged (Requirement 6.4).
+ * Idempotent: the skill is already `shared` (previously approved or
+ * published before the approval gate was introduced).
  */
 export interface SkillAlreadyPublicResult {
   alreadyPublic: true;
 }
 
-/** Result of {@link SkillPublisher.publish}. */
-export type PublishResult = SkillPublishedResult | SkillAlreadyPublicResult;
+/** The skill already has a pending review — no duplicate submission. */
+export interface SkillAlreadyPendingResult {
+  alreadyPending: true;
+}
+
+/** Result of {@link SkillPublisher.submitForApproval}. */
+export type PublishResult =
+  | SkillPendingApprovalResult
+  | SkillAlreadyPublicResult
+  | SkillAlreadyPendingResult;
 
 /**
  * Typed error mapped to a unified HTTP response by the route layer (task 16).
@@ -73,24 +72,22 @@ export class SkillPublisher {
   }
 
   /**
-   * Publish a skill owned by `actor`, making it publicly browsable/downloadable.
+   * Submit a private skill for admin review before going public.
    *
-   * Flow (Requirements 6.1, 6.3–6.8):
-   * 1. Require an authenticated actor, else `UNAUTHORIZED` (also enforced at the
-   *    route layer; guarded here as defence in depth).
-   * 2. `getOwnership(id)` is null ⇒ `NOT_FOUND`, no data change (6.7).
-   * 3. `canPublish(actor, owner)` false ⇒ `FORBIDDEN`, visibility unchanged (6.3).
-   * 4. Already `shared` ⇒ `{ alreadyPublic: true }` WITHOUT a DB write (6.4).
-   * 5. Owner + currently `private` ⇒ `setVisibility(id,'shared')` in a single
-   *    transaction (6.1/6.6); a transaction failure rolls back and leaves the
-   *    visibility as `private`, surfacing an error (6.8).
+   * Flow:
+   * 1. Require an authenticated actor → UNAUTHORIZED.
+   * 2. getOwnership(id) is null → NOT_FOUND.
+   * 3. canPublish(actor, owner) false → FORBIDDEN.
+   * 4. Already `shared` → alreadyPublic (idempotent, no write).
+   * 5. approval_status already 'pending' → alreadyPending (idempotent).
+   * 6. Owner + currently private → setApprovalStatus(id, 'pending').
    */
-  publish(actor: Actor | null, id: string): PublishResult {
+  submitForApproval(actor: Actor | null, id: string): PublishResult {
     if (actor === null || !actor.userId) {
       throw new SkillPublisherError(
         401,
         ErrorCode.UNAUTHORIZED,
-        'Authentication is required to publish a skill',
+        'Authentication is required to submit a skill for review',
       );
     }
 
@@ -103,43 +100,40 @@ export class SkillPublisher {
       throw new SkillPublisherError(
         403,
         ErrorCode.FORBIDDEN,
-        'Only the skill owner can publish this skill',
+        'Only the skill owner can submit this skill for review',
       );
     }
 
-    // Idempotent: already public ⇒ no write, visibility preserved (6.4).
     if (normalizeVisibility(row.visibility) === 'shared') {
       return { alreadyPublic: true };
     }
 
+    // Check if already pending
+    const ownership = this.skillDb.getOwnership(id);
+    if (ownership) {
+      // Check approval_status via direct query since getOwnership doesn't return it
+      const db = getServerDatabase();
+      const row = db.get('SELECT approval_status FROM skills WHERE id = ?', id) as { approval_status: string | null } | undefined;
+      if (row?.approval_status === 'pending') {
+        return { alreadyPending: true };
+      }
+    }
+
     let updated: boolean;
     try {
-      // Single-transaction visibility write (6.6); on failure the transaction
-      // rolls back and the stored visibility remains 'private' (6.8).
-      updated = this.skillDb.setVisibility(id, 'shared');
+      updated = this.skillDb.setApprovalStatus(id, 'pending');
     } catch (cause) {
       throw new SkillPublisherError(
         500,
         ErrorCode.INTERNAL_ERROR,
-        `Failed to publish skill: ${cause instanceof Error ? cause.message : String(cause)}`,
+        `Failed to submit skill for review: ${cause instanceof Error ? cause.message : String(cause)}`,
       );
     }
 
     if (!updated) {
-      // The row existed at read time but no row was updated (e.g. concurrent
-      // delete). No visibility change was persisted.
       throw new SkillPublisherError(404, ErrorCode.NOT_FOUND, 'Skill not found');
     }
 
-    const publishedRow = this.skillDb.getOwnership(id);
-    if (publishedRow === null) {
-      throw new SkillPublisherError(
-        500,
-        ErrorCode.INTERNAL_ERROR,
-        'Skill not found after publishing',
-      );
-    }
-
-    return { published: true, skill: toPublicSummary(publishedRow) };
+    return { pendingApproval: true };
   }
 }

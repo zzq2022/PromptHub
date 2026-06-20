@@ -9,6 +9,7 @@ import {
 } from "../../services/skill-repo-sync";
 import type {
   CreateSkillParams,
+  PublishResult,
   SkillDeleteOptions,
   SkillSafetyScanInput,
   UpdateSkillParams,
@@ -45,12 +46,13 @@ export function registerSkillCrudHandlers({ db }: SkillIPCContext): void {
         return db.getById(id);
       }
 
-      // Strip overwriteExisting from IPC — only internal callers (e2e
-      // seeding) should be able to silently overwrite existing skills.
-      // Renderer-initiated creates must go through the normal
-      // duplicate-name check in SkillDB.create().
+      // Allow skipInitialVersion and overwriteExisting options from the renderer
+      // where the user has explicitly confirmed overwriting a same-name skill.
       const safeOptions = options
-        ? { skipInitialVersion: options.skipInitialVersion }
+        ? {
+            skipInitialVersion: options.skipInitialVersion,
+            overwriteExisting: options.overwriteExisting,
+          }
         : undefined;
 
       return db.create(data, safeOptions);
@@ -338,4 +340,60 @@ export function registerSkillCrudHandlers({ db }: SkillIPCContext): void {
     const id = await SkillInstaller.importFromJson(jsonContent, db);
     return db.getById(id);
   });
+
+  /**
+   * `skill:publish` — atomic publish-to-SkillHub.
+   *
+   * Local-first: flips the local row's `visibility` to `'shared'` via
+   * `SkillDB.setVisibility` (single transaction, mirrors web's
+   * `SkillPublisher.publish`). When the same skill is already shared the call
+   * is idempotent: no DB write, returns `{ alreadyPublic: true, skill }`.
+   *
+   * The handler does NOT push to a self-hosted PromptHub Web. That side-effect
+   * is best-effort and is orchestrated by the renderer (see
+   * `apps/desktop/src/renderer/services/skillhub-publish.ts`) so that web
+   * auth, captcha handling and the publish HTTP call live next to the rest of
+   * the self-hosted sync logic. A web push failure never rolls back the local
+   * visibility write.
+   */
+  ipcMain.handle(
+    IPC_CHANNELS.SKILL_PUBLISH,
+    async (_, id: string): Promise<PublishResult | null> => {
+      if (typeof id !== "string" || id.trim().length === 0) {
+        throw new Error("skill:publish requires a non-empty id");
+      }
+
+      const existing = db.getById(id);
+      if (!existing) {
+        return null;
+      }
+
+      // Idempotent: already public ⇒ no DB write, return the current row.
+      if (existing.visibility === "shared") {
+        return { alreadyPublic: true, skill: existing };
+      }
+
+      // Single-transaction visibility write; on failure the row stays as-is.
+      const updated = db.setVisibility(id, "shared");
+      if (!updated) {
+        // The row existed at read time but no row was updated (e.g. concurrent
+        // delete). Surface the missing row instead of pretending success.
+        const after = db.getById(id);
+        if (!after) {
+          return null;
+        }
+        // If another writer raced us to 'shared', return the idempotent shape.
+        if (after.visibility === "shared") {
+          return { alreadyPublic: true, skill: after };
+        }
+        throw new Error("Failed to publish skill: database write was rejected");
+      }
+
+      const published = db.getById(id);
+      if (!published || published.visibility !== "shared") {
+        throw new Error("Skill not found after publishing");
+      }
+      return { published: true, skill: published };
+    },
+  );
 }

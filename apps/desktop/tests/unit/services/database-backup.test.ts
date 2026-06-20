@@ -1144,4 +1144,58 @@ describe("database-backup restore", () => {
       { skipVersionSnapshot: true },
     );
   });
+
+  it("skips restoring skill versions and skill files when skill creation fails", async () => {
+    window.api.skill.create.mockRejectedValue(new Error("already exists"));
+
+    await expect(
+      restoreFromBackup({
+        version: 1,
+        exportedAt: "2026-04-07T00:00:00.000Z",
+        prompts: [],
+        folders: [],
+        versions: [],
+        skills: [
+          {
+            id: "skill-1",
+            name: "writer",
+            description: "Writer skill",
+            content: "# Writer",
+            instructions: "# Writer",
+            protocol_type: "skill",
+            version: "1.0.0",
+            author: "PromptHub",
+            tags: ["writing"],
+            is_favorite: false,
+            created_at: Date.parse("2026-04-07T00:00:00.000Z"),
+            updated_at: Date.parse("2026-04-07T00:00:00.000Z"),
+            currentVersion: 1,
+          } as any,
+        ],
+        skillVersions: [
+          {
+            id: "version-1",
+            skillId: "skill-1",
+            version: 1,
+            content: "# Writer",
+            createdAt: "2026-04-07T00:00:00.000Z",
+            source: "manual",
+          } as any,
+        ],
+        skillFiles: {
+          "skill-1": [
+            {
+              relativePath: "SKILL.md",
+              content: "# Writer",
+            },
+          ],
+        },
+      }),
+    ).rejects.toThrow("Backup restore completed with 1 file errors: skill writer");
+
+    expect(window.api.skill.deleteAll).toHaveBeenCalledTimes(1);
+    expect(window.api.skill.create).toHaveBeenCalledTimes(1);
+    expect(window.api.skill.insertVersionDirect).not.toHaveBeenCalled();
+    expect(window.api.skill.writeLocalFile).not.toHaveBeenCalled();
+  });
 });

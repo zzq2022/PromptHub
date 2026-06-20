@@ -212,4 +212,46 @@ describe("SkillDB", () => {
       ]),
     );
   });
+
+  it("persists and maps ownerUserId and visibility", () => {
+    const run = vi.fn();
+    const get = vi.fn().mockReturnValue({
+      id: "skill-1",
+      name: "custom-skill",
+      protocol_type: "skill",
+      is_favorite: 0,
+      created_at: 1,
+      updated_at: 1,
+      owner_user_id: "user-123",
+      visibility: "shared",
+    });
+    const stmt = { get, all: vi.fn(), run };
+    const prepare = vi.fn().mockReturnValue(stmt);
+    const concreteDb = new SkillDB({ prepare } as any);
+
+    vi.spyOn(concreteDb, "getByName").mockReturnValue(null);
+
+    concreteDb.create({
+      name: "custom-skill",
+      protocol_type: "skill",
+      is_favorite: false,
+      ownerUserId: "user-123",
+      visibility: "shared",
+    } as any);
+
+    expect(run).toHaveBeenCalledWith(
+      expect.objectContaining({
+        "@owner_user_id": "user-123",
+        "@visibility": "shared",
+      }),
+    );
+
+    const fetched = concreteDb.getById("skill-1");
+    expect(fetched).toEqual(
+      expect.objectContaining({
+        ownerUserId: "user-123",
+        visibility: "shared",
+      }),
+    );
+  });
 });

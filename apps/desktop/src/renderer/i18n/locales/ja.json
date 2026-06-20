@@ -1361,6 +1361,9 @@
     "copied": "コピー済み",
     "visitRepo": "スキルリポジトリを開く",
     "updateFailed": "更新に失敗しました",
+    "overwriteConfirmTitle": "ローカルのスキルを上書きしますか？",
+    "overwriteConfirmMessage": "ローカルに同名のスキル「{{name}}」が既に存在します。上書きすると、すべての指示とファイルが置き換えられます。続行しますか？",
+    "overwriteConfirmAction": "上書きを確認",
     "allSkills": "すべてのスキル",
     "favorites": "お気に入り",
     "create": "スキルを作成",
@@ -1379,6 +1382,7 @@
     "galleryColumnsCount": "{{count}} 列",
     "quickInstall": "プラットフォームにインストール",
     "selectPlatforms": "インストール先のプラットフォームを選択",
+    "selectProjects": "インストール先のプロジェクトを選択",
     "installSelected": "選択した項目をインストール",
     "noPlatformsDetected": "利用可能なプラットフォームが見つかりません",
     "allPlatformsInstalled": "すべてのプラットフォームにインストール済み",
@@ -2275,5 +2279,8 @@
       "skill": "Skill"
     },
     "skillsOnly": "スキルデータのみ"
+  },
+  "skillhub": {
+    "publishNameConflict": "リモートのSkillHubに同名のスキルが既に存在します。スキル名を変更してから再度お試しください。"
   }
 }

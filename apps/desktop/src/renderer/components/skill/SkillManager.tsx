@@ -51,6 +51,7 @@ import type {
 import { updateSkillTags, type SkillBatchTagMode } from "./batch-utils";
 import { filterVisibleSkills } from "../../services/skill-filter";
 import { buildMySkillSourceBadges } from "../../services/skill-source-badges";
+import { publishSkillToSkillHub } from "../../services/skillhub-publish";
 import { getRuntimeCapabilities } from "../../runtime";
 import { useSkillStoreRemoteSync } from "./store-remote-sync";
 
@@ -279,7 +280,7 @@ export function SkillManager() {
         return next;
       });
       try {
-        await (window.api.skill as any).publish(skillId);
+        await publishSkillToSkillHub(skillId);
         useSkillStore.setState((state) => {
           const nextEntries = { ...state.remoteStoreEntries };
           delete nextEntries["skillhub"];

@@ -25,11 +25,6 @@ vi.mock('../contexts/AuthContext', () => ({
 
 function createAuthValue(isAuthenticated: boolean): AuthValue {
   return {
-    getCaptcha: vi.fn().mockResolvedValue({
-      captchaId: '550e8400-e29b-41d4-a716-446655440000',
-      expiresInSeconds: 300,
-      imageData: 'data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=',
-    }),
     login: loginMock,
     register: vi.fn(),
     isAuthenticated,
@@ -108,18 +103,13 @@ describe('LoginPage', () => {
     expect(screen.getByRole('heading', { name: 'auth.loginTitle' })).toBeTruthy();
     expect(screen.getByText('auth.loginDescription')).toBeTruthy();
     expect(screen.queryByText('auth.setupDescription')).toBeNull();
-    await waitFor(() => {
-      expect(screen.getByRole('img', { name: 'auth.captchaImageAlt' })).toBeTruthy();
-    });
     
     const usernameInput = screen.getByLabelText('auth.username');
     const passwordInput = screen.getByLabelText('auth.password');
-    const captchaInput = screen.getByLabelText('auth.captchaLabel', { selector: 'input' });
     const submitBtn = screen.getByRole('button', { name: 'auth.signIn' });
 
     fireEvent.change(usernameInput, { target: { value: 'user' } });
     fireEvent.change(passwordInput, { target: { value: 'password123' } });
-    fireEvent.change(captchaInput, { target: { value: '7' } });
     
     loginMock.mockResolvedValueOnce(undefined);
     
@@ -129,8 +119,6 @@ describe('LoginPage', () => {
       expect(loginMock).toHaveBeenCalledWith({
         username: 'user',
         password: 'password123',
-        captchaId: '550e8400-e29b-41d4-a716-446655440000',
-        captchaAnswer: '7',
       });
     });
   });
@@ -140,13 +128,8 @@ describe('LoginPage', () => {
     
     const usernameInput = screen.getByLabelText('auth.username');
     const passwordInput = screen.getByLabelText('auth.password');
-    const captchaInput = screen.getByLabelText('auth.captchaLabel', { selector: 'input' });
-    await waitFor(() => {
-      expect(screen.getByRole('img', { name: 'auth.captchaImageAlt' })).toBeTruthy();
-    });
     fireEvent.change(usernameInput, { target: { value: 'user' } });
     fireEvent.change(passwordInput, { target: { value: 'password123' } });
-    fireEvent.change(captchaInput, { target: { value: '7' } });
 
     loginMock.mockRejectedValueOnce(new Error('Bad credentials'));
     
@@ -156,8 +139,6 @@ describe('LoginPage', () => {
       expect(loginMock).toHaveBeenCalledWith({
         username: 'user',
         password: 'password123',
-        captchaId: '550e8400-e29b-41d4-a716-446655440000',
-        captchaAnswer: '7',
       });
     });
 

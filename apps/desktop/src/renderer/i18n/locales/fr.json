@@ -1361,6 +1361,9 @@
     "copied": "Copied",
     "visitRepo": "Visit Skill Repository",
     "updateFailed": "Update failed",
+    "overwriteConfirmTitle": "Écraser la compétence locale ?",
+    "overwriteConfirmMessage": "Une compétence portant le même nom \"{{name}}\" existe déjà localement. L'écrasement remplacera toutes les instructions et tous les fichiers. Voulez-vous continuer ?",
+    "overwriteConfirmAction": "Confirmer l'écrasement",
     "allSkills": "All Skills",
     "favorites": "Favorites",
     "create": "Créer la compétence",
@@ -1379,6 +1382,7 @@
     "galleryColumnsCount": "{{count}} colonnes",
     "quickInstall": "Installer sur les plateformes",
     "selectPlatforms": "Sélectionner les plateformes d'installation",
+    "selectProjects": "Sélectionner les projets d'installation",
     "installSelected": "Installer la sélection",
     "noPlatformsDetected": "Aucune plateforme détectée",
     "allPlatformsInstalled": "Installé sur toutes les plateformes",
@@ -2270,5 +2274,8 @@
       "skill": "Compétence"
     },
     "skillsOnly": "Contient uniquement des compétences"
+  },
+  "skillhub": {
+    "publishNameConflict": "Une compétence portant le même nom existe déjà sur le SkillHub distant. Veuillez renommer votre compétence et réessayer."
   }
 }

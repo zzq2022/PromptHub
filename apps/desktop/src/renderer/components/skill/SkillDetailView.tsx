@@ -24,6 +24,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useSkillStore } from "../../stores/skill.store";
 import { useSettingsStore } from "../../stores/settings.store";
 import { useToast } from "../ui/Toast";
+import { publishSkillToSkillHub } from "../../services/skillhub-publish";
 import { EditSkillModal } from "./EditSkillModal";
 import { SkillFileEditor } from "./SkillFileEditor";
 import { UnsavedChangesDialog } from "../ui/UnsavedChangesDialog";
@@ -74,6 +75,7 @@ export function SkillDetailView() {
   const [activeTab, setActiveTab] = useState<"preview" | "code">("preview");
   const [editedInstructions, setEditedInstructions] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
 
   // Confirmation dialog states
   // 确认对话框状态
@@ -199,12 +201,11 @@ export function SkillDetailView() {
     }
   };
 
-  const [isPublishing, setIsPublishing] = useState(false);
   const handlePublishToSkillHub = async () => {
     if (!selectedSkill) return;
     setIsPublishing(true);
     try {
-      await (window.api.skill as any).publish(selectedSkill.id);
+      await publishSkillToSkillHub(selectedSkill.id);
       useSkillStore.setState((state) => {
         const nextEntries = { ...state.remoteStoreEntries };
         delete nextEntries["skillhub"];
@@ -263,6 +264,11 @@ export function SkillDetailView() {
                 <GlobeIcon className="w-3.5 h-3.5" />
                 {selectedSkill.author || t("skill.localStorage")}
               </div>
+              {selectedSkill.visibility === "shared" && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-1.5 py-0.5 text-[9px] font-semibold text-emerald-600 dark:text-emerald-300">
+                  {t("settings.platformWorkbench.statusPublished", "已发布")}
+                </span>
+              )}
             </div>
           </div>
         </div>

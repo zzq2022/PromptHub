@@ -102,6 +102,7 @@ const REQUIRED_COLUMNS: Record<string, string[]> = {
     "safety_score",
     "safety_report",
     "safety_scanned_at",
+    "approval_status",
     "owner_user_id",
     "visibility",
   ],
@@ -408,6 +409,7 @@ export function initDatabase(
       { name: "safety_score", type: "INTEGER" },
       { name: "safety_report", type: "TEXT" },
       { name: "safety_scanned_at", type: "INTEGER" },
+      { name: "approval_status", type: "TEXT" },
     ];
 
     for (const col of skillNewColumns) {

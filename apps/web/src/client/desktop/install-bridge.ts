@@ -452,6 +452,12 @@ export function installDesktopBridge(): void {
       set: (settings: Partial<Settings>) =>
         apiOk('/api/settings', 'PUT', settings),
     },
+    upgradeBackup: {
+      list: async () => [],
+      create: async () => ({ created: true, skipped: false, backupId: 'web-backup' }),
+      delete: async () => {},
+      restore: async () => ({ success: true, needsRestart: false }),
+    },
     io: {},
     ai: {
       request: requestAi,

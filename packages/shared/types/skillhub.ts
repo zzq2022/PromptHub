@@ -23,6 +23,7 @@ export interface SkillPublicSummary {
   name: string;
   /** Truncated to <=500 characters; shorter descriptions are kept as-is. */
   description: string;
+  slug?: string;
 }
 
 /**
@@ -34,6 +35,7 @@ export interface SkillPrivateSummary {
   name: string;
   description: string;
   visibility: SkillVisibility;
+  slug?: string;
 }
 
 /**
@@ -51,6 +53,7 @@ export interface SkillDetail {
   skillMd: string | null;
   /** Corresponds to Requirements 1.8 / 5.8. */
   skillMdAvailable: boolean;
+  slug?: string;
 }
 
 /**

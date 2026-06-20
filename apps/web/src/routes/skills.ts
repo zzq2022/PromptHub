@@ -107,7 +107,11 @@ skills.post('/', async (c) => {
   }
 
   try {
-    return success(c, skillService.create(getAuthUser(c), parsed.data), 201);
+    const actor = getAuthUser(c);
+    return success(c, skillService.create(actor, {
+      ...parsed.data,
+      ownerUserId: actor.userId,
+    }), 201);
   } catch (routeError) {
     return toSkillErrorResponse(c, routeError);
   }
@@ -202,7 +206,11 @@ skills.post('/import', async (c) => {
   }
 
   try {
-    return success(c, skillService.create(getAuthUser(c), parsed.data), 201);
+    const actor = getAuthUser(c);
+    return success(c, skillService.create(actor, {
+      ...parsed.data,
+      ownerUserId: actor.userId,
+    }), 201);
   } catch (routeError) {
     return toSkillErrorResponse(c, routeError);
   }

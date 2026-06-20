@@ -1360,6 +1360,9 @@
     "copied": "Copied",
     "visitRepo": "Visit Skill Repository",
     "updateFailed": "Update failed",
+    "overwriteConfirmTitle": "¿Sobrescribir habilidad local?",
+    "overwriteConfirmMessage": "Ya existe una habilidad con el mismo nombre \"{{name}}\" localmente. Al sobrescribirla se reemplazarán todas las instrucciones y archivos. ¿Desea continuar?",
+    "overwriteConfirmAction": "Confirmar sobrescritura",
     "allSkills": "All Skills",
     "favorites": "Favorites",
     "create": "Crear habilidad",
@@ -1378,6 +1381,7 @@
     "galleryColumnsCount": "{{count}} columnas",
     "quickInstall": "Instalar en plataformas",
     "selectPlatforms": "Seleccionar plataformas de instalación",
+    "selectProjects": "Seleccionar proyectos de instalación",
     "installSelected": "Instalar selección",
     "noPlatformsDetected": "No se detectaron plataformas",
     "allPlatformsInstalled": "Instalado en todas las plataformas",
@@ -2269,5 +2273,8 @@
       "skill": "Habilidad"
     },
     "skillsOnly": "Solo contiene habilidades"
+  },
+  "skillhub": {
+    "publishNameConflict": "Ya existe una habilidad con el mismo nombre en el SkillHub remoto. Cambie el nombre de la habilidad e inténtelo de nuevo."
   }
 }

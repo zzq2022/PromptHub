@@ -1360,6 +1360,9 @@
     "copied": "Kopiert",
     "visitRepo": "Skill-Repository offnen",
     "updateFailed": "Aktualisierung fehlgeschlagen",
+    "overwriteConfirmTitle": "Lokalen Skill überschreiben?",
+    "overwriteConfirmMessage": "Ein Skill mit dem Namen „{{name}}“ ist lokal bereits vorhanden. Durch das Überschreiben werden alle Anweisungen und Dateien ersetzt. Möchten Sie fortfahren?",
+    "overwriteConfirmAction": "Überschreiben bestätigen",
     "allSkills": "Alle Skills",
     "favorites": "Favorites",
     "create": "Skill erstellen",
@@ -1378,6 +1381,7 @@
     "galleryColumnsCount": "{{count}} Spalten",
     "quickInstall": "Auf Plattformen installieren",
     "selectPlatforms": "Plattformen zur Installation auswahlen",
+    "selectProjects": "Projekte zur Installation auswählen",
     "installSelected": "Ausgewahlte installieren",
     "noPlatformsDetected": "Keine Plattformen erkannt",
     "allPlatformsInstalled": "Auf allen Plattformen installiert",
@@ -2274,5 +2278,8 @@
       "skill": "Skill"
     },
     "skillsOnly": "Nur Skill-Daten"
+  },
+  "skillhub": {
+    "publishNameConflict": "Ein Skill mit demselben Namen existiert bereits auf dem Remote-SkillHub. Bitte benennen Sie Ihren Skill um und versuchen Sie es erneut."
   }
 }

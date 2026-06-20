@@ -723,7 +723,16 @@ export async function importDatabase(backup: DatabaseBackup): Promise<void> {
     for (const version of normalizedBackup.skillVersions) {
       try {
         const restoredSkillId =
-          restoredSkillIdMap.get(version.skillId) ?? version.skillId;
+          restoredSkillIdMap.get(version.skillId) ??
+          restoredSkillsByName.get(version.skillId)?.id;
+
+        if (!restoredSkillId) {
+          console.warn(
+            `Skipping skill version restore for skill "${version.skillId}" because the corresponding skill was not successfully restored in the database.`
+          );
+          continue;
+        }
+
         const remappedVersion: SkillVersion = {
           ...version,
           skillId: restoredSkillId,
@@ -764,8 +773,14 @@ export async function importDatabase(backup: DatabaseBackup): Promise<void> {
     for (const [skillKey, files] of Object.entries(normalizedBackup.skillFiles)) {
       const restoredSkillId =
         restoredSkillIdMap.get(skillKey) ??
-        restoredSkillsByName.get(skillKey)?.id ??
-        skillKey;
+        restoredSkillsByName.get(skillKey)?.id;
+
+      if (!restoredSkillId) {
+        console.warn(
+          `Skipping skill files restore for key "${skillKey}" because the corresponding skill was not successfully restored in the database.`
+        );
+        continue;
+      }
 
       for (const file of files) {
         try {

@@ -1,653 +1,656 @@
-# PromptHub — Project Context & Development Rules
+# PromptHub — 项目上下文与开发规程
 
-## 0. Agent Operating Contract
+## 0. Agent 运行契约
 
-These rules exist because agents do not retain memory across sessions. Do not rely on prior chat context when the repository already contains a boundary record.
+这些规则的存在是因为 Agent 在不同会话之间不保留记忆。当仓库中已经存在边界记录时，请勿依赖之前的聊天上下文。
 
-### 0.1 Source-of-Truth Lookup Order
+### 0.1 单一真理源（Source-of-Truth）检索顺序
 
-Before non-trivial code changes, read in this order:
+在进行非琐碎（non-trivial）的代码修改之前，请按以下顺序阅读：
 
-1. `AGENTS.md` for global project rules.
-2. The relevant stable docs under `spec/knowledge/*` and `spec/rules/*`.
-3. Any active change under `spec/changes/active/<change-key>/` that matches the same user problem.
-4. The current implementation and tests for the touched module.
+1. `AGENTS.md`：获取全局项目规则。
+2. `spec/knowledge/*` 和 `spec/rules/*` 下的相关稳定文档。
+3. `spec/changes/active/<change-key>/` 下与当前用户问题匹配的任何活动变更。
+4. 被修改模块的当前实现和测试。
 
-If an existing boundary exists, update it. Do not create a competing rule, schema, storage layout, or workflow because it is easier than finding the current one.
+如果已存在既定的边界，请对其进行更新。不要因为“新建一个规则、模式、存储布局或工作流比寻找现有规则更容易”而创建与之竞争的实现。
 
-### 0.2 Mandatory Change Gate
+### 0.2 强制变更关卡（Mandatory Change Gate）
 
-Create or update an active change folder before implementation when the work touches any of these:
+当工作涉及到以下任何一项时，必须在实现前创建或更新一个活动变更（active change）文件夹：
 
-- database schema, migrations, adapters, indexes, or persistence semantics
-- filesystem data layout, backup/restore, sync, or recovery
-- IPC/API contracts, preload exposure, route contracts, or shared types
-- cross-package behavior in `packages/*`
-- multi-file feature work, refactors, or user-visible workflow changes
+- 数据库模式（schema）、迁移（migrations）、适配器（adapters）、索引（indexes）或持久化语义
+- 文件系统数据布局、备份/恢复、同步或灾难恢复
+- IPC/API 契约、preload 暴露、路由契约或共享类型
+- `packages/*` 中的跨包行为
+- 多文件功能开发、重构或用户可见的工作流变更
 
-Small local fixes can skip a new change folder only when they do not alter behavior boundaries, storage, public contracts, or user workflows.
+只有当微小的本地修复不改变行为边界、存储、公共契约或用户工作流时，才可以跳过新建变更文件夹的步骤。
 
-### 0.3 Existing-Feature Modification Rule
+### 0.3 现有功能修改规则
 
-When modifying existing behavior, first identify:
+在修改现有行为时，首先要明确：
 
-- the owning app/package (`apps/desktop`, `apps/web`, `apps/cli`, `apps/web-cloudflare`, `packages/core`, `packages/db`, or `packages/shared`)
-- the current source of truth for data (SQLite, filesystem workspace, SKILL.md, settings, remote sync, or UI state)
-- the existing tests or missing regression gap
-- the stable doc or active change that defines the boundary
+- 所属的 App/包（`apps/desktop`、`apps/web`、`apps/cli`、`apps/web-cloudflare`、`packages/core`、`packages/db` 或 `packages/shared`）
+- 当前的数据真理源（SQLite、文件系统工作区、SKILL.md、设置、远程同步或 UI 状态）
+- 现有的测试或缺失的回归测试空白（regression gap）
+- 定义了该边界的稳定文档或活动变更
 
-If the implementation and docs disagree, do not silently pick one. Record the discrepancy in the active change and make the intended source of truth explicit.
+如果代码实现与文档不一致，请勿默默选择其中之一。应在活动变更中记录该差异，并明确预期的真理源。
 
-### 0.4 New-Feature Addition Rule
+### 0.4 新功能添加规则
 
-For new features, define the boundary before writing code:
+对于新功能，在编写代码之前先定义其边界：
 
-- Data: new table/column/index, JSON field, file, directory, or remote payload?
-- Contract: new shared type, IPC channel, route, CLI command, or preload method?
-- Ownership: should logic live in `packages/core`, `packages/db`, app-specific services, or renderer UI?
-- Compatibility: migration path for existing users and rollback behavior.
-- Verification: lowest effective test layer plus release harness impact.
+- 数据：是否需要新的表/列/索引、JSON 字段、文件、目录或远程载荷？
+- 契约：是否需要新的共享类型、IPC 通道、路由、CLI 命令或 preload 方法？
+- 归属：逻辑应该存在于 `packages/core`、`packages/db`、应用特定的服务，还是渲染器 UI 中？
+- 兼容性：现有用户的迁移路径和回滚行为。
+- 验证：最低有效测试层（lowest effective test layer）以及发布套件（release harness）的影响。
 
-Do not put durable business rules only in React components or one-off IPC handlers. Shared behavior belongs in `packages/core`; storage primitives belong in `packages/db`; shared contracts belong in `packages/shared`.
+不要将持久的业务规则仅放在 React 组件或一次性的 IPC 处理器中。共享行为属于 `packages/core`；存储原语属于 `packages/db`；共享契约属于 `packages/shared`。
 
-### 0.5 Test-First Rule
+### 0.5 测试先行规则
 
-For bug fixes and non-trivial features, write or update the failing test before implementation unless the change is documentation-only or pure mechanical cleanup.
+对于缺陷修复和非琐碎（non-trivial）功能，在实现之前编写或更新失败的测试，除非该更改仅为文档或纯粹的机械清理。
 
-The test must prove the real risk:
+测试必须证明真正的风险：
 
-- For a bug, reproduce the user-visible failure or the broken invariant first.
-- For a feature, encode acceptance behavior and at least one relevant failure or boundary path.
-- For persistence, assert stored data, migration behavior, and reload/rescan behavior where relevant.
-- For UI state, assert the visible state users depend on, not only internal callbacks.
-- For filesystem/sync/platform behavior, assert durable side effects, not only function calls.
+- 对于缺陷：首先复现用户可见的失败或被破坏的不变量。
+- 对于功能：编写验收行为以及至少一个相关的失败或边界路径。
+- 对于持久化：在相关地方断言存储的数据、迁移行为以及重新加载/重新扫描行为。
+- 对于 UI 状态：断言用户所依赖的可见状态，而不仅仅是内部回调。
+- 对于文件系统/同步/平台行为：断言持久的副作用，而不仅仅是函数调用。
 
-Coverage is a gate, not decoration:
+覆盖率是准入门槛，而非装饰：
 
-- New or changed production code must target 100% line, function, branch, and condition coverage in its touched module.
-- Critical boundary modules, including database, filesystem persistence, sync, IPC/preload contracts, installer/import/export logic, security, and release harness code, require 100% branch and condition coverage for the changed behavior before merging.
-- If the whole legacy file cannot reach 100% immediately, the active change must record the uncovered legacy branches and the PR must still provide 100% coverage for every new branch and changed condition.
-- Coverage numbers do not replace adversarial tests. A change can have 100% coverage and still be rejected if it lacks boundary, error, rollback, fuzz, or performance tests for the risk it introduces.
+- 新编写或修改的生产代码在其触及的模块中必须达到 100% 的行、函数、分支和条件覆盖率。
+- 关键边界模块，包括数据库、文件系统持久化、同步、IPC/preload 契约、安装器/导入/导出逻辑、安全以及发布套件（release harness）代码，在合并前，其修改行为必须达到 100% 的分支和条件覆盖率。
+- 如果整个遗留文件无法立即达到 100% 覆盖，活动变更必须记录未覆盖的遗留分支，且 PR 仍必须为每个新分支和修改的条件提供 100% 的覆盖率。
+- 覆盖率数值不能代替对抗性测试。如果某个变更缺乏针对其引入的风险的边界、错误、回滚、模糊（fuzz）或性能测试，即使其覆盖率达到 100%，也可能会被拒绝。
 
-Coverage is not the test plan. For each non-trivial change, choose and record the required test methods:
+覆盖率并不是完整的测试计划。对于每个非琐碎变更，选择并记录所需的测试方法：
 
-- Black-box behavior: assert user-visible behavior and durable outputs without relying on implementation details.
-- White-box branch/condition: exercise each changed decision branch, guard, fallback, and error path.
-- Boundary and fuzz: test malformed inputs, empty values, path traversal, Unicode/special characters, oversized payloads, duplicate identities, and adversarial fixtures relevant to the module.
-- Security: test permission boundaries, injection/traversal/SSRF-like inputs, unsafe source handling, symlink behavior, secret handling, and tamper detection where relevant.
-- Performance/stress: test large inventories, bulk operations, repeated mutations, concurrency-like calls, and acceptable time/memory bounds for changed critical paths.
-- Integration/contract: test DB, filesystem, IPC/preload, CLI/API, sync, and platform boundaries with real adapters or faithful fixtures when mocks would hide the bug.
-- Failure/rollback: test partial failure at each external boundary and assert no half-written DB rows, repos, files, status, or UI state remain.
+- 黑盒行为：断言用户可见的行为和持久的输出，而不依赖于实现细节。
+- 白盒分支/条件：测试每个修改的决策分支、守卫（guard）、回退（fallback）和错误路径。
+- 边界与模糊测试：测试格式错误输入、空值、路径穿越、Unicode/特殊字符、超大载荷、重复身份以及与模块相关的对抗性夹具（fixtures）。
+- 安全性：在相关地方测试权限边界、注入/穿越/类 SSRF 输入、不安全源处理、符号链接行为、密钥处理以及篡改检测。
+- 性能/压力：测试大型库存、批量操作、重复变更、类并发调用，以及修改的关键路径在合理的时间/内存限制内。
+- 集成/契约：使用真实适配器或忠实的夹具测试数据库、文件系统、IPC/preload、CLI/API、同步和平台边界，以防止 mock 隐藏缺陷。
+- 失败/回滚：在每个外部边界测试部分失败，并断言没有留下写到一半的数据库行、仓库、文件、状态或 UI 状态。
 
-If a test cannot be written before the fix, record why in the active change and identify the verification substitute. "Too hard" is not a sufficient reason.
+如果无法在修复前编写测试，请在活动变更中记录原因，并指明替代的验证手段。“太难了”不是一个充分的理由。
 
-### 0.6 Design Conflict Stop Rule
+### 0.6 设计冲突中止规则
 
-Before changing design, compare the proposed approach with existing docs and implementation. Stop and ask the user for confirmation when any of these are true:
+在更改设计之前，将所提议的方法与现有文档及实现进行对比。如果以下任何一项属实，请停下来并向用户确认：
 
-- current code and stable docs disagree about the intended behavior
-- the requested change conflicts with an existing active change or accepted design boundary
-- the fix requires changing the source of truth for data or state
-- the feature can be implemented in two materially different ways with different user/data consequences
-- preserving backward compatibility would require a migration, fallback, or breaking behavior change
+- 当前代码与稳定文档对预期行为的理解不一致
+- 请求的变更与现有的活动变更或已接受的设计边界相冲突
+- 修复需要更改数据或状态的真理源
+- 该功能可以通过两种截然不同的方式实现，且会带来不同的用户/数据后果
+- 保持向后兼容需要进行迁移、回退或破坏性的行为变更
 
-Do not resolve these conflicts by silently choosing the smallest code change. Record the conflict, present the options, and wait for direction.
+不要通过默默选择最小的代码修改来解决这些冲突。应记录冲突，向用户展示选项，并等待指示。
 
-### 0.7 Code Quality and Architecture Rule
+### 0.7 代码质量与架构规则
 
-Code quality is part of the product contract. A change is not done merely because it works locally.
+代码质量是产品契约的一部分。一个变更不能仅仅因为在本地运行通过就宣告完成。
 
-Core engineering principles:
+核心工程原则：
 
-- High cohesion: a module should own one clear responsibility and keep related behavior together.
-- Low coupling: modules should depend on stable contracts, not each other's internal state, private helpers, or UI details.
-- Single source of truth: data ownership must be explicit; do not duplicate durable state across DB, filesystem, settings, and UI state without a sync contract.
-- Clear dependency direction: shared packages must not import app-specific code; main/preload/renderer boundaries must remain explicit; UI must not own durable business rules.
-- Small surface area: expose the minimum API needed, with typed inputs/outputs and validation at process, filesystem, network, and persistence boundaries.
-- Change locality: adding a feature should mostly touch its owning module plus contract/test/docs. If it requires scattered edits, first check whether the design boundary is wrong.
-- Refactor before pile-on: if the correct change would make an oversized or mixed-responsibility file worse, split the module or create an active refactor task before adding more behavior.
+- 高内聚：一个模块应该拥有一个明确的职责，并将相关的行为保持在一起。
+- 低耦合：模块应该依赖于稳定的契约，而不是彼此的内部状态、私有辅助函数或 UI 细节。
+- 单一真理源：数据所有权必须明确；不要在没有同步契约的情况下，将持久状态在数据库、文件系统、设置和 UI 状态之间进行多份备份。
+- 清晰的依赖方向：共享包不能导入特定于应用的代码；主进程/preload/渲染器边界必须保持明确；UI 不能拥有持久的业务规则。
+- 小接口表面积：暴露所需的最小 API，并在进程、文件系统、网络和持久化边界进行类型化输入/输出以及验证。
+- 变更局部性：添加一个功能应该主要触及它的所属模块以及契约/测试/文档。如果需要分散的编辑，请首先检查设计边界是否错误。
+- 堆砌前重构：如果正确的变更会使一个体积过大或职责混合的文件变得更糟，请在添加更多行为之前拆分该模块或创建一个主动重构任务。
 
-Size and complexity limits:
+尺寸与复杂度限制：
 
-- A single source or test file must not exceed 2,000 lines. Existing files above this limit are legacy debt: do not expand them except to extract code or tests into smaller files.
-- New files should stay below 1,000 lines by default. Crossing 1,000 lines requires a clear reason in the active change.
-- Functions should stay under 50 lines unless the active change records why a longer function is clearer and what tests cover it.
-- Avoid "god" services, stores, components, and test files. Split by domain responsibility, not by arbitrary helper buckets.
-- Prefer small pure helpers for parsing, normalization, identity, and policy decisions; keep side effects in orchestration functions.
+- 单个源文件或测试文件不能超过 2000 行。超出此限制的现有文件属于遗留技术债务：不要扩展它们，除非是为了将代码或测试提取到更小的文件中。
+- 新文件默认应保持在 1000 行以下。超过 1000 行需要在活动变更中说明明确原因。
+- 函数应保持在 50 行以下，除非活动变更中记录了为什么更长的函数更清晰，以及有哪些测试覆盖了它。
+- 避免使用“上帝”（god）服务、商店、组件和测试文件。按领域职责进行拆分，而不是按任意的辅助工具桶拆分。
+- 优先选择用于解析、规范化、身份验证和策略决策的小型纯辅助函数；将副作用保留在编排函数（orchestration functions）中。
 
-Design quality gates:
+设计质量准入限制：
 
-- Before adding a new abstraction, identify the repeated complexity it removes. Do not add abstractions for a single call site unless it defines a real boundary.
-- Before adding a dependency between modules, verify the dependency direction matches the architecture section in this file.
-- Before adding state, define who owns it, how it is derived, how it is invalidated, and how reload/rescan/reopen behaves.
-- Before adding filesystem or DB behavior, define atomicity, rollback, migration, and recovery behavior.
-- Before adding UI behavior, define the source selector/state that list, detail, badge, count, and action surfaces must share.
-- If a change violates these rules, stop and either refactor first or record a design conflict for user confirmation.
+- 在添加新的抽象之前，识别它所消除的重复复杂度。不要为单个调用点添加抽象，除非它定义了一个真实的边界。
+- 在添加模块之间的依赖关系之前，验证依赖方向是否符合本文档中的架构部分。
+- 在添加状态之前，定义谁拥有它、它是如何推导出来的、它是如何失效的，以及重新加载/重新扫描/重新打开的表现。
+- 在添加文件系统或数据库行为之前，定义原子性、回滚、迁移和恢复行为。
+- 在添加 UI 行为之前，定义列表、详情、徽章、计数和操作界面必须共享的源选择器/状态。
+- 如果某个变更违反了这些规则，请停下来，要么先进行重构，要么记录设计冲突以供用户确认。
 
-## 1. Project Overview
+## 1. 项目概述
 
-**PromptHub** is a local-first prompt and AI-skill management monorepo. It includes a cross-platform Electron desktop app, a standalone CLI, a self-hosted web app, and a Cloudflare Worker backend. It allows users to organize, version-control, sync, recover, and test prompts and reusable AI skill definitions.
+**PromptHub** 是一个本地优先的提示词（prompt）和 AI 技能（AI-skill）管理 monorepo。它包含一个跨平台的 Electron 桌面应用、一个独立的 CLI、一个自托管的 Web 应用以及一个 Cloudflare Worker 后端。它允许用户组织、进行版本控制、同步、恢复和测试提示词以及可重用的 AI 技能定义。
 
-- **Type:** Local-first monorepo with desktop, CLI, web, and worker distributions
-- **License:** AGPL-3.0
-- **Version:** 0.5.7
+- **类型：** 具有桌面、CLI、web 和 worker 分发包的本地优先 monorepo
+- **许可证：** AGPL-3.0
+- **版本：** 0.5.7
 
-### Tech Stack
+### 技术栈
 
-| Category            | Technology                                                         |
+| 类别 | 技术 |
 | :------------------ | :----------------------------------------------------------------- |
-| **Runtime**         | Electron 33                                                        |
-| **Frontend**        | React 18, TypeScript 5, Vite 6                                     |
-| **Styling**         | Tailwind CSS 3 (design tokens: `bg-card`, `text-muted-foreground`) |
-| **Icons**           | Lucide React                                                       |
-| **State**           | Zustand 5                                                          |
-| **Database**        | SQLite via `node-sqlite3-wasm` adapter in `packages/db`            |
-| **Testing**         | Vitest 2 (unit), Playwright 1.57+ (E2E)                            |
-| **I18n**            | i18next 24 / react-i18next 15 (7 locales)                          |
-| **Package Manager** | pnpm                                                               |
+| **运行时** | Electron 33 |
+| **前端** | React 18, TypeScript 5, Vite 6 |
+| **样式** | Tailwind CSS 3 (设计标记: `bg-card`, `text-muted-foreground`) |
+| **图标** | Lucide React |
+| **状态** | Zustand 5 |
+| **数据库** | 通过 `packages/db` 中的 `node-sqlite3-wasm` 适配器使用 SQLite |
+| **测试** | Vitest 2 (单元测试), Playwright 1.57+ (端到端测试) |
+| **国际化 (I18n)** | i18next 24 / react-i18next 15 (支持 7 种语言) |
+| **包管理器** | pnpm |
 
-## 2. Architecture
+## 2. 架构
 
-The application follows the standard Electron process model:
+应用遵循标准的 Electron 进程模型：
 
-### Desktop App (`apps/desktop`)
+### 桌面应用 (`apps/desktop`)
 
-- Electron main process: `apps/desktop/src/main`
-- Renderer React app: `apps/desktop/src/renderer`
-- Preload bridge: `apps/desktop/src/preload`
-- Desktop-only IPC, native dialogs, updater, local media handling, and Electron shell integration live here.
+- Electron 主进程：`apps/desktop/src/main`
+- 渲染器 React 应用：`apps/desktop/src/renderer`
+- Preload 桥接：`apps/desktop/src/preload`
+- 仅限桌面的 IPC、原生对话框、更新器、本地媒体处理和 Electron shell 集成都存放在这里。
 
-### Shared Packages (`packages/*`)
+### 共享包 (`packages/*`)
 
-- `packages/db`: SQLite schema, adapter, migrations, and DB classes. This is the storage primitive layer.
-- `packages/core`: shared business workflows, runtime paths, CLI orchestration, rules workspace, and reusable feature logic.
-- `packages/shared`: shared types, constants, platform matrices, IPC channel names, and pure utilities.
+- `packages/db`：SQLite 模式、适配器、迁移和数据库类。这是存储原语层。
+- `packages/core`：共享业务工作流、运行时路径、CLI 编排、规则工作区和可重用的功能逻辑。
+- `packages/shared`：共享类型、常量、平台矩阵、IPC 通道名称和纯工具函数。
 
-Shared logic must not import Electron renderer/main modules. App-specific UI and platform glue can import shared packages, not the reverse.
+共享逻辑决不能导入 Electron 渲染器/主进程模块。应用特定的 UI 和平台粘合代码可以导入共享包，反之则不行。
 
-### Web and CLI Apps
+### Web 和 CLI 应用
 
-- `apps/cli`: standalone command-line product backed by `packages/core`, `packages/db`, and `packages/shared`.
-- `apps/web`: self-hosted Hono/React web app with server routes under `apps/web/src/routes` and client UI under `apps/web/src/client`.
-- `apps/web-cloudflare`: Cloudflare Worker sync/backend implementation.
+- `apps/cli`：由 `packages/core`、`packages/db` 和 `packages/shared` 支持的独立命令行产品。
+- `apps/web`：自托管的 Hono/React web 应用，其服务端路由位于 `apps/web/src/routes`，客户端 UI 位于 `apps/web/src/client`。
+- `apps/web-cloudflare`：Cloudflare Worker 同步/后端实现。
 
-### Data Layer
+### 数据层
 
-- **SQLite:** `packages/db/src/schema.ts`, `packages/db/src/init.ts`, and DB classes in `packages/db/src/*.ts`.
-- **Runtime paths:** `packages/core/src/runtime-paths.ts` defines the user data layout.
-- **Desktop DB entry:** `packages/core/src/database.ts` resolves `prompthub.db` under `getUserDataPath()`.
-- **Local Storage:** SQLite stores prompts, versions, folders, skills, skill versions, rules, users, settings, and sync/auth data.
-- **Search:** Uses SQLite FTS5 for full-text search (`prompts_fts` virtual table).
-- **Sync:** WebDAV support for backup and sync.
-- **Skill Files:** Skills stored as SKILL.md files with YAML frontmatter metadata. DB metadata and local repo content must stay synchronized through the relevant sync services.
-- **Filesystem Layout:** durable user data lives under `data/`, `config/`, and `logs/` beneath the resolved user data path; legacy paths are resolved only through runtime-path helpers.
+- **SQLite：** `packages/db/src/schema.ts`、`packages/db/src/init.ts` 以及 `packages/db/src/*.ts` 中的 DB 类。
+- **运行时路径：** `packages/core/src/runtime-paths.ts` 定义了用户数据布局。
+- **桌面数据库入口：** `packages/core/src/database.ts` 在 `getUserDataPath()` 下解析出 `prompthub.db`。
+- **本地存储：** SQLite 存储提示词、版本、文件夹、技能、技能版本、规则、用户、设置以及同步/认证数据。
+- **搜索：** 使用 SQLite FTS5进行全文搜索（`prompts_fts` 虚拟表）。
+- **同步：** 支持 WebDAV 备份和同步。
+- **技能文件：** 技能作为带有 YAML 前言（frontmatter）元数据的 SKILL.md 文件进行存储。数据库元数据和本地仓库内容必须通过相关的同步服务保持同步。
+- **文件系统布局：** 持久用户数据存放在已解析的用户数据路径下的 `data/`、`config/` 和 `logs/` 中；遗留路径只能通过运行时路径辅助函数进行解析。
 
-## 3. Key Commands
+## 3. 关键命令
 
-| Command                     | Description                            |
+| 命令 | 描述 |
 | :-------------------------- | :------------------------------------- |
-| `pnpm install`              | Install dependencies                   |
-| `pnpm electron:dev`         | Start dev server (Vite + Electron)     |
-| `pnpm build`                | Build for production (Main + Renderer) |
-| `pnpm electron:build`       | Build and package the application      |
-| `pnpm verify:release`       | Run root release harness               |
-| `pnpm verify:release:quick` | Run faster root harness profile        |
-| `pnpm test:run`             | Run desktop Vitest suite               |
-| `pnpm test -- <path> --run` | Run single desktop test file           |
-| `pnpm test:e2e`             | Run end-to-end tests (Playwright)      |
-| `pnpm lint`                 | Run ESLint                             |
-| `pnpm format`               | Format code with Prettier              |
+| `pnpm install` | 安装依赖 |
+| `pnpm electron:dev` | 启动开发服务器 (Vite + Electron) |
+| `pnpm build` | 生成用于生产环境的构建 (主进程 + 渲染器) |
+| `pnpm electron:build` | 构建并打包应用 |
+| `pnpm verify:release` | 运行根发布测试套件 (release harness) |
+| `pnpm verify:release:quick` | 运行更快的根发布测试套件配置 |
+| `pnpm test:run` | 运行桌面 Vitest 测试套件 |
+| `pnpm test -- <path> --run` | 运行单个桌面测试文件 |
+| `pnpm test:e2e` | 运行端到端测试 (Playwright) |
+| `pnpm lint` | 运行 ESLint |
+| `pnpm format` | 使用 Prettier 格式化代码 |
 
-## 4. Directory Structure
+## 4. 目录结构
 
 ```text
 PromptHub/
 ├── apps/
-│   ├── desktop/                    # Electron desktop application
-│   │   ├── src/main/               # Electron main process, IPC, updater, native services
-│   │   ├── src/preload/            # contextBridge API exposed to renderer
-│   │   ├── src/renderer/           # React desktop renderer
-│   │   ├── tests/unit/             # Desktop unit/component/service tests
-│   │   ├── tests/integration/      # Desktop integration tests
-│   │   ├── tests/e2e/              # Playwright desktop E2E tests
-│   │   └── scripts/                # Desktop packaging, screenshot, budget scripts
-│   ├── cli/                        # Standalone `prompthub` CLI
+│   ├── desktop/                    # Electron 桌面应用
+│   │   ├── src/main/               # Electron 主进程、IPC、更新器、原生服务
+│   │   ├── src/preload/            # 暴露给渲染器的 contextBridge API
+│   │   ├── src/renderer/           # React 桌面渲染器
+│   │   ├── tests/unit/             # 桌面单元/组件/服务测试
+│   │   ├── tests/integration/      # 桌面集成测试
+│   │   ├── tests/e2e/              # Playwright 桌面端到端（E2E）测试
+│   │   └── scripts/                # 桌面打包、截图、预算脚本
+│   ├── cli/                        # 独立的 `prompthub` CLI
 │   │   ├── src/
 │   │   ├── tests/
 │   │   └── bin/
-│   ├── web/                        # Self-hosted Hono + React web app
-│   │   ├── src/client/             # Web client UI
-│   │   ├── src/routes/             # Server routes
-│   │   ├── src/services/           # Web server/client services
+│   ├── web/                        # 自托管的 Hono + React web 应用
+│   │   ├── src/client/             # Web 客户端 UI
+│   │   ├── src/routes/             # 服务端路由
+│   │   ├── src/services/           # Web 服务端/客户端服务
 │   │   └── tests/
-│   └── web-cloudflare/             # Cloudflare Worker backend
+│   └── web-cloudflare/             # Cloudflare Worker 后端
 │       ├── src/
 │       ├── migrations/
 │       └── tests/
 ├── packages/
-│   ├── core/                       # Shared workflows, runtime paths, CLI orchestration
-│   ├── db/                         # SQLite schema, adapter, migrations, DB classes
-│   └── shared/                     # Shared types, constants, pure utilities
-├── spec/                           # Internal SSD docs, stable knowledge, active changes
+│   ├── core/                       # 共享工作流、运行时路径、CLI 编排
+│   ├── db/                         # SQLite 模式、适配器、迁移、数据库类
+│   └── shared/                     # 共享类型、常量、纯工具函数
+├── spec/                           # 内部 SSD 文档、稳定知识、活动变更
 │   ├── changes/active/
 │   ├── knowledge/
 │   ├── rules/
 │   └── workflow/
-├── docs/                           # Repository-facing docs
-├── scripts/                        # Root project automation
-├── .github/                        # CI/release workflows
-├── pnpm-workspace.yaml             # Workspace package layout
-└── package.json                    # Root scripts and harness entry points
+├── docs/                           # 面向仓库的文档
+├── scripts/                        # 根项目自动化脚本
+├── .github/                        # CI/发布工作流
+├── pnpm-workspace.yaml             # 工作区包布局
+└── package.json                    # 根脚本和测试套件入口点
 ```
 
-Historical single-app paths such as `src/main`, `src/renderer`, and `src/shared` must not be used for new work unless a file actually exists there. Use the monorepo paths above.
+除非文件确实存在于历史路径中，否则不要在新的工作中使用如 `src/main`、`src/renderer` 和 `src/shared` 这样的历史单一应用路径。应使用上述 monorepo 路径。
 
-## 5. Key Conventions
+## 5. 关键约定
 
-### IPC Communication
+### IPC 通信
 
-- **Channel Definitions:** Desktop IPC channel strings are defined in `packages/shared/constants/ipc-channels.ts`.
-- **Pattern:** Renderer invokes `window.api.method()` → `ipcRenderer.invoke(channel, ...args)` → Main process handles with `ipcMain.handle(channel, handler)`.
-- **Naming:** Channels follow `domain:action` format (e.g., `prompt:create`, `skill:update`, `folder:delete`).
+- **通道定义：** 桌面 IPC 通道字符串定义在 `packages/shared/constants/ipc-channels.ts` 中。
+- **模式：** 渲染器调用 `window.api.method()` → `ipcRenderer.invoke(channel, ...args)` → 主进程通过 `ipcMain.handle(channel, handler)` 进行处理。
+- **命名：** 通道遵循 `domain:action` 格式 (例如 `prompt:create`, `skill:update`, `folder:delete`)。
 
-### Database Schema
+### 数据库模式
 
-- **Owner:** `packages/db` owns schema, migrations, adapter, and DB classes.
-- **Prompts:** Stores title, content, variables (JSON), tags (JSON), and folder association. Supports versioning via `prompt_versions` table.
-- **Folders:** Hierarchical structure with `parent_id` and `sort_order` for ordering. Supports CASCADE delete.
-- **Skills:** Stores skill metadata, instructions, versioning. Syncs with local SKILL.md files.
-- **FTS:** `prompts_fts` virtual table (FTS5) for full-text search on title + content + tags.
-- **Migrations:** Existing-user schema changes are handled in `packages/db/src/init.ts`; fresh-install schema is in `packages/db/src/schema.ts`.
+- **所有者：** `packages/db` 拥有模式、迁移、适配器和数据库类。
+- **提示词：** 存储标题、内容、变量 (JSON)、标签 (JSON) 和文件夹关联。通过 `prompt_versions` 表支持版本控制。
+- **文件夹：** 分层结构，带有 `parent_id` 和用于排序的 `sort_order`。支持级联 (CASCADE) 删除。
+- **技能：** 存储技能元数据、指令、版本控制。与本地的 SKILL.md 文件保持同步。
+- **全文搜索 (FTS)：** 使用 `prompts_fts` 虚拟表 (FTS5) 对标题 + 内容 + 标签进行全文搜索。
+- **迁移：** 针对现有用户的模式更改在 `packages/db/src/init.ts` 中处理；全新的模式安装则在 `packages/db/src/schema.ts` 中。
 
-### Component Styling
+### 组件样式
 
-- **Tailwind CSS:** Used exclusively for styling. Design tokens include `bg-card`, `text-muted-foreground`, `border-border`, etc.
-- **Theme:** Supports Dark/Light modes via CSS variables and Tailwind's `dark:` prefix.
-- **Icons:** `lucide-react` is the standard icon set. No other icon libraries.
+- **Tailwind CSS：** 专用于样式。设计标记包括 `bg-card`、`text-muted-foreground`、`border-border` 等。
+- **主题：** 通过 CSS 变量 and Tailwind 的 `dark:` 前缀支持暗色/亮色模式。
+- **图标：** `lucide-react` 是标准的图标集。不使用其他图标库。
 
-### Internationalization
+### 国际化
 
-- **Library:** `react-i18next` with `i18next` backend.
-- **Usage:** `const { t } = useTranslation();`
-- **Keys:** Structured keys with dot notation (e.g., `folder.create`, `common.cancel`, `settings.addNModels`).
-- **Locales:** 7 supported: `en`, `zh`, `zh-TW`, `ja`, `fr`, `de`, `es`.
-- **All user-facing strings must use i18n.** See Section 8.3.
+- **库：** `react-i18next` 配合 `i18next` 后端。
+- **使用方式：** `const { t } = useTranslation();`
+- **键：** 使用点记法的结构化键（例如 `folder.create`, `common.cancel`, `settings.addNModels`）。
+- **语言支持：** 支持 7 种语言：`en`、`zh`、`zh-TW`、`ja`、`fr`、`de`、`es`。
+- **所有面向用户的字符串都必须使用国际化。** 见第 8.3 节。
 
-## 6. Development Workflow
+## 6. 开发工作流
 
-### 6.1 Documentation Operating System (DOS)
+### 6.1 文档操作系统 (DOS)
 
-PromptHub uses a project-native Documentation Operating System (DOS). Internal SSD assets live under `spec/`, while repository-facing docs stay under `docs/`.
+PromptHub 使用项目原生的文档操作系统 (DOS)。内部 SSD 资产位于 `spec/` 下，而面向仓库的文档留在 `docs/` 下。
 
-PromptHub now uses `spec-init` directories for stable project docs and an OpenSpec-style change workflow for deltas:
+PromptHub 现在使用 `spec-init` 目录存放稳定的项目文档，并为增量变更采用 OpenSpec 风格的变更工作流：
 
-- `spec-init` provides the project-level document boundaries for workflow / knowledge / changes / records
-- PromptHub's change-management backbone remains `spec/changes/active/<change-key>/specs/<domain>/spec.md` plus `spec/changes/archive/`; stable truth now lives in `spec/workflow/*`, `spec/knowledge/*`, `spec/rules/`, `spec/releases/`, and related record folders
+- `spec-init` 提供了项目级文档边界，涵盖工作流 (workflow) / 知识 (knowledge) / 变更 (changes) / 记录 (records)
+- PromptHub 的变更管理主干仍为 `spec/changes/active/<change-key>/specs/<domain>/spec.md` 加上 `spec/changes/archive/`；稳定的真理现存于 `spec/workflow/*`、`spec/knowledge/*`、`spec/rules/`、`spec/releases/` 以及相关的记录文件夹中
 
-The expected SSD loop is:
+预期的 SSD 循环为：
 
-`requirements -> spec -> design -> tasks -> implementation -> sync -> archive`
+`需求 (requirements) -> 规格 (spec) -> 设计 (design) -> 任务 (tasks) -> 实现 (implementation) -> 同步 (sync) -> 归档 (archive)`
 
-#### Document Roles
+#### 文档角色
 
-- `spec/workflow/00-intake/`: project-level intake entry for why the work matters, target users, constraints, and non-goals.
-- `spec/workflow/01-requirements/`: project-level requirements entry for FR / NFR / AC style requirements.
-- `spec/workflow/02-design/`: project-level design entry for architecture, module boundaries, data, interfaces, and tradeoffs.
-- `spec/workflow/03-implementation/`: project-level implementation-planning entry for sequencing and milestones.
-- `spec/workflow/04-verification/`: project-level verification-planning entry.
-- `spec/workflow/05-tasks/`: project-level executable task entry.
-- `spec/knowledge/context/`: long-lived context docs for stable terminology, actors, entities, and business boundaries.
-- `spec/knowledge/structure/`: long-lived docs for stable system structure and module boundaries.
-- `spec/knowledge/behavior/`: long-lived docs for stable workflows, state transitions, and business rules.
-- `spec/knowledge/reference/`: long-lived reference docs for schemas, samples, fixtures, and protocols.
-- `spec/rules/`: project-level default engineering rules entry.
-- `spec/releases/`: project-level release-summary entry.
-- `spec/archive/`: project-level archive entry.
-- `spec/adr/`: project-level ADR entry.
-- `spec/knowledge/context/`: long-lived source-of-truth docs for stable terminology, actors, entities, and product boundaries.
-- `spec/knowledge/structure/`: long-lived source-of-truth docs for stable internal architecture and accepted engineering constraints.
-- `spec/knowledge/behavior/`: long-lived docs for stable workflows, semantic rules, and derivation boundaries.
-- `spec/knowledge/reference/`: long-lived docs for fixed assets such as platform matrices, canonical file mappings, schemas, and durable reference inventories.
-- `spec/README.md`: the internal SSD entry point.
-- `spec/changes/active/<change-key>/`: active change folders for feature work, larger bug fixes, refactors, and migrations.
-- `spec/changes/archive/<date>-<change-key>/`: completed or superseded changes kept for history.
-- `spec/changes/legacy/`: recovered historical internal docs that are still useful but are not the current source of truth.
-- `spec/issues/active/`: ongoing defects, quality risks, and follow-up issues that are not yet a scoped implementation change.
-- `spec/changes/_templates/`: reusable templates for proposal, delta specs, design, tasks, and implementation artifacts.
-- `docs/README.md`: the repository-facing docs index for users and contributors.
+- `spec/workflow/00-intake/`：项目级引入入口，阐述工作的重要性、目标用户、约束和非目标。
+- `spec/workflow/01-requirements/`：项目级需求入口，适用于功能需求（FR）/非功能需求（NFR）/验收标准（AC）样式的需求。
+- `spec/workflow/02-design/`：项目级设计入口，适用于架构、模块边界、数据、接口和权衡。
+- `spec/workflow/03-implementation/`：项目级实现规划入口，适用于排期和里程碑。
+- `spec/workflow/04-verification/`：项目级验证规划入口。
+- `spec/workflow/05-tasks/`：项目级可执行任务入口。
+- `spec/knowledge/context/`：长期存在的上下文文档，用于定义稳定的术语、参与者、实体和业务边界。
+- `spec/knowledge/structure/`：长期存在的文档，用于定义稳定的系统结构和模块边界。
+- `spec/knowledge/behavior/`：长期存在的文档，用于定义稳定的工作流、状态转换和业务规则。
+- `spec/knowledge/reference/`：长期存在的参考文档，用于定义模式、样本、夹具和协议。
+- `spec/rules/`：项目级默认工程规则入口。
+- `spec/releases/`：项目级发布摘要入口。
+- `spec/archive/`：项目级归档入口。
+- `spec/adr/`：项目级架构决策记录 (ADR) 入口。
+- `spec/knowledge/context/`：长期存在的真理源文档，用于定义稳定的术语、参与者、实体和产品边界。
+- `spec/knowledge/structure/`：长期存在的真理源文档，用于定义稳定的内部架构和接受的工程约束。
+- `spec/knowledge/behavior/`：长期文档，用于定义稳定的工作流、语义规则和推导边界。
+- `spec/knowledge/reference/`：长期文档，用于固定资产，如平台矩阵、规范文件映射、模式和持久参考库存。
+- `spec/README.md`：内部 SSD 入口点。
+- `spec/changes/active/<change-key>/`：活动变更文件夹，用于功能开发、较大的缺陷修复、重构和迁移。
+- `spec/changes/archive/<date>-<change-key>/`：已完成或被取代的变更，保留用于历史记录。
+- `spec/changes/legacy/`：恢复的历史内部文档，虽然仍然有用，但不再是当前的真理源。
+- `spec/issues/active/`：进行中的缺陷、质量风险和跟进问题，但尚未形成范围内实现的变更。
+- `spec/changes/_templates/`：用于提案、增量规格、设计、任务和实现制品的重用模板。
+- `docs/README.md`：面向用户的仓库级文档索引和贡献者指南。
 
-#### Required Artifacts For Non-Trivial Work
+#### 非琐碎（Non-Trivial）工作所需的制品
 
-For any non-trivial feature, refactor, migration, cross-process change, or multi-file bug fix, create or update one active change folder under `spec/changes/active/<change-key>/`.
+对于任何非琐碎功能、重构、迁移、跨进程更改或多文件缺陷修复，在 `spec/changes/active/<change-key>/` 下创建或更新一个活动变更文件夹。
 
-Each active change should contain:
+每个活动变更应包含：
 
-1. `proposal.md` — why the change exists, scope, risks, rollback thinking, and impacted user flows.
-2. `specs/<domain>/spec.md` — the intended behavior delta, including added, modified, and removed requirements or scenarios.
-3. `design.md` — technical approach, affected modules, data model / IPC / sync / migration impact, and tradeoffs.
-4. `tasks.md` — a concrete implementation checklist with verification items.
-5. `implementation.md` — what actually shipped, what changed during execution, what was verified, and which stable docs were synced.
+1. `proposal.md`：为何需要此变更、范围、风险、回滚考量以及受影响的用户流。
+2. `specs/<domain>/spec.md`：预期的行为差异，包括新增、修改和删除的需求或场景。
+3. `design.md`：技术方案、受影响的模块、数据模型/IPC/同步/迁移影响以及权衡。
+4. `tasks.md`：具体带有验证项的实现清单。
+5. `implementation.md`：实际发布的内容、执行期间的变更、验证的内容以及哪些稳定文档已同步。
 
-Use one or more domain spec files under `specs/` when the change spans multiple stable domains. Do not create a flat top-level `spec.md` file inside the change folder for new work.
+> [!IMPORTANT]
+> 所有在活动变更文件夹（包括 `proposal.md`、`spec.md`、`design.md`、`tasks.md`、`implementation.md` 等）中编写的技术实现和设计文档必须使用 **中文（Chinese）** 撰写。
 
-#### Workflow Expectations
+当变更跨越多个稳定领域时，在 `specs/` 下使用一个或多个领域规范文件。在新工作中，不要在变更文件夹内创建扁平的顶级 `spec.md` file。
 
-1. Start with the change folder before writing significant code.
-2. Use the `spec-init` document boundaries to decide what kind of document a piece of content belongs in, but keep non-trivial implementation work inside `spec/changes/active/<change-key>/`.
-3. Refine `proposal.md`, `specs/<domain>/spec.md`, and `design.md` as understanding improves; the workflow is iterative, not phase-locked.
-4. Use `tasks.md` as the implementation checklist and mark items complete as work lands.
-5. Update `implementation.md` during or immediately after implementation so the executed work does not live only in git diff or chat history.
-6. When the change ships, sync current behavior back into `spec/workflow/*` and `spec/knowledge/*`, and sync stable rules, release summaries, or decisions into `spec/rules/`, `spec/releases/`, or `spec/adr/` where appropriate.
-7. After shipping or abandoning the work, move the change folder to `spec/changes/archive/` rather than deleting it.
+#### 工作流预期
 
-#### When To Update Existing Change vs Start New One
+1. 在编写重要代码之前，先准备好变更文件夹。
+2. 使用 `spec-init` 文档边界来决定内容应归入哪种文档，但将非琐碎的实现工作保留在 `spec/changes/active/<change-key>/` 内部。
+3. 随着理解的加深，不断完善 `proposal.md`、`specs/<domain>/spec.md` 和 `design.md`；该工作流是迭代式的，而非阶段锁定的。
+4. 使用 `tasks.md` 作为实现清单，并在工作落实时标记已完成。
+5. 在实现期间或实现后立即更新 `implementation.md`，使执行的工作不仅存在于 git diff 或聊天历史中。
+6. 当变更发布时，在适当的情况下将当前行为同步回 `spec/workflow/*` 和 `spec/knowledge/*`，并将稳定的规则、发布摘要或决策同步到 `spec/rules/`、`spec/releases/` 或 `spec/adr/`。
+7. 在发布或放弃该工作后，将变更文件夹移动到 `spec/changes/archive/`，而不是删除它。
 
-- Update the existing change when the user problem and intended outcome stay the same, but execution details or scope boundaries evolve.
-- Start a new change when the objective materially changes, the original work can stand on its own, or the history would become confusing if kept in one folder.
+#### 何时更新现有变更 vs 开启新变更
 
-#### Implementation Discipline
+- 当用户问题和预期的产出保持不变，但执行细节或范围边界有所发展时，更新现有变更。
+- 当目标发生实质性变化、原工作可以独立存在、或者如果保留在一个文件夹中历史会变得混乱时，启动一个新变更。
 
-- Do not let requirements live only in chat history when the work is significant.
-- Do not confuse the new `spec/workflow/*` and `spec/knowledge/*` project-level entry points with replacements for active change records; they classify document intent, while `spec/changes/active/` remains the execution record for non-trivial work.
-- Do not edit `spec/workflow/*`, `spec/knowledge/*`, `spec/rules/`, `spec/releases/`, or `spec/adr/` as if they were scratchpads for active work; active deltas belong in `spec/changes/active/` first.
-- Do not treat `tasks.md` as optional for substantial changes; it is the execution contract.
-- Do not treat `implementation.md` as optional for substantial changes; it is the executed record of what really landed.
-- Do not close a change folder without updating its verification status and follow-up notes.
-- Repository-facing documentation should live under `docs/` unless it must remain at the repository root for tooling or platform conventions, such as `README.md`, `CHANGELOG.md`, or `AGENTS.md`. Internal SSD, specs, and architecture records belong in `spec/`.
+#### 实现纪律
 
-### 6.2 Engineering Flow
+- 重要的工作决不能只让需求存在于聊天历史中。
+- 不要将新的项目级入口点 `spec/workflow/*` 和 `spec/knowledge/*` 与活动变更记录的替代品相混淆；它们只是分类文档的意图，而 `spec/changes/active/` 仍是非琐碎工作的执行记录。
+- 不要将 `spec/workflow/*`、`spec/knowledge/*`、`spec/rules/`、`spec/releases/` 或 `spec/adr/` 作为活动工作的草稿纸进行编辑；活动增量应首先放置在 `spec/changes/active/` 中。
+- 对实质性的变更，不要把 `tasks.md` 视为可选的；它是执行契约。
+- 对实质性的变更，不要把 `implementation.md` 视为可选的；它是实际落实的执行记录。
+- 在更新验证状态和跟进注释之前，不要关闭变更文件夹。
+- 面向仓库的文档应存在于 `docs/` 下，除非出于工具链或平台约定的考虑必须留在仓库根目录，例如 `README.md`、`CHANGELOG.md` 或 `AGENTS.md`。内部 SSD、规范和架构记录属于 `spec/`。
 
-1. **Locate boundary:** Identify the owning app/package, source-of-truth docs, existing tests, and active change record.
-2. **Plan:** For non-trivial work, create or update a change folder in `spec/changes/active/` using the templates.
-3. **Design data/contract impact:** Before code, write whether the change touches SQLite, filesystem layout, sync payloads, IPC/API, CLI commands, routes, shared types, or i18n.
-4. **Modify:** Put shared business logic in `packages/core`, storage primitives in `packages/db`, shared contracts in `packages/shared`, and app-specific UI/platform glue in the relevant `apps/*` package.
-5. **IPC/API:** If adding backend access, update shared constants/types, implement the handler/route, expose the bridge/client, and add validation tests.
-6. **Test:** Run the lowest effective test layer first, then the relevant harness (`pnpm verify:release:quick` or `pnpm verify:release`) when release risk exists.
-7. **Record:** Update `implementation.md` with actual execution, verification, skipped checks, and follow-up notes.
-8. **Sync Docs:** Update `spec/workflow/*` when project-level goals or requirements changed, `spec/knowledge/behavior/` or `spec/knowledge/reference/` when stable behavior/assets changed, `spec/knowledge/structure/` when architecture contracts changed, and `docs/` / `README.md` when contributor/user contracts changed.
-9. **Commit:** Use Conventional Commits (e.g., `feat: ...`, `fix: ...`, `refactor: ...`, `test: ...`).
+### 6.2 工程流
 
-### 6.3 Data and Storage Change Gate
+1. **定位边界：** 确定所属的 App/包、真理源文档、现有测试和活动变更记录。
+2. **计划：** 对于非琐碎工作，使用模板在 `spec/changes/active/` 中创建或更新一个变更文件夹。
+3. **设计数据/契约影响：** 在编码之前，写下变更是否会触及 SQLite、文件系统布局、同步载荷、IPC/API、CLI 命令、路由、共享类型或 i18n。
+4. **修改：** 将共享业务逻辑放在 `packages/core` 中，存储原语放在 `packages/db` 中，共享契约放在 `packages/shared` 中，而应用特定的 UI/平台粘合放在相关的 `apps/*` 包中。
+5. **IPC/API：** 如果添加后端访问，更新共享常量/类型，实现处理器/路由，暴露桥接/客户端，并添加验证测试。
+6. **测试：** 先运行最低有效测试层，然后在存在发布风险时运行相关的测试套件（`pnpm verify:release:quick` 或 `pnpm verify:release`）。
+7. **记录：** 更新 `implementation.md`，写明实际的执行、验证、跳过的检查以及跟进注释。
+8. **同步文档：** 项目级目标或需求改变时更新 `spec/workflow/*`；稳定行为/资产改变时更新 `spec/knowledge/behavior/` 或 `spec/knowledge/reference/`；架构契约改变时更新 `spec/knowledge/structure/`；贡献者/用户契约改变时更新 `docs/` / `README.md`。
+9. **提交：** 使用约定式提交（Conventional Commits，例如 `feat: ...`, `fix: ...`, `refactor: ...`, `test: ...`）。
 
-Before changing persistence or storage, document the following in the active change:
+### 6.3 数据与存储变更关卡（Data and Storage Change Gate）
 
-- current source of truth: SQLite table, filesystem directory, SKILL.md frontmatter, settings key, remote payload, or derived UI state
-- schema/layout delta: table/column/index/trigger, JSON shape, directory/file path, or sync contract
-- migration and compatibility: how existing users are upgraded, how old data is read, and what happens on partial failure
-- rollback/recovery: whether backups, recovery candidates, or data layout migration need updates
-- verification: real SQLite tests, path traversal/null-byte tests, backup/restore tests, sync tests, and any release harness impact
+在更改持久化或存储之前，在活动变更中记录以下内容：
 
-Rules for storage ownership:
+- 当前真理源：SQLite 表、文件系统目录、SKILL.md 前言（frontmatter）、设置键、远程载荷或推导出的 UI 状态
+- 模式/布局差异：表/列/索引/触发器、JSON 形状、目录/文件路径或同步契约
+- 迁移与兼容性：如何升级现有用户、如何读取旧数据，以及在部分失败时会发生什么
+- 回滚/恢复：备份、恢复候选对象或数据布局迁移是否需要更新
+- 验证：真实 SQLite 测试、路径穿越/空字节测试、备份/恢复测试、同步测试以及发布测试套件影响
 
-- SQLite schema, indexes, migrations, and DB classes live in `packages/db`.
-- Runtime path decisions live in `packages/core/src/runtime-paths.ts`.
-- Shared data contracts live in `packages/shared/types` or `packages/shared/constants`.
-- Desktop-only native storage glue lives in `apps/desktop/src/main`.
-- Web-specific route/service storage glue lives in `apps/web/src`.
-- Never bypass runtime path helpers by hardcoding user data, legacy, or platform paths.
+存储所有权的规则：
 
-## 7. Testing Standards
+- SQLite 模式、索引、迁移和数据库类存放在 `packages/db` 中。
+- 运行时路径决策存放在 `packages/core/src/runtime-paths.ts` 中。
+- 共享数据契约存放在 `packages/shared/types` 或 `packages/shared/constants` 中。
+- 仅限桌面的原生存储粘合代码存放在 `apps/desktop/src/main` 中。
+- 特定于 Web 的路由/服务存储粘合代码存放在 `apps/web/src` 中。
+- 绝不要通过硬编码用户数据、遗留或平台路径来绕过运行时路径辅助函数。
 
-### 7.1 Core Principles
+## 7. 测试标准
 
-> Tests exist to **find bugs**, not to inflate coverage numbers. Every test must have a clear reason to exist — if a test can never fail, it is worthless. If a test only verifies the happy path with obvious inputs, it is insufficient.
+### 7.1 核心原则
 
-| Principle                             | Description                                                                                                                                                                                |
+> 测试的存在是为了**发现缺陷（bugs）**，而不是为了刷高覆盖率数值。每个测试都必须有明确的合理存在理由——如果一个测试永远不会失败，那它就是毫无价值的。如果一个测试只用显而易见的输入来验证正常路径，那也是不够的。
+
+| 原则 | 描述 |
 | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Real bugs, not rubber stamps**      | Every test must target a scenario that could realistically fail in production. Avoid trivially-passing tests that merely confirm a function returns the same hardcoded value it was given. |
-| **Test behavior, not implementation** | Assert on observable outcomes (return values, DB state, side effects), not internal private methods or call counts. Tests that break on harmless refactors are fragile.                    |
-| **Root cause verification**           | After fixing a bug, the regression test must reproduce the original failure condition — not merely call the fixed code path.                                                               |
-| **No fake implementations**           | Prohibited: `setTimeout` to simulate async, hardcoded mock return values that bypass real logic, `jest.fn().mockReturnValue(expectedResult)` that makes the test a tautology.              |
-| **No lazy assertions**                | Prohibited: `expect(result).toBeDefined()` when the actual value matters; `expect(fn).not.toThrow()` without checking the return value; `.toMatchSnapshot()` for dynamic data.             |
+| **针对真实缺陷，不做橡皮图章** | 每个测试必须针对在生产环境中实际可能失败的场景。避免写那种仅仅为了验证函数返回了传入的硬编码值的无意义通过测试。 |
+| **测试行为，而非实现** | 断言可观察的结果（返回值、数据库状态、副作用），而不是内部私有方法或调用次数。那些在无害的重构中就会损坏的测试是脆弱的。 |
+| **根本原因验证** | 修复缺陷后，回归测试必须复现原始的失败条件——而不仅仅是调用已修复的代码路径。 |
+| **禁止虚假实现** | 禁用：用 `setTimeout` 模拟异步、硬编码 mock 返回值来绕过真实逻辑、使用 `jest.fn().mockReturnValue(expectedResult)` 让测试变成同义反复（自证）。 |
+| **禁止偷懒断言** | 禁用：当实际值很重要时使用 `expect(result).toBeDefined()`；使用 `expect(fn).not.toThrow()` 而不检查返回值；对动态数据使用 `.toMatchSnapshot()`。 |
 
-### 7.2 Test Categories (All Required for New Modules)
+### 7.2 测试分类（新模块必须全部包含）
 
-#### 7.2.1 Functional Tests
+#### 7.2.1 功能测试
 
-| Aspect                  | Requirements                                                                                                                       |
+| 维度 | 要求 |
 | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| **Happy path**          | Cover the primary use case with realistic inputs.                                                                                  |
-| **Boundary conditions** | Empty string, null, undefined, zero, negative numbers, MAX_SAFE_INTEGER, empty arrays, single-element arrays.                      |
-| **Error paths**         | Invalid inputs must produce correct errors, not silent failures. Verify error messages/types, not just that an error was thrown.   |
-| **State transitions**   | For stateful modules (stores, DB, auth): test the full lifecycle (create → read → update → delete) and verify intermediate states. |
+| **正常路径 (Happy path)** | 使用真实的输入覆盖首要使用场景。 |
+| **边界条件** | 空字符串、null、undefined、零、负数、MAX_SAFE_INTEGER、空数组、单元素数组。 |
+| **错误路径** | 无效输入必须产生正确的错误，而不是静默失败。验证错误消息/类型，而不仅仅是抛出了错误。 |
+| **状态转换** | 对于有状态的模块 (stores, DB, auth)：测试完整的生命周期 (创建 → 读取 → 更新 → 删除) 并验证中间状态。 |
 
-#### 7.2.2 Adversarial / Fuzz Tests
+#### 7.2.2 对抗性 / 模糊测试 (Fuzz Tests)
 
-| Aspect                    | Requirements                                                                                                                                                                                                               |
+| 维度 | 要求 |
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **SQL injection**         | All user-facing string inputs (title, description, tags, search keywords) must be tested with SQL injection payloads: `'; DROP TABLE x; --`, `" OR 1=1 --`, `UNION SELECT`. Verify the table is intact after each attempt. |
-| **XSS-like content**      | Store and retrieve `<script>alert(1)</script>`, HTML entities, and JS event handlers in all text fields.                                                                                                                   |
-| **Unicode / CJK / Emoji** | Full round-trip (write → read) with CJK characters, emoji (including multi-codepoint like 🏳️‍🌈), RTL text (Arabic/Hebrew), zero-width characters.                                                                            |
-| **Null bytes**            | Test `\x00` in string fields because SQLite adapter behavior can cause silent data loss. Document the observed behavior in tests.                                                                                          |
-| **Extreme sizes**         | 10KB+ strings, 100+ element arrays, 1MB payloads for encryption. Verify no crashes and data integrity.                                                                                                                     |
-| **Special characters**    | Backslashes, quotes (single/double), newlines, tabs, CRLF, Unicode BOM, control characters (0x01–0x1F).                                                                                                                    |
+| **SQL 注入** | 所有面向用户的字符串输入（标题、描述、标签、搜索关键词）必须使用 SQL 注入有效载荷进行测试：`'; DROP TABLE x; --`、`" OR 1=1 --`、`UNION SELECT`。验证每次尝试后表保持完好。 |
+| **类 XSS 内容** | 在所有文本字段中存储和检索 `<script>alert(1)</script>`、HTML 实体和 JS 事件处理程序。 |
+| **Unicode / 中日韩 (CJK) / 表情符号** | CJK 字符、表情符号（包括像 🏳️‍🌈 这样的多码位字符）、RTL 文本（阿拉伯语/希伯来语）、零宽字符的完整往返测试（写入 → 读取）。 |
+| **空字节 (Null bytes)** | 测试字符串字段中的 `\x00`，因为 SQLite 适配器的行为可能会导致静默数据丢失。在测试中记录观察到的行为。 |
+| **极端大小** | 10KB+ 字符串、100+ 元素的数组、1MB 的加密有效载荷。验证无崩溃并保持数据完整性。 |
+| **特殊字符** | 反斜杠、单/双引号、换行符、制表符、CRLF、Unicode BOM、控制字符（0x01–0x1F）。 |
 
-#### 7.2.3 Security Tests
+#### 7.2.3 安全测试
 
-| Aspect                             | Requirements                                                                                                                                                   |
+| 维度 | 要求 |
 | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Cryptographic tamper detection** | For encrypted data: test bit-flips in IV, auth tag, and ciphertext independently. Verify all produce rejection (null/error), not silent decryption to garbage. |
-| **Key/password boundaries**        | Empty password, 10KB password, unicode password, password with null bytes. Verify old password fails after reset.                                              |
-| **Timing safety**                  | Where `timingSafeEqual` is used, verify that wrong-length inputs don't crash (Node.js throws if buffers differ in length).                                     |
-| **Input validation**               | All IPC handlers must reject malformed inputs. Test with wrong types, missing required fields, extra unknown fields.                                           |
-| **Path traversal**                 | File path inputs must be tested with `../`, absolute paths, symlinks, and null bytes.                                                                          |
+| **加密篡改检测** | 对于加密数据：分别独立测试 IV、认证标签（auth tag）和密文中的位翻转（bit-flips）。验证所有翻转都会产生拒绝（返回 null 或抛出错误），而不是静默解密为垃圾数据。 |
+| **密钥/密码边界** | 空密码、10KB 密码、unicode 密码、带空字节的密码。验证重置后旧密码失效。 |
+| **时序安全 (Timing safety)** | 在使用 `timingSafeEqual` 的地方，验证错误长度的输入不会引发崩溃（Node.js 在缓冲区长度不同时会抛出异常）。 |
+| **输入验证** | 所有 IPC 处理器必须拒绝格式错误的输入。使用错误的类型、缺失必填字段、多余的未知字段进行测试。 |
+| **路径穿越** | 必须使用 `../`、绝对路径、符号链接和空字节对文件路径输入进行测试。 |
 
-#### 7.2.4 Performance / Stress Tests
+#### 7.2.4 性能 / 压力测试
 
-| Aspect                         | Requirements                                                                                                        |
+| 维度 | 要求 |
 | ------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
-| **Batch operations**           | 100+ creates followed by bulk delete. Verify count accuracy and no orphaned records.                                |
-| **Rapid sequential mutations** | 50+ updates to same record in tight loop. Verify final state is deterministic and no version/counter drift.         |
-| **Concurrent-like access**     | Multiple operations in same transaction/tick. Verify data consistency (especially for version numbers, sort_order). |
-| **State cycling**              | 10+ cycles of set→lock→unlock, create→delete, enable→disable. Verify no state leaks across cycles.                  |
+| **批量操作** | 100+ 次创建操作，紧接着批量删除。验证数量的准确性且无遗留孤立记录。 |
+| **快速连续变更** | 在紧密循环中对同一记录进行 50+ 次更新。验证最终状态是确定性的，且版本/计数器没有发生漂移。 |
+| **类并发访问** | 在同一个事务/tick 中进行多次操作。验证数据一致性（特别是针对版本号、`sort_order`）。 |
+| **状态循环** | 设置→锁定→解锁、创建→删除、启用→禁用等循环 10+ 次。验证在循环中没有状态泄漏。 |
 
-#### 7.2.5 Integration Tests (Database)
+#### 7.2.5 集成测试（数据库）
 
-| Aspect                    | Requirements                                                                                                                                                                                                                 |
+| 维度 | 要求 |
 | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Use real SQLite**       | Database tests MUST use `new DatabaseAdapter(":memory:")` with the real schema (`SCHEMA_TABLES` + `SCHEMA_INDEXES`), NOT mocks. Mocked databases cannot catch SQL syntax errors, constraint violations, or trigger behavior. |
-| **Foreign key behavior**  | Test CASCADE deletes, SET NULL behavior, and constraint violations explicitly.                                                                                                                                               |
-| **Transaction atomicity** | For operations wrapped in `db.transaction()`: verify that partial failures roll back completely.                                                                                                                             |
-| **FTS correctness**       | Full-text search tests must include special FTS5 operators (`AND`, `OR`, `NOT`, `NEAR`, `*`, `^`, `"phrase"`, `column:`) and verify they don't cause SQL errors.                                                             |
+| **使用真实 SQLite** | 数据库测试**必须**使用带有真实模式 (`SCHEMA_TABLES` + `SCHEMA_INDEXES`) 的 `new DatabaseAdapter(":memory:")`，而**不能**使用 mock。被 mock 的数据库无法捕获 SQL 语法错误、约束违反或触发器行为。 |
+| **外键行为** | 显式测试级联 (CASCADE) 删除、SET NULL 行为和约束违反。 |
+| **事务原子性** | 对于包装在 `db.transaction()` 中的操作：验证部分失败能完全回滚。 |
+| **FTS 正确性** | 全文搜索测试必须包含特殊的 FTS5 运算符（`AND`、`OR`、`NOT`、`NEAR`、`*`、`^`、`"phrase"`、`column:`），并验证它们不会导致 SQL 错误。 |
 
-### 7.3 Prohibited Anti-Patterns
+### 7.3 被禁止的反模式
 
-| Anti-Pattern                                      | Why It's Harmful                           | Correct Approach                                                       |
+| 反模式 | 为什么有害 | 正确的做法 |
 | ------------------------------------------------- | ------------------------------------------ | ---------------------------------------------------------------------- |
-| `expect(result).toBeDefined()` alone              | Passes for any value including wrong ones  | Assert the specific expected value                                     |
-| `expect(fn).not.toThrow()` without value check    | Confirms no crash but not correctness      | Assert both no-throw AND correct return value                          |
-| Mock that returns the expected value              | Test becomes a tautology (always passes)   | Mock dependencies, assert on SUT behavior                              |
-| `as any` / `@ts-ignore` in test code              | Hides type errors that are real bugs       | Fix the types; if testing JS interop, use explicit casts with comments |
-| Testing private methods directly                  | Couples test to implementation             | Test through public API                                                |
-| `toMatchSnapshot()` for dynamic data              | Snapshot bloat, meaningless diffs          | Use specific assertions                                                |
-| Copy-paste test blocks with minor variations      | Hard to maintain, masks missing edge cases | Use `it.each()` or parameterized tests                                 |
-| `beforeEach` that creates unnecessary fixtures    | Slow tests, hidden dependencies            | Create fixtures in the specific test that needs them                   |
-| Catching errors just to assert `instanceof Error` | Doesn't verify the error message or cause  | Assert `error.message` contains specific text                          |
+| 单独使用 `expect(result).toBeDefined()` | 任何值（包括错误的值）都能通过 | 断言具体的期望值 |
+| 使用 `expect(fn).not.toThrow()` 但不检查返回值 | 只能确认没有崩溃，但不能确认正确性 | 同时断言不抛出异常以及返回值正确 |
+| 返回期望值的 mock | 让测试沦为同义反复（总是通过） | mock 依赖，并对被测系统（SUT）的行为进行断言 |
+| 测试代码中使用 `as any` / `@ts-ignore` | 隐藏类型错误，这些往往是真实的缺陷 | 修复类型；如果测试 JS 互操作，请使用带有注释的显式转换 |
+| 直接测试私有方法 | 让测试与实现细节发生耦合 | 通过公共 API 进行测试 |
+| 对动态数据使用 `toMatchSnapshot()` | 会造成快照膨胀以及无意义的 diff | 使用具体的断言 |
+| 复制粘贴测试块，仅做细微修改 | 难以维护，且会掩盖缺失的边缘情况 | 使用 `it.each()` 或参数化测试 |
+| 在 `beforeEach` 中创建不必要的夹具 | 导致测试变慢，隐藏依赖关系 | 仅在需要夹具的特定测试中创建它们 |
+| 捕获错误仅为了断言 `instanceof Error` | 无法验证错误消息或原因 | 断言 `error.message` 包含特定文本 |
 
-### 7.4 Test File Organization
+### 7.4 测试文件组织
 
 ```
 tests/
 ├── unit/
-│   ├── main/               # Main process tests (DB, services, security)
-│   ├── components/          # React component tests (render, interaction)
-│   ├── services/            # Frontend service tests (AI clients, etc.)
-│   ├── stores/              # Zustand store tests
-│   ├── hooks/               # Hook tests
-│   └── cli/                 # CLI tests
-├── integration/             # Integration tests
-├── e2e/                     # Playwright end-to-end tests
-├── fixtures/                # Shared test fixtures
-├── helpers/                 # Shared test helpers
-└── setup.ts                 # Global test setup
+│   ├── main/               # 主进程测试（数据库、服务、安全）
+│   ├── components/          # React 组件测试（渲染、交互）
+│   ├── services/            # 前端服务测试（AI 客户端等）
+│   ├── stores/              # Zustand store 测试
+│   ├── hooks/               # Hook 测试
+│   └── cli/                 # CLI 测试
+├── integration/             # 集成测试
+├── e2e/                     # Playwright 端到端测试
+├── fixtures/                # 共享测试夹具
+├── helpers/                 # 共享测试辅助函数
+└── setup.ts                 # 全局测试设置
 ```
 
-**Naming convention:** `<module-name>.test.ts` — matches the source file it tests.
+**命名约定：** `<module-name>.test.ts` —— 与其测试的源文件匹配。
 
-**Structure within test files:**
+**测试文件内部结构：**
 
 ```typescript
 describe("ModuleName", () => {
   describe("methodName", () => {
-    it("does X when given Y", () => { ... });         // Happy path
-    it("returns null for non-existent id", () => { ... }); // Error path
+    it("does X when given Y", () => { ... });         // 正常路径
+    it("returns null for non-existent id", () => { ... }); // 错误路径
   });
   describe("adversarial inputs", () => {
-    // Fuzz / boundary / injection tests grouped together
+    // 模糊/边界/注入测试分组放在这里
   });
 });
 ```
 
-### 7.5 Running Tests
+### 7.5 运行测试
 
-| Command                                 | Purpose                        |
+| 命令 | 用途 |
 | --------------------------------------- | ------------------------------ |
-| `pnpm test -- --run`                    | Full test suite (all files)    |
-| `pnpm test -- <path> --run`             | Single file                    |
-| `pnpm test -- --run --reporter=verbose` | Verbose output with test names |
-| `pnpm test -- --run --coverage`         | With coverage report           |
+| `pnpm test -- --run` | 运行整个测试套件 (所有文件) |
+| `pnpm test -- <path> --run` | 运行单个文件 |
+| `pnpm test -- --run --reporter=verbose` | 显示详细的测试名称输出 |
+| `pnpm test -- --run --coverage` | 附带覆盖率报告 |
 
-**Rule:** After adding new tests, always run the full suite (`pnpm test -- --run`) to ensure no regressions. Every PR must have 0 test failures and 0 lint errors.
+**规则：** 添加新测试后，务必运行完整的测试套件（`pnpm test -- --run`）以确保没有引入回归错误。每个 PR 必须达到 0 测试失败和 0 lint 错误。
 
-### 7.6 Coverage Targets
+### 7.6 覆盖率目标
 
-| Layer                                                                                                                              | Minimum                                                 | Priority                                |
+| 分层 | 最低要求 | 优先级 |
 | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- | --------------------------------------- |
-| New/changed production code                                                                                                        | 100% lines, functions, branches, and conditions         | **Required** — no untested new behavior |
-| Critical boundary modules: database, filesystem persistence, sync, IPC/preload, installer/import/export, security, release harness | 100% branch and condition coverage for touched behavior | **Required** — data/user trust boundary |
-| `packages/db/src/`                                                                                                                 | 100% for changed files; legacy gaps must be recorded    | **Critical** — data integrity           |
-| `apps/desktop/src/main/security.ts`                                                                                                | 100% for changed files; legacy gaps must be recorded    | **Critical** — encryption correctness   |
-| `packages/core/src/` and app services                                                                                              | 100% for changed files; legacy gaps must be recorded    | High — business logic                   |
-| `apps/desktop/src/main/ipc/`                                                                                                       | 100% for changed handlers and validation branches       | High — input validation                 |
-| `apps/desktop/src/renderer/stores/`                                                                                                | 100% for changed actions and state branches             | High — state management                 |
-| `apps/desktop/src/renderer/services/`                                                                                              | 100% for changed services and error paths               | High — client correctness               |
-| `apps/desktop/src/renderer/components/`                                                                                            | 100% for changed user-visible states and interactions   | Medium — UI behavior                    |
+| 新的/修改的生产代码 | 100% 行、函数、分支和条件 | **必须满足** — 无未测试的新行为 |
+| 关键边界模块：数据库、文件系统持久化、同步、IPC/preload、安装器/导入/导出、安全、发布套件 | 修改行为达到 100% 分支和条件覆盖率 | **必须满足** — 数据/用户信任边界 |
+| `packages/db/src/` | 已修改文件达到 100%；遗留空白必须记录 | **至关重要** — 数据完整性 |
+| `apps/desktop/src/main/security.ts` | 已修改文件达到 100%；遗留空白必须记录 | **至关重要** — 加密正确性 |
+| `packages/core/src/` 和应用服务 | 已修改文件达到 100%；遗留空白必须记录 | 高 — 业务逻辑 |
+| `apps/desktop/src/main/ipc/` | 已修改的处理器和验证分支达到 100% | 高 — 输入验证 |
+| `apps/desktop/src/renderer/stores/` | 已修改的操作（actions）和状态分支达到 100% | 高 — 状态管理 |
+| `apps/desktop/src/renderer/services/` | 已修改的服务和错误路径达到 100% | 高 — 客户端正确性 |
+| `apps/desktop/src/renderer/components/` | 已修改的用户可见状态和交互达到 100% | 中 — UI 行为 |
 
-Coverage acceptance must include branch and condition review, not only line coverage. Any uncovered branch in touched code must be either tested or explicitly documented in the active change with a reason and a follow-up task.
+覆盖率验收必须包括分支和条件的审查，而不仅仅是行覆盖率。被触及代码中的任何未覆盖分支必须进行测试，或在活动变更中以合理的理由以及跟进任务显式记录。
 
-### 7.7 What Makes a Test "Good"
+### 7.7 什么是“好”测试
 
-A good test:
+好的测试：
 
-1. **Fails when the code is broken** — If you comment out the implementation, the test must fail.
-2. **Passes when the code is correct** — No flaky behavior, no timing dependencies.
-3. **Documents the expected behavior** — The test name and assertions serve as living documentation.
-4. **Catches regressions** — A future developer changing the code incorrectly will be stopped by this test.
-5. **Is independent** — Can run in any order, doesn't depend on other tests' side effects.
-6. **Is fast** — Unit tests should complete in milliseconds, not seconds.
+1. **当代码损坏时失败** — 如果你注释掉实现，测试必须失败。
+2. **当代码正确时通过** — 没有不稳定的（flaky）行为，没有时间依赖性。
+3. **记录了预期的行为** — 测试名称和断言起到活档（living documentation）的作用。
+4. **捕获回归** — 能够拦截未来开发人员对代码进行的错误修改。
+5. **独立性** — 可以以任何顺序运行，不依赖于其他测试的副作用。
+6. **速度快** — 单元测试应在毫秒内完成，而不是数秒。
 
-A bad test:
+差的测试：
 
-1. Always passes regardless of implementation.
-2. Tests implementation details that change on refactor.
-3. Has vague assertions (`toBeDefined`, `toBeTruthy`) when specific values are known.
-4. Requires network, filesystem, or timing to pass.
-5. Is a copy-paste of another test with one variable changed.
+1. 无论实现如何，总是通过。
+2. 测试会在重构时发生改变的实现细节。
+3. 在明确知道具体值时，使用模糊的断言（`toBeDefined`、`toBeTruthy`）。
+4. 需要网络、文件系统或特定定时才能通过。
+5. 复制粘贴另一个测试，仅更改了一个变量。
 
-## 8. Code Quality Rules
+## 8. 代码质量规则
 
-### 8.1 TypeScript Strictness
+### 8.1 TypeScript 严格性
 
-| Rule                        | Description                                                                                                    |
+| 规则 | 描述 |
 | --------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| **No `any`**                | The `any` type is globally prohibited by ESLint. Use proper types, generics, or `unknown` with type guards.    |
-| **No `@ts-ignore`**         | Fix the underlying type error instead of suppressing it.                                                       |
-| **No `as` type assertions** | Unless truly necessary for interop; must include a comment explaining why.                                     |
-| **Explicit return types**   | All exported functions must have explicit return type annotations.                                             |
-| **Strict null checks**      | Handle `null` and `undefined` explicitly. No optional chaining as a substitute for proper null handling logic. |
+| **禁止使用 `any`** | ESLint 全局禁止使用 `any` 类型。请使用适当的类型、泛型或配合类型守卫（type guards）使用 `unknown`。 |
+| **禁止使用 `@ts-ignore`** | 修复底层的类型错误，而不是压制它。 |
+| **禁止使用 `as` 类型断言** | 除非互操作确实需要；必须包含一条注释解释原因。 |
+| **显式返回值类型** | 所有导出的函数必须有显式的返回值类型标注。 |
+| **严格的 null 检查** | 显式处理 `null` 和 `undefined`。不要用可选链（optional chaining）代替正确的 null 处理逻辑。 |
 
-### 8.2 Error Handling
+### 8.2 错误处理
 
-| Rule                        | Description                                                                                                  |
+| 规则 | 描述 |
 | --------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| **No empty catch blocks**   | Every `catch` must either re-throw, log with full stack, or handle the error meaningfully.                   |
-| **No silent failures**      | Functions must not swallow errors and return default values. If an operation can fail, the caller must know. |
-| **Specific error messages** | Error messages must include context (what failed, with what input). Not just "Error occurred".               |
-| **IPC error propagation**   | IPC handlers must catch errors and return structured error responses, never crash the main process silently. |
+| **禁止空白的 catch 块** | 每个 `catch` 必须重新抛出、使用完整堆栈进行日志记录，或者进行有意义的错误处理。 |
+| **禁止静默失败** | 函数决不能吞掉错误并返回默认值。如果一个操作可能失败，调用方必须知晓。 |
+| **具体的错误消息** | 错误消息必须包含上下文（什么失败了，输入了什么）。不能仅仅是 "Error occurred"。 |
+| **IPC 错误传播** | IPC 处理器必须捕获错误并返回结构化的错误响应，绝不能静默崩溃主进程。 |
 
-### 8.3 Internationalization (i18n) Rules
+### 8.3 国际化 (i18n) 规则
 
-| Rule                                 | Description                                                                                                                                                  |
+| 规则 | 描述 |
 | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **No hardcoded user-facing strings** | All text visible to users must go through `t()` from `react-i18next`. This includes button labels, error messages, placeholders, tooltips, and status text.  |
-| **No hardcoded Chinese**             | Hardcoded Chinese characters in source code (outside of locale JSON files) are prohibited. This is enforced by regression tests.                             |
-| **All 7 locales must be updated**    | When adding a new i18n key, it must be added to ALL locale files: `en.json`, `zh.json`, `zh-TW.json`, `ja.json`, `fr.json`, `de.json`, `es.json`.            |
-| **Key naming**                       | Use dot-notation structured keys: `domain.action` (e.g., `skill.formatDirectoryRepo`, `settings.addNModels`).                                                |
-| **Interpolation**                    | Use i18next interpolation for dynamic values: `t('settings.addNModels', { count: n })`. Never concatenate translated strings.                                |
-| **Backend error messages**           | Error messages in the main process (thrown from IPC handlers, services) should be in English, as they are typically logged, not displayed directly to users. |
+| **禁止硬编码面向用户的字符串** | 所有用户可见的文本必须通过 `react-i18next` 的 `t()` 函数处理。这包括按钮标签、错误消息、占位符、工具提示和状态文本。 |
+| **禁止硬编码中文** | 禁止在源码（本地化 JSON 文件之外）中硬编码中文字符。这由回归测试强制执行。 |
+| **所有 7 个本地化文件必须同步更新** | 添加新 i18n 键时，必须将其添加到所有本地化文件中：`en.json`、`zh.json`、`zh-TW.json`、`ja.json`、`fr.json`、`de.json`、`es.json`。 |
+| **键的命名** | 使用点记法的结构化键：`domain.action`（例如 `skill.formatDirectoryRepo`，`settings.addNModels`）。 |
+| **插值** | 使用 i18next 插值来处理动态值：`t('settings.addNModels', { count: n })`。绝不要拼接翻译后的字符串。 |
+| **后端错误消息** | 主进程中抛出的错误消息（从 IPC 处理器、服务中抛出）应为英文，因为它们通常只记录在日志中，不直接向用户展示。 |
 
-### 8.4 Database Rules
+### 8.4 数据库规则
 
-| Rule                                       | Description                                                                                                                                         |
+| 规则 | 描述 |
 | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Parameterized queries only**             | All SQL queries must use parameterized placeholders (`?`). String concatenation for SQL values is absolutely prohibited.                            |
-| **Foreign keys enforced**                  | `PRAGMA foreign_keys = ON` must be set. All FK constraints must use explicit `ON DELETE` behavior (CASCADE or SET NULL).                            |
-| **Transactions for multi-step operations** | Any operation that involves multiple SQL statements must be wrapped in `db.transaction()`.                                                          |
-| **FTS sync**                               | When updating prompts, the FTS index must be kept in sync. Use triggers or explicit FTS update statements.                                          |
-| **Schema migrations**                      | All schema changes must go through `packages/db/src/init.ts`. Never modify `packages/db/src/schema.ts` without a corresponding migration and test.  |
-| **Adapter boundary**                       | Database code must use the `packages/db/src/adapter.ts` API. Do not bypass it with direct driver calls in app code.                                 |
-| **Shared package boundary**                | App code should consume DB classes through `@prompthub/db` / `@prompthub/core`; do not duplicate schema knowledge in renderer components.           |
-| **Null byte awareness**                    | SQLite string inputs can lose data around `\x00`. Input validation should strip or reject null bytes before database writes and test this behavior. |
+| **仅限参数化查询** | 所有 SQL 查询必须使用参数化占位符 (`?`)。绝对禁止将 SQL 值进行字符串拼接。 |
+| **强制执行外键约束** | 必须设置 `PRAGMA foreign_keys = ON`。所有外键（FK）约束必须使用显式的 `ON DELETE` 行为（CASCADE 或 SET NULL）。 |
+| **多步骤操作使用事务** | 任何涉及多条 SQL 语句的操作都必须封装在 `db.transaction()` 中。 |
+| **FTS 同步** | 更新提示词时，FTS 索引必须保持同步。使用触发器或显式的 FTS 更新语句。 |
+| **模式迁移 (Schema migrations)** | 所有模式更改必须通过 `packages/db/src/init.ts` 进行。决不能在没有相应迁移和测试的情况下直接修改 `packages/db/src/schema.ts`。 |
+| **适配器边界** | 数据库代码必须使用 `packages/db/src/adapter.ts` API。不要在应用代码中通过直接调用驱动来绕过它。 |
+| **共享包边界** | 应用代码应该通过 `@prompthub/db` / `@prompthub/core` 消费 DB 类；不要在渲染器组件中复制模式定义。 |
+| **空字节防范意识** | SQLite 字符串输入可能会在 `\x00` 附近丢失数据。在写入数据库之前，输入验证应剥离或拒绝空字节，并在测试中验证此行为。 |
 
-Additional database workflow:
+附加数据库工作流：
 
-1. Update `packages/db/src/schema.ts` for fresh installs.
-2. Add an idempotent migration in `packages/db/src/init.ts` for existing installs.
-3. Update the relevant DB class in `packages/db/src/*.ts`.
-4. Update shared types in `packages/shared/types` if the field crosses app/package boundaries.
-5. Add real SQLite tests using `DatabaseAdapter(":memory:")` plus migration/compatibility tests when existing data is affected.
-6. Record migration, rollback, and verification in the active change `implementation.md`.
+1. 更新 `packages/db/src/schema.ts` 以用于全新安装。
+2. 在 `packages/db/src/init.ts` 中针对现有安装添加一个幂等的迁移。
+3. 在 `packages/db/src/*.ts` 中更新相关的数据库类。
+4. 如果该字段跨越应用/包边界，在 `packages/shared/types` 中更新共享类型。
+5. 使用 `DatabaseAdapter(":memory:")` 添加真实的 SQLite测试，在影响现有数据时加上迁移/兼容性测试。
+6. 在活动变更的 `implementation.md` 中记录迁移、回滚和验证过程。
 
-### 8.5 Security Rules
+### 8.5 安全规则
 
-| Rule                          | Description                                                                                                               |
+| 规则 | 描述 |
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| **AES-256-GCM**               | All encryption uses AES-256-GCM with random IV. Never reuse IVs.                                                          |
-| **Master password**           | Derived via scrypt (or equivalent KDF). Never stored in plaintext.                                                        |
-| **No secrets in logs**        | Passwords, API keys, tokens, and encryption keys must never appear in log output or error messages.                       |
-| **IPC input validation**      | All IPC handlers must validate input types and reject malformed payloads before processing.                               |
-| **SSRF protection**           | Image download endpoints (`image.ipc.ts`) must validate URLs against SSRF attacks (no internal IPs, no file:// protocol). |
-| **Path traversal prevention** | File path inputs must be validated to prevent `../` traversal, absolute path injection, and symlink attacks.              |
+| **AES-256-GCM** | 所有加密均使用带有随机 IV 的 AES-256-GCM。绝不重用 IV。 |
+| **主密码** | 通过 scrypt（或等效的 KDF）推导。绝不以明文形式存储。 |
+| **日志中不包含敏感信息** | 密码、API 密钥、令牌（tokens）和加密密钥绝不能出现在日志输出或错误消息中。 |
+| **IPC 输入验证** | 所有 IPC 处理器在处理前必须验证输入类型并拒绝格式错误的有效载荷。 |
+| **SSRF 防护** | 图像下载端点（`image.ipc.ts`）必须验证 URL 以防范 SSRF 攻击（不使用内部 IP，不使用 file:// 协议）。 |
+| **防范路径穿越** | 必须对文件路径输入进行验证，以防范 `../` 穿越、绝对路径注入和符号链接攻击。 |
 
-### 8.6 Component & UI Rules
+### 8.6 组件与 UI 规则
 
-| Rule                          | Description                                                                                                                            |
+| 规则 | 描述 |
 | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| **Reuse existing components** | Check `apps/desktop/src/renderer/components/ui/` or the relevant app UI folder before creating new primitives.                         |
-| **No inline styles**          | Use Tailwind classes exclusively. No `style={{ }}` props.                                                                              |
-| **Lucide icons only**         | Use `lucide-react` for all icons. Do not import other icon libraries.                                                                  |
-| **Accessible**                | All interactive elements must have appropriate ARIA labels. Modals must trap focus.                                                    |
-| **Dark mode**                 | All UI must work in both light and dark modes. Use Tailwind's design tokens (e.g., `bg-card`, `text-foreground`) not hardcoded colors. |
+| **复用现有组件** | 在创建新的基础组件之前，检查 `apps/desktop/src/renderer/components/ui/` 或相关的应用 UI 文件夹。 |
+| **禁止内联样式** | 独占使用 Tailwind 类。禁止使用 `style={{ }}` 属性。 |
+| **仅限 Lucide 图标** | 所有图标均使用 `lucide-react`。不要导入其他图标库。 |
+| **无障碍访问（Accessible）** | 所有交互式元素必须具有适当的 ARIA 标签。模态框（Modals）必须捕获焦点（trap focus）。 |
+| **暗色模式** | 所有 UI 必须在亮色和暗色模式下都能正常工作。使用 Tailwind 的设计标记（例如 `bg-card`，`text-foreground`），不要硬编码颜色。 |
 
-### 8.7 Import & Module Rules
+### 8.7 导入与模块规则
 
-| Rule                            | Description                                                                                                              |
+| 规则 | 描述 |
 | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| **Package imports**             | Prefer workspace package imports (`@prompthub/core`, `@prompthub/db`, `@prompthub/shared`) for shared behavior.          |
-| **App boundary**                | `packages/*` must not import from `apps/*`. App packages may import from `packages/*`.                                   |
-| **No circular imports**         | Modules must not have circular dependencies. Main → Shared is OK. Renderer → Shared is OK. Main ↔ Renderer is NEVER OK.  |
-| **Shared types only in shared** | Types used by more than one app/package belong in `packages/shared/types`. App-local types stay near the app module.     |
-| **IPC channels in constants**   | Desktop IPC channel strings must be defined in `packages/shared/constants/ipc-channels.ts`, never hardcoded in handlers. |
+| **包导入** | 优先选用工作区包导入（`@prompthub/core`、`@prompthub/db`、`@prompthub/shared`）来处理共享行为。 |
+| **应用边界** | `packages/*` 决不能从 `apps/*` 导入。应用包可以从 `packages/*` 导入。 |
+| **禁止循环导入** | 模块之间决不能有循环依赖。主进程 → 共享包是 OK 的。渲染器 → 共享包是 OK 的。主进程 ↔ 渲染器是绝对不行的。 |
+| **共享类型只能存放在 shared 中** | 供多个应用/包使用的类型属于 `packages/shared/types`。应用本地的类型应留在应用模块附近。 |
+| **IPC 通道定义在常量中** | 桌面 IPC 通道字符串必须定义在 `packages/shared/constants/ipc-channels.ts` 中，绝不能在处理器中硬编码。 |
 
-## 9. IPC Development Checklist
+## 9. IPC 开发清单
 
-When adding a new IPC endpoint:
+当添加新的 IPC 端点时：
 
-1. **Define channel** in `packages/shared/constants/ipc-channels.ts`.
-2. **Define types** for request/response in `packages/shared/types/` when the contract crosses package boundaries.
-3. **Implement handler** in `apps/desktop/src/main/ipc/` with input validation.
-4. **Expose in preload** via `apps/desktop/src/preload/` (`contextBridge.exposeInMainWorld`).
-5. **Call from renderer** via the typed `window.api` method.
-6. **Add tests** for the handler (valid inputs, invalid inputs, error paths).
-7. **Record contract impact** in the active change when the endpoint changes user-visible behavior or persistent data.
+1. 在 `packages/shared/constants/ipc-channels.ts` 中**定义通道**。
+2. 当契约跨包边界时，在 `packages/shared/types/` 中**定义请求/响应的类型**。
+3. 在 `apps/desktop/src/main/ipc/` 中**实现处理器**并包含输入验证。
+4. 通过 `apps/desktop/src/preload/` 显式在 preload 中**暴露** (`contextBridge.exposeInMainWorld`)。
+5. 通过类型化的 `window.api` 方法从渲染器中**调用**。
+6. 为处理器**编写测试**（有效输入、无效输入、错误路径）。
+7. 当端点更改用户可见行为或持久化数据时，在活动变更中**记录契约影响**。
 
-## 10. Skill System Conventions
+## 10. 技能（Skill）系统约定
 
-### Package Boundary
+### 包边界
 
-A Skill is a directory-level package. `SKILL.md` is the required entrypoint inside the package, not the whole Skill.
+一个技能是一个目录级别的包。`SKILL.md` 是该包内必需的入口文件，它本身并不代表整个技能。
 
-Valid examples:
+有效示例：
 
 ```text
 writer/
@@ -662,17 +665,17 @@ simple-skill/
 └── SKILL.md
 ```
 
-Rules:
+规则：
 
-- Import/install/sync/export/distribute/deploy paths must preserve the whole Skill directory tree, except explicit ignored entries such as `.git` and `.prompthub`.
-- A Skill with only `SKILL.md` is valid, but it is still represented as a directory containing `SKILL.md`.
-- Content-only writes (`writeLocalFile("SKILL.md")`, `saveContentToLocalRepo`, or equivalent) are allowed for new UI-authored Skills and editing the entrypoint file. They must not be used as the final persistence path for a store/Git/Gitea/local-directory import that represents a package.
-- When source metadata includes `source_url`, branch/directory fields, `canonical_skill_path`, `local_repo_path`, or `directory_fingerprint`, treat the source as a package unless explicitly documented as single-file.
-- Tests for Skill import/install must assert managed repo file inventory, not only DB rows or mocked API calls.
+- 导入/安装/同步/导出/分发/部署路径必须保留整个技能目录树，除了显式忽略的条目如 `.git` 和 `.prompthub`。
+- 仅包含 `SKILL.md` 的技能也是有效的，但它仍然表示为包含 `SKILL.md` 的目录。
+- 仅写内容的操作（`writeLocalFile("SKILL.md")`、`saveContentToLocalRepo` 或同等方法）允许用于新建 UI 编写的技能以及编辑入口文件。它们决不能作为代表包的商店/Git/Gitea/本地目录导入的最终持久化路径。
+- 当源元数据包含 `source_url`、分支/目录字段、`canonical_skill_path`、`local_repo_path` 或 `directory_fingerprint` 时，应将源视为一个包，除非显式记录为单文件。
+- 技能导入/安装的测试必须断言受管理的仓库文件清单，而不仅是数据库行或 mocked API 调用。
 
-### File Format
+### 文件格式
 
-Every Skill package contains a `SKILL.md` file with YAML frontmatter:
+每个技能包都包含一个带有 YAML 前言（frontmatter）的 `SKILL.md` 文件：
 
 ```markdown
 ---
@@ -684,43 +687,43 @@ tags:
   - tag2
 ---
 
-# Skill Instructions
+# 技能指令
 
-Markdown content here...
+Markdown 内容放置于此...
 ```
 
-### Sync Rules
+### 同步规则
 
-- **DB is the source of truth** for metadata displayed in the UI.
-- **SKILL.md files** are the source of truth for instructions/content.
-- When metadata is edited in the UI (`EditSkillModal`), both DB and SKILL.md frontmatter are updated (`syncFrontmatterToRepo()`).
-- When SKILL.md file changes on disk, the DB is synced via `syncSkillFromRepo()`.
-- The `METADATA_KEYS` constant in `skill-repo-sync.ts` defines which fields are considered metadata: `name`, `description`, `version`, `tags`, `author`, `model`.
+- **数据库是 UI 中显示的元数据的真理源**。
+- **SKILL.md 文件是指令/内容的真理源**。
+- 在 UI（`EditSkillModal`）中编辑元数据时，数据库和 SKILL.md 的前言都会被更新（`syncFrontmatterToRepo()`）。
+- 当磁盘上的 SKILL.md 文件发生更改时，数据库会通过 `syncSkillFromRepo()` 进行同步。
+- `skill-repo-sync.ts` 中的 `METADATA_KEYS` 常量定义了哪些字段被视为元数据：`name`、`description`、`version`、`tags`、`author`、`model`。
 
-### Validation
+### 验证
 
-- Skill names must match `/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/` (lowercase, hyphens, no leading/trailing hyphens).
-- SKILL.md must have valid YAML frontmatter with required `name` field.
-- `parseSkillMd()` in `skill-validator.ts` handles parsing; edge cases (empty frontmatter, missing delimiters) are documented in tests.
+- 技能名称必须符合 `/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/`（小写、连字符，无开头/结尾连字符）。
+- SKILL.md 必须具有包含必需 `name` 字段的有效 YAML 前言。
+- `skill-validator.ts` 中的 `parseSkillMd()` 处理解析；边缘情况（空前言、缺少分隔符）在测试中进行了记录。
 
-## 11. Git & Commit Conventions
+## 11. Git 与提交约定
 
-| Rule                     | Description                                                                         |
+| 规则 | 描述 |
 | ------------------------ | ----------------------------------------------------------------------------------- |
-| **Conventional Commits** | `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`, `perf:`, `style:`.        |
-| **Scope optional**       | `feat(skill): add frontmatter sync` or `fix: correct Gemini routing`.               |
-| **Imperative mood**      | "add feature" not "added feature" or "adds feature".                                |
-| **No auto-commit**       | AI agents must never commit without explicit user instruction.                      |
-| **Atomic commits**       | Each commit should represent one logical change. Don't mix features with bug fixes. |
-| **All tests must pass**  | `pnpm test -- --run` and `pnpm lint` must both pass before committing.              |
+| **约定式提交** | `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`, `perf:`, `style:`。 |
+| **作用域可选** | `feat(skill): add frontmatter sync` 或 `fix: correct Gemini routing`。 |
+| **祈使语气** | 使用 "add feature"（添加功能）而非 "added feature" 或 "adds feature"。 |
+| **禁止自动提交** | 在没有用户明确指示的情况下，AI Agent 决不能自动提交代码。 |
+| **原子提交** | 每次提交应该代表一个逻辑更改。不要把功能开发与缺陷修复混在一起。 |
+| **所有测试必须通过** | 在提交之前，`pnpm test -- --run` 和 `pnpm lint` 都必须成功通过。 |
 
-## 12. Known Caveats & Gotchas
+## 12. 已知陷阱与注意事项
 
-| Issue                         | Details                                                                                                                                                                                                                                            |
-| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --- | ------------------------------------------------------------------- |
-| **SQLite null byte handling** | Null bytes in text fields can cause silent data loss depending on adapter/runtime behavior. Strip or reject `\x00` before database writes.                                                                                                         |
-| **FTS5 special operators**    | Search queries containing `AND`, `OR`, `NOT`, `NEAR`, `*`, `^`, `"`, or `column:` are interpreted as FTS5 operators and may cause syntax errors if not properly escaped.                                                                           |
-| **Electron process boundary** | Objects passed via IPC are serialized (structured clone). Functions, class instances, and circular references cannot cross the IPC boundary.                                                                                                       |
-| **Skill sync race condition** | `useEffect` in `SkillFullDetailPage` triggers `syncSkillFromRepo()` on `updated_at` change, which can overwrite metadata edits if the SKILL.md file hasn't been updated yet. This is mitigated by `syncFrontmatterToRepo()` in the update handler. |
-| **Empty string vs null**      | Some DB methods convert `""` to `null` via `value                                                                                                                                                                                                  |     | null`. Be explicit about whether empty strings should be preserved. |
-| **Flaky time-based tests**    | Avoid relying on `Date.now()` for ordering. Use explicit timestamps or deterministic sequencing in tests.                                                                                                                                          |
+| 问题 | 详情 |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **SQLite 空字节处理** | 文本字段中的空字节可能会根据适配器/运行时的表现引起静默数据丢失。在写入数据库前过滤或拒绝 `\x00`。 |
+| **FTS5 特殊运算符** | 包含 `AND`、`OR`、`NOT`、`NEAR`、`*`、`^`、`"` 或 `column:` 的搜索查询会被解释为 FTS5 运算符，如果未正确转义，可能会导致语法错误。 |
+| **Electron 进程边界** | 通过 IPC 传递的对象会被序列化 (结构化克隆)。函数、类实例和循环引用无法跨越 IPC 边界。 |
+| **技能同步竞态条件** | `SkillFullDetailPage` 中的 `useEffect` 在 `updated_at` 更改时触发 `syncSkillFromRepo()`，如果 SKILL.md 文件尚未更新，可能会覆盖元数据编辑。这已通过更新处理程序中的 `syncFrontmatterToRepo()` 得到缓解。 |
+| **空字符串与 null** | 某些 DB 方法通过 `value || null` 将 `""` 转换为 `null`。请明确说明是否应保留空字符串。 |
+| **不稳定的基于时间的测试** | 避免依赖 `Date.now()` 进行排序。在测试中使用显式的时间戳或确定性的序列。 |

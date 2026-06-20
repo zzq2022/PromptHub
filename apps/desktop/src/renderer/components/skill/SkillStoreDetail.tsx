@@ -32,6 +32,7 @@ import {
   getErrorMessage,
   groupSkillSafetyFindings,
   getSafetyScanAIConfig,
+  isSkillDuplicateError,
   renderImmersiveSegments,
   resolveSkillDescription,
   stripFrontmatter,
@@ -154,6 +155,7 @@ export function SkillStoreDetail({
   const [showTranslation, setShowTranslation] = useState(false);
   const [showRetranslatePrompt, setShowRetranslatePrompt] = useState(false);
   const [deploySkill, setDeploySkill] = useState<Skill | null>(null);
+  const [pendingOverwriteInstall, setPendingOverwriteInstall] = useState(false);
   const stalePromptFingerprintRef = useRef<string | null>(null);
   const [translationSidecar, setTranslationSidecar] =
     useState<SkillTranslationSidecar | null>(null);
@@ -466,25 +468,28 @@ export function SkillStoreDetail({
     setShowRetranslatePrompt(true);
   }, [hasStaleTranslation, translationFingerprint]);
 
+  const performInstall = async (overwriteExisting = false) => {
+    const result = await installRegistrySkill(
+      installableSkill,
+      overwriteExisting ? { overwriteExisting: true } : undefined,
+    );
+    if (result) {
+      setJustInstalled(true);
+      showToast(
+        t("skill.addedToLibrary", "Added") + `: ${skill.name}`,
+        "success",
+      );
+      setDeploySkill(result);
+      setTimeout(() => setJustInstalled(false), 2000);
+    }
+  };
+
   const handleInstall = async () => {
     if (isInstalling || installed) {
       return;
     }
     setInstallPending(true);
     try {
-      const performInstall = async () => {
-        const result = await installRegistrySkill(installableSkill);
-        if (result) {
-          setJustInstalled(true);
-          showToast(
-            t("skill.addedToLibrary", "Added") + `: ${skill.name}`,
-            "success",
-          );
-          setDeploySkill(result);
-          setTimeout(() => setJustInstalled(false), 2000);
-        }
-      };
-
       if (autoScanBeforeInstall) {
         const report = await scanSafety();
         const shouldBlockInstall = report?.level === "blocked";
@@ -506,6 +511,10 @@ export function SkillStoreDetail({
 
       await performInstall();
     } catch (e) {
+      if (isSkillDuplicateError(e)) {
+        setPendingOverwriteInstall(true);
+        return;
+      }
       showToast(formatSkillInstallError(e, t), "error");
     } finally {
       setInstallPending(false);
@@ -1096,17 +1105,12 @@ export function SkillStoreDetail({
             setPendingHighRiskInstallReport(null);
             setInstallPending(true);
             try {
-              const result = await installRegistrySkill(installableSkill);
-              if (result) {
-                setJustInstalled(true);
-                showToast(
-                  t("skill.addedToLibrary", "Added") + `: ${skill.name}`,
-                  "success",
-                );
-                setDeploySkill(result);
-                setTimeout(() => setJustInstalled(false), 2000);
-              }
+              await performInstall();
             } catch (error) {
+              if (isSkillDuplicateError(error)) {
+                setPendingOverwriteInstall(true);
+                return;
+              }
               showToast(formatSkillInstallError(error, t), "error");
             } finally {
               setInstallPending(false);
@@ -1164,6 +1168,33 @@ export function SkillStoreDetail({
         )}
         confirmText={t("skill.retranslateNow", "Retranslate now")}
         cancelText={t("common.cancel", "Cancel")}
+      />
+      <ConfirmDialog
+        isOpen={pendingOverwriteInstall}
+        onClose={() => setPendingOverwriteInstall(false)}
+        onConfirm={() => {
+          const run = async () => {
+            setPendingOverwriteInstall(false);
+            setInstallPending(true);
+            try {
+              await performInstall(true);
+            } catch (error) {
+              showToast(formatSkillInstallError(error, t), "error");
+            } finally {
+              setInstallPending(false);
+            }
+          };
+          void run();
+        }}
+        title={t("skill.overwriteConfirmTitle", "Overwrite Local Skill?")}
+        message={t(
+          "skill.overwriteConfirmMessage",
+          'A skill with the same name "{{name}}" already exists locally. Overwriting will replace all instructions and files. Do you want to continue?',
+          { name: skill.name },
+        )}
+        confirmText={t("skill.overwriteConfirmAction", "Confirm Overwrite")}
+        cancelText={t("common.cancel", "Cancel")}
+        variant="destructive"
       />
     </div>
   );

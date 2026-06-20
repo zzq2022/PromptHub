@@ -50,6 +50,7 @@ export function toPublicSummary(row: SkillCatalogRow): SkillPublicSummary {
     id: row.id,
     name: row.name,
     description: truncateDescription(row.description),
+    slug: row.registry_slug ?? undefined,
   };
 }
 
@@ -66,5 +67,6 @@ export function toPrivateSummary(row: SkillCatalogRow): SkillPrivateSummary {
     name: row.name,
     description: truncateDescription(row.description),
     visibility: normalizeVisibility(row.visibility),
+    slug: row.registry_slug ?? undefined,
   };
 }

@@ -1,0 +1,12 @@
+const Database = require('better-sqlite3');
+const path = require('path');
+const dbPath = path.join(__dirname, 'apps/web/data/prompthub.db');
+const db = new Database(dbPath);
+console.log('=== All skills (id, name, visibility) ===');
+const rows = db.prepare('SELECT id, name, visibility FROM skills').all();
+rows.forEach(r => console.log(`${r.id} | ${r.name} | ${r.visibility}`));
+console.log(`\nTotal: ${rows.length}`);
+console.log('\n=== Skills with visibility=shared ===');
+const shared = db.prepare("SELECT COUNT(*) as cnt FROM skills WHERE visibility = 'shared'").get();
+console.log(`Shared count: ${shared.cnt}`);
+db.close();

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { getStoredAccessToken } from '../api/auth-session';
@@ -10,19 +11,27 @@ import {
   downloadSkill,
   fetchPrivateSkills,
   publishSkill,
+  fetchPendingSkills,
+  approveSkill,
+  rejectSkill,
+  type PendingSkillSummary,
+  type PendingReviewResult,
 } from '../api/skillhub';
 
-type ViewMode = 'browse' | 'detail' | 'private' | 'privateDetail';
+type ViewMode = 'browse' | 'detail' | 'private' | 'privateDetail' | 'pending';
 
 /**
  * SkillHub page — single-page component with internal tabs/sections.
  *
  * Publicly accessible (no ProtectedRoute wrapper). Authenticated users can
- * additionally view their private skills and publish them.
+ * additionally view their private skills and submit them for review.
+ * Admin users see a "Review" tab to approve/reject pending skills.
  */
 export function SkillHubPage() {
   const { t } = useTranslation();
-  const { isAuthenticated, user } = useAuth();
+  const navigate = useNavigate();
+  const { isAuthenticated, user, logout } = useAuth();
+  const isAdmin = (user as any)?.role === 'admin';
 
   // -- Public browsing state --
   const [view, setView] = useState<ViewMode>('browse');
@@ -41,6 +50,11 @@ export function SkillHubPage() {
   const [privateSkills, setPrivateSkills] = useState<SkillPrivateSummary[]>([]);
   const [privateLoading, setPrivateLoading] = useState(false);
 
+  // -- Pending review state (admin) --
+  const [pendingResult, setPendingResult] = useState<PendingReviewResult | null>(null);
+  const [pendingLoading, setPendingLoading] = useState(false);
+  const [pendingPage, setPendingPage] = useState(1);
+
   // -------------------------------------------------------------------
   // Public browse/search
   // -------------------------------------------------------------------
@@ -56,7 +70,6 @@ export function SkillHubPage() {
       setCurrentPage(page);
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : t('skillhub.error'));
-      // Keep previous data on error (Req 1.7)
     } finally {
       setLoading(false);
     }
@@ -116,7 +129,7 @@ export function SkillHubPage() {
   };
 
   // -------------------------------------------------------------------
-  // Private skills
+  // Private skills (submit for review)
   // -------------------------------------------------------------------
 
   const loadPrivateSkills = useCallback(async () => {
@@ -141,14 +154,61 @@ export function SkillHubPage() {
       const result = await publishSkill(token, id);
       if (result.alreadyPublic) {
         setStatusMsg(t('skillhub.alreadyPublic'));
-      } else {
-        setStatusMsg(t('skillhub.publishSuccess'));
+      } else if (result.alreadyPending) {
+        setStatusMsg(t('skillhub.alreadyPending'));
+      } else if (result.pendingApproval) {
+        setStatusMsg(t('skillhub.pendingApproval'));
       }
-      // Refresh both lists
       await loadPrivateSkills();
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Submit for review failed');
+    }
+  };
+
+  // -------------------------------------------------------------------
+  // Admin: pending review
+  // -------------------------------------------------------------------
+
+  const loadPendingSkills = useCallback(async (page: number) => {
+    const token = getStoredAccessToken();
+    if (!token || !isAdmin) return;
+    setPendingLoading(true);
+    setErrorMsg(null);
+    try {
+      const result = await fetchPendingSkills(token, page);
+      setPendingResult(result);
+      setPendingPage(page);
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : t('skillhub.error'));
+    } finally {
+      setPendingLoading(false);
+    }
+  }, [isAdmin, t]);
+
+  const handleApprove = async (id: string) => {
+    const token = getStoredAccessToken();
+    if (!token) return;
+    setStatusMsg(null);
+    try {
+      await approveSkill(token, id);
+      setStatusMsg(t('skillhub.approveSuccess'));
+      void loadPendingSkills(pendingPage);
       void loadPublicSkills(currentPage, searchQuery);
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : 'Publish failed');
+      setErrorMsg(err instanceof Error ? err.message : 'Approve failed');
+    }
+  };
+
+  const handleReject = async (id: string) => {
+    const token = getStoredAccessToken();
+    if (!token) return;
+    setStatusMsg(null);
+    try {
+      await rejectSkill(token, id);
+      setStatusMsg(t('skillhub.rejectSuccess'));
+      void loadPendingSkills(pendingPage);
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Reject failed');
     }
   };
 
@@ -167,6 +227,13 @@ export function SkillHubPage() {
     setSelectedDetail(null);
     setStatusMsg(null);
     void loadPrivateSkills();
+  };
+
+  const showPending = () => {
+    setView('pending');
+    setSelectedDetail(null);
+    setStatusMsg(null);
+    void loadPendingSkills(1);
   };
 
   const totalPages = publicResult
@@ -189,6 +256,20 @@ export function SkillHubPage() {
           <div className="skillhub-user-badge">
             <span className="skillhub-user-icon">●</span>
             {user?.username ?? ''}
+            {isAdmin && (
+              <button
+                className="skillhub-admin-link"
+                onClick={() => navigate('/admin')}
+              >
+                {t('admin.title')}
+              </button>
+            )}
+            <button
+              className="skillhub-logout-btn"
+              onClick={() => { void logout(); }}
+            >
+              {t('common.logout')}
+            </button>
           </div>
         )}
       </div>
@@ -211,11 +292,20 @@ export function SkillHubPage() {
             {t('skillhub.private')}
           </button>
         )}
-        {!isAuthenticated && (
-          <a
-            href="/login"
-            className="skillhub-login-link"
+        {isAuthenticated && isAdmin && (
+          <button
+            id="skillhub-tab-pending"
+            className={`skillhub-tab ${view === 'pending' ? 'skillhub-tab-active' : ''}`}
+            onClick={showPending}
           >
+            {t('skillhub.review')}
+            {pendingResult && pendingResult.total > 0 && (
+              <span className="skillhub-pending-badge">{pendingResult.total}</span>
+            )}
+          </button>
+        )}
+        {!isAuthenticated && (
+          <a href="/login" className="skillhub-login-link">
             {t('skillhub.loginToManage')}
           </a>
         )}
@@ -234,9 +324,8 @@ export function SkillHubPage() {
       )}
 
       {/* Browse view */}
-      {(view === 'browse') && (
+      {view === 'browse' && (
         <div className="skillhub-browse">
-          {/* Search bar */}
           <form onSubmit={handleSearch} className="skillhub-search-form">
             <input
               id="skillhub-search-input"
@@ -251,10 +340,8 @@ export function SkillHubPage() {
             </button>
           </form>
 
-          {/* Loading */}
           {loading && <p className="empty-state">{t('skillhub.loading')}</p>}
 
-          {/* Skill list */}
           {!loading && publicResult && publicResult.items.length === 0 && (
             <p className="empty-state">
               {searchQuery.trim() ? t('skillhub.noResults') : t('skillhub.noSkills')}
@@ -281,7 +368,6 @@ export function SkillHubPage() {
                 ))}
               </div>
 
-              {/* Pagination */}
               {totalPages > 1 && (
                 <div className="skillhub-pagination">
                   <button
@@ -361,11 +447,7 @@ export function SkillHubPage() {
           {!privateLoading && privateSkills.length > 0 && (
             <div className="resource-list">
               {privateSkills.map((skill) => (
-                <div
-                  key={skill.id}
-                  className="resource-card"
-                  id={`skillhub-private-${skill.id}`}
-                >
+                <div key={skill.id} className="resource-card" id={`skillhub-private-${skill.id}`}>
                   <div className="resource-card-top">
                     <h3 className="resource-title">{skill.name}</h3>
                     <span className="resource-badge skillhub-badge-private">
@@ -382,7 +464,7 @@ export function SkillHubPage() {
                         onClick={() => void handlePublish(skill.id)}
                         id={`skillhub-publish-${skill.id}`}
                       >
-                        {t('skillhub.publish')}
+                        {t('skillhub.submitForReview')}
                       </button>
                     )}
                     <button
@@ -395,6 +477,83 @@ export function SkillHubPage() {
                 </div>
               ))}
             </div>
+          )}
+        </div>
+      )}
+
+      {/* Admin: Pending review view */}
+      {view === 'pending' && isAuthenticated && isAdmin && (
+        <div className="skillhub-pending">
+          <p className="skillhub-pending-subtitle">{t('skillhub.reviewSubtitle')}</p>
+
+          {pendingLoading && <p className="empty-state">{t('skillhub.loading')}</p>}
+
+          {!pendingLoading && pendingResult && pendingResult.items.length === 0 && (
+            <p className="empty-state">{t('skillhub.noPendingSkills')}</p>
+          )}
+
+          {!pendingLoading && pendingResult && pendingResult.items.length > 0 && (
+            <>
+              <div className="resource-list">
+                {pendingResult.items.map((skill) => (
+                  <div key={skill.id} className="resource-card" id={`skillhub-pending-${skill.id}`}>
+                    <div className="resource-card-top">
+                      <h3 className="resource-title">{skill.name}</h3>
+                      <span className="resource-badge skillhub-badge-pending">
+                        {t('skillhub.pendingReview')}
+                      </span>
+                    </div>
+                    <p className="resource-body resource-body-truncate">
+                      {skill.description || t('skills.noDescription')}
+                    </p>
+                    {skill.ownerUserId && (
+                      <p className="resource-meta">Owner: {skill.ownerUserId}</p>
+                    )}
+                    <div className="inline-actions">
+                      <button
+                        className="primary-button"
+                        onClick={() => void handleApprove(skill.id)}
+                        id={`skillhub-approve-${skill.id}`}
+                      >
+                        {t('skillhub.approve')}
+                      </button>
+                      <button
+                        className="secondary-button"
+                        onClick={() => void handleReject(skill.id)}
+                        id={`skillhub-reject-${skill.id}`}
+                      >
+                        {t('skillhub.reject')}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {Math.max(1, Math.ceil(pendingResult.total / pendingResult.pageSize)) > 1 && (
+                <div className="skillhub-pagination">
+                  <button
+                    className="secondary-button"
+                    disabled={pendingPage <= 1}
+                    onClick={() => void loadPendingSkills(pendingPage - 1)}
+                  >
+                    {t('skillhub.prev')}
+                  </button>
+                  <span className="skillhub-page-info">
+                    {t('skillhub.page', {
+                      current: pendingPage,
+                      total: Math.max(1, Math.ceil(pendingResult.total / pendingResult.pageSize)),
+                    })}
+                  </span>
+                  <button
+                    className="secondary-button"
+                    disabled={pendingPage >= Math.ceil(pendingResult.total / pendingResult.pageSize)}
+                    onClick={() => void loadPendingSkills(pendingPage + 1)}
+                  >
+                    {t('skillhub.next')}
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
