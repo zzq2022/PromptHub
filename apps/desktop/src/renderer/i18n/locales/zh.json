@@ -1350,6 +1350,7 @@
     "collapse": "收起",
     "loading": "加载中...",
     "saving": "保存中...",
+    "retry": "重试",
     "error": "错误",
     "success": "成功",
     "optional": "可选",

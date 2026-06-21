@@ -219,12 +219,22 @@ describe("SkillInstaller.saveRemoteGitSkillToLocalRepoBySkillId", () => {
         },
       );
 
-    await expect(listRelativeFiles(repoPath)).resolves.toEqual([
-      "SKILL.md",
-      "assets/icon.png",
-      "references/guide.md",
-      "scripts/setup.sh",
-    ]);
+    const expectedFiles = process.platform === "win32"
+      ? [
+          "SKILL.md",
+          "assets/icon.png",
+          "guide-link.md",
+          "references/guide.md",
+          "scripts/setup.sh",
+        ]
+      : [
+          "SKILL.md",
+          "assets/icon.png",
+          "references/guide.md",
+          "scripts/setup.sh",
+        ];
+
+    await expect(listRelativeFiles(repoPath)).resolves.toEqual(expectedFiles);
     expect(await listRemoteImportTempDirs()).toEqual([]);
   });
 

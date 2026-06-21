@@ -146,6 +146,7 @@
     "discardChanges": "Discard",
     "imageDownloadFailed": "Image Download Failed",
     "imageDownloadFailedMessage": "Unable to download image from this URL. Please check if the link is correct.",
+    "internalImageUrlBlocked": "The self-hosted web workspace does not support fetching LAN/intranet images by default. Please upload them manually or use a public URL.",
     "aiResponse": "AI Response",
     "callingAI": "Calling AI...",
     "waitingResponse": "Waiting for response...",

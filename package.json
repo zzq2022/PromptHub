@@ -42,6 +42,7 @@
     "verify:web": "pnpm lint:web && pnpm typecheck:web && pnpm test:web -- --run && pnpm build:web",
     "verify:release": "node --experimental-strip-types scripts/verify-release.mts",
     "verify:release:quick": "node --experimental-strip-types scripts/verify-release.mts --profile quick",
+    "validate:i18n": "node --experimental-strip-types scripts/validate-i18n.mts",
     "docker:web:build": "docker build -f apps/web/Dockerfile -t prompthub-web:local ."
   },
   "devDependencies": {

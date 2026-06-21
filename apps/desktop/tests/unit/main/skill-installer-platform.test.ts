@@ -2,6 +2,7 @@
  * @vitest-environment node
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import path from "node:path";
 
 const fsMocks = vi.hoisted(() => ({
   mkdir: vi.fn(),
@@ -442,9 +443,10 @@ describe("skill-installer-platform symlink install", () => {
 
   it("reports whether active platform installs are copies or symlinks", async () => {
     internalMocks.fileExists.mockImplementation(async (target: string) => {
+      const normalizedTarget = target.replace(/\\/g, "/");
       return (
-        target.endsWith("/.prompthub-platform-activations.json") ||
-        target.endsWith("/SKILL.md")
+        normalizedTarget.endsWith("/.prompthub-platform-activations.json") ||
+        normalizedTarget.endsWith("/SKILL.md")
       );
     });
     fsMocks.readFile = vi.fn(async () =>
@@ -459,7 +461,8 @@ describe("skill-installer-platform symlink install", () => {
       (platform) => `/platform/${platform.id}/skills`,
     );
     fsMocks.lstat.mockImplementation(async (target: string) => {
-      if (target.includes("/claude/")) {
+      const normalizedTarget = target.replace(/\\/g, "/");
+      if (normalizedTarget.includes("/claude/")) {
         return {
           isSymbolicLink: () => true,
           isDirectory: () => false,
@@ -508,11 +511,15 @@ describe("skill-installer-platform symlink install", () => {
     cherryStudioMocks.getCherryStudioSkillStatus.mockImplementation(
       async (_platform, skillName: string) => skillName === "writer",
     );
-    fsMocks.lstat.mockImplementation(async (target: string) => ({
-      isSymbolicLink: () => target === `${cherrySkillsDir}/writer`,
-      isDirectory: () => target !== `${cherrySkillsDir}/writer`,
-      isFile: () => false,
-    }));
+    fsMocks.lstat.mockImplementation(async (target: string) => {
+      const normalizedTarget = target.replace(/\\/g, "/");
+      const normalizedExpected = `${cherrySkillsDir}/writer`.replace(/\\/g, "/");
+      return {
+        isSymbolicLink: () => normalizedTarget === normalizedExpected,
+        isDirectory: () => normalizedTarget !== normalizedExpected,
+        isFile: () => false,
+      };
+    });
 
     const status = await getSkillMdInstallStatusDetailsForSkill(
       { id: "skill-a", name: "writer", source_id: "source-a" },
@@ -534,7 +541,8 @@ describe("skill-installer-platform symlink install", () => {
         : `/platform/${platform.id}/skills`,
     );
     internalMocks.fileExists.mockImplementation(async (target: string) => {
-      return !target.endsWith(".prompthub-platform-activations.json");
+      const normalizedTarget = target.replace(/\\/g, "/");
+      return !normalizedTarget.endsWith(".prompthub-platform-activations.json");
     });
     cherryStudioMocks.getCherryStudioSkillStatus.mockImplementation(
       async (_platform, skillName: string) => skillName === "skill-creator",
@@ -574,12 +582,12 @@ describe("skill-installer-platform symlink install", () => {
       ["writer"],
     );
 
-    expect(fsMocks.rm).toHaveBeenCalledWith("/platform/skills/writer", {
+    expect(fsMocks.rm).toHaveBeenCalledWith(path.normalize("/platform/skills/writer"), {
       recursive: true,
       force: true,
     });
     expect(fsMocks.writeFile).toHaveBeenCalledWith(
-      "/platform/skills/.prompthub-platform-activations.json",
+      path.normalize("/platform/skills/.prompthub-platform-activations.json"),
       expect.not.stringContaining('"writer"'),
       "utf-8",
     );
@@ -631,16 +639,16 @@ describe("skill-installer-platform symlink install", () => {
     );
 
     expect(fsMocks.rm).toHaveBeenCalledTimes(1);
-    expect(fsMocks.rm).toHaveBeenCalledWith("/platform/skills/writer", {
+    expect(fsMocks.rm).toHaveBeenCalledWith(path.normalize("/platform/skills/writer"), {
       recursive: true,
       force: true,
     });
     expect(fsMocks.rm).not.toHaveBeenCalledWith(
-      "/prompthub/skills/skill-a",
+      path.normalize("/prompthub/skills/skill-a"),
       expect.anything(),
     );
     expect(fsMocks.rm).not.toHaveBeenCalledWith(
-      "/prompthub/skills/writer",
+      path.normalize("/prompthub/skills/writer"),
       expect.anything(),
     );
   });

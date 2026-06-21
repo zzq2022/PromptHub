@@ -229,7 +229,7 @@ export async function resolvePublicAddress(
   hostname: string,
   options: ResolvePublicAddressOptions = {},
 ): Promise<ResolvedAddress> {
-  if (!options.allowPrivateNetwork && isBlockedHostname(hostname)) {
+  if (isBlockedHostname(hostname)) {
     throw new Error("Access to local network addresses is not allowed");
   }
 
