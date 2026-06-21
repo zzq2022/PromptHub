@@ -34,7 +34,7 @@ import {
 import { useFolderStore } from "../../stores/folder.store";
 import { usePromptStore } from "../../stores/prompt.store";
 import { useSettingsStore } from "../../stores/settings.store";
-import { useUIStore } from "../../stores/ui.store";
+import { useUIStore, type AppModule } from "../../stores/ui.store";
 import {
   SIDEBAR_PANEL_WIDTH_DEFAULT,
   SIDEBAR_PANEL_WIDTH_MAX,
@@ -44,7 +44,7 @@ import { ColumnResizer } from "../ui/ColumnResizer";
 import { useSkillStore } from "../../stores/skill.store";
 import { FolderModal, PrivateFolderUnlockModal } from "../folder";
 import { useTranslation } from "react-i18next";
-import type { Folder } from "@prompthub/shared/types";
+import type { Folder, RuleFileId } from "@prompthub/shared/types";
 import { SortableTree } from "./tree/SortableTree";
 import type { FlattenedItem } from "./tree/utilities";
 import { buildPromptStats } from "../../services/prompt-filter";
@@ -339,7 +339,7 @@ export function Sidebar({
   const runtimeCapabilities = getRuntimeCapabilities();
   const webRuntime = isWebRuntime();
   const canAddRuleProject = !webRuntime;
-  const activeModule = appModule === "rules" || appModule === "projects" ? appModule : viewMode;
+  const activeModule: AppModule = appModule === "rules" || appModule === "projects" ? appModule : viewMode;
 
   useEffect(() => {
     if (storeView === "store") {
@@ -1825,7 +1825,7 @@ export function Sidebar({
                 </div>
               )}
             </>
-          ) : activeModule === "projects" ? (
+          ) : (activeModule as string) === "projects" ? (
             <>
               {/* Projects module sidebar panel - managed by ProjectsManager internally */}
               <div className="flex-1 flex flex-col items-center justify-center px-4">

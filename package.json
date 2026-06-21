@@ -14,7 +14,6 @@
     "build:cli": "pnpm --filter @prompthub/cli build",
     "pack:cli": "pnpm --dir apps/cli pack",
     "build:web": "pnpm --filter @prompthub/web build",
-    "build:web:cf": "pnpm --filter @prompthub/web build:client",
     "dev": "pnpm --filter @prompthub/desktop dev",
     "dev:cli": "pnpm --filter @prompthub/cli dev",
     "dev:web": "pnpm --filter @prompthub/web dev",

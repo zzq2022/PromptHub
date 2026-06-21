@@ -125,24 +125,6 @@ const checks: Check[] = [
     args: ["--filter", "@prompthub/web", "build"],
     profile: "quick",
   },
-  {
-    id: "web-cloudflare-lint",
-    label: "Cloudflare worker lint",
-    args: ["--filter", "@prompthub/web-cloudflare", "lint"],
-    profile: "quick",
-  },
-  {
-    id: "web-cloudflare-typecheck",
-    label: "Cloudflare worker typecheck",
-    args: ["--filter", "@prompthub/web-cloudflare", "typecheck"],
-    profile: "quick",
-  },
-  {
-    id: "web-cloudflare-test",
-    label: "Cloudflare worker tests",
-    args: ["--filter", "@prompthub/web-cloudflare", "test"],
-    profile: "quick",
-  },
 ];
 
 function getProfile(): Profile {

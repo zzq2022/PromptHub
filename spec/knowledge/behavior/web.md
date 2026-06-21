@@ -26,13 +26,6 @@
 - Web 自部署 runtime 在 Docker 或其他生产构建中必须能完整启动认证验证码服务。
 - 如果服务端依赖像 `svg-captcha` 这样会在运行时读取包内静态资源的库，SSR 构建不得把它错误内联到 bundle 中，否则会破坏其字体或资源的相对路径读取。
 
-### 5. Cloudflare Worker Packaging
-
-- `apps/web-cloudflare` 是独立于 `apps/web` 的 Cloudflare Workers 自部署实现，但它仍必须作为 monorepo 内可重复安装、可重复 typecheck、可重复 lint、可重复测试的 workspace package 存在。
-- Cloudflare worker 若通过 `wrangler` 生成运行时类型，应优先使用生成的 `worker-configuration.d.ts`，避免长期维护与真实平台 API 漂移的手写声明。
-- Cloudflare worker 的辅助脚本只能调用仓库内真实存在的构建命令；公开同步脚本不得依赖失效命令名。
-- Cloudflare worker 的 500 响应不得向客户端透传内部异常 message；详细异常仅记录在服务端日志。
-
 ## Stable Scenarios
 
 ### Scenario: Contributor updates web architecture
@@ -49,11 +42,3 @@ When a user needs deployment instructions:
 
 - the public entry remains `docs/web-self-hosted.md`
 - internal planning and migration detail stays in `spec/`
-
-### Scenario: Contributor updates Cloudflare worker integration
-
-When a contributor changes `apps/web-cloudflare` runtime bindings, scripts, or shared package imports:
-
-- they keep the package installable from the monorepo root
-- they rerun Cloudflare type generation after wrangler binding changes
-- they verify `typecheck`, `lint`, `test`, and `build:web:cf`
