@@ -80,7 +80,7 @@ export const useUIStore = create<UIState>()(
       setAppModule: (mode) =>
         set({
           appModule: mode,
-          viewMode: mode === "rules" ? "prompt" : mode,
+          viewMode: mode === "rules" || mode === "projects" ? "prompt" : mode,
         }),
       isSidebarCollapsed: false,
       toggleSidebar: () =>

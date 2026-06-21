@@ -22,11 +22,13 @@ import type {
   SkillProject,
 } from "@prompthub/shared/types";
 import { useSettingsStore } from "../../stores/settings.store";
+import { useUIStore } from "../../stores/ui.store";
 import { useSkillStore } from "../../stores/skill.store";
 import { useToast } from "../ui/Toast";
 import { Modal } from "../ui/Modal";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { Input } from "../ui/Input";
+import { ProjectCard } from "../shared/ProjectCard";
 import { SkillQuickInstall } from "./SkillQuickInstall";
 import { filterVisibleScannedSkills } from "../../services/skill-filter";
 import { SkillFullDetailPage } from "./SkillFullDetailPage";
@@ -1057,17 +1059,20 @@ export function SkillProjectsView() {
                   <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
                     {t(
                       "skill.projectsSidebarHint",
-                      "Register project directories and manage their local skills.",
+                      "View and manage project-local skills.",
                     )}
                   </p>
                 </div>
                 <button
                   type="button"
-                  onClick={handleOpenCreate}
-                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-white transition-colors hover:bg-primary/90"
-                  title={t("skill.addProject", "Add Project")}
+                  onClick={() => {
+                    useUIStore.getState().setAppModule("projects");
+                  }}
+                  className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-border app-wallpaper-surface px-3 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  title={t("projects.addProject", "Add Project")}
                 >
-                  <FolderPlusIcon className="h-4 w-4" />
+                  <FolderPlusIcon className="h-3.5 w-3.5" />
+                  {t("projects.title", "Projects")}
                 </button>
               </div>
             </div>
@@ -1091,43 +1096,28 @@ export function SkillProjectsView() {
                   const isActive = selectedProject?.id === project.id;
                   const scanState = projectScanState[project.id];
                   return (
-                    <button
+                    <ProjectCard
                       key={project.id}
-                      type="button"
+                      name={project.name}
+                      rootPath={project.rootPath}
+                      isActive={isActive}
                       onClick={() => selectProject(project.id)}
-                      className={`w-full rounded-2xl border px-4 py-3 text-left transition-colors ${
-                        isActive
-                          ? "border-primary/40 bg-primary/5"
-                          : "border-border app-wallpaper-surface hover:bg-accent"
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex min-w-0 flex-1 items-start gap-3">
-                          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-sm font-semibold text-primary">
-                            {getProjectInitial(project.name)}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="truncate font-medium text-foreground">
-                              {project.name}
-                            </div>
-                            <div className="mt-1 truncate text-[11px] text-muted-foreground">
-                              {project.rootPath}
-                            </div>
-                          </div>
+                      indicator={
+                        scanState?.isScanning ? (
+                          <Loader2Icon className="h-4 w-4 animate-spin text-primary" />
+                        ) : null
+                      }
+                      footer={
+                        <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                          <span>
+                            {t("skill.projectSkillCount", {
+                              count: scanState?.scannedSkills.length || 0,
+                              defaultValue: `${scanState?.scannedSkills.length || 0} skills`,
+                            })}
+                          </span>
                         </div>
-                        {scanState?.isScanning ? (
-                          <Loader2Icon className="h-4 w-4 shrink-0 animate-spin text-primary" />
-                        ) : null}
-                      </div>
-                      <div className="mt-3 flex items-center justify-between text-[11px] text-muted-foreground">
-                        <span>
-                          {t("skill.projectSkillCount", {
-                            count: scanState?.scannedSkills.length || 0,
-                            defaultValue: `${scanState?.scannedSkills.length || 0} skills`,
-                          })}
-                        </span>
-                      </div>
-                    </button>
+                      }
+                    />
                   );
                 })
               )}

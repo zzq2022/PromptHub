@@ -80,6 +80,8 @@ describe("settings desktop workspace actions", () => {
     expect(useSettingsStore.getState().desktopHomeModules).toEqual([
       "skill",
       "prompt",
+      "rules",
+      "projects",
     ]);
   });
 

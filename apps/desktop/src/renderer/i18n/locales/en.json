@@ -320,6 +320,7 @@
     "sidebarHint": "Manage global rule files and project AGENTS.md files from one workspace.",
     "globalSection": "Global Rules",
     "projectSection": "Project Rules",
+    "noRuleFile": "No rule file",
     "addProjectRuleDirectory": "Add Project Directory",
     "addProjectRuleDirectoryHint": "Pick a code project folder and PromptHub will create and maintain an AGENTS.md rule file inside it for AI tools to read.",
     "currentProjectBadge": "Current",
@@ -424,7 +425,14 @@
     "copiedMessage": "Copied",
     "stopGenerating": "Stop",
     "clearSession": "Clear Session",
-    "clearSessionConfirm": "Clear all messages in this session? This cannot be undone."
+    "clearSessionConfirm": "Clear all messages in this session? This cannot be undone.",
+    "welcomeTitle": "Chat with {{name}}",
+    "welcomeDesc": "Ask questions about this project, generate code, analyze architecture, or plan features.",
+    "selectProjectSubHint": "Select a project to start an AI conversation",
+    "hintHelp": "Help me understand this codebase",
+    "hintAnalyze": "Analyze the project structure",
+    "hintExplain": "Explain the main modules",
+    "hintPlan": "Plan a new feature"
   },
   "folder": {
     "new": "New Folder",

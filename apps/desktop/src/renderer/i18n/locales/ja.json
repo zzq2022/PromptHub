@@ -342,7 +342,14 @@
     "copiedMessage": "コピー済み",
     "stopGenerating": "停止",
     "clearSession": "セッションをクリア",
-    "clearSessionConfirm": "このセッションのすべてのメッセージをクリアしますか？元に戻せません。"
+    "clearSessionConfirm": "このセッションのすべてのメッセージをクリアしますか？元に戻せません。",
+    "welcomeTitle": "{{name}} とチャット",
+    "welcomeDesc": "プロジェクトについて質問、コード生成、アーキテクチャ分析、機能計画など。",
+    "selectProjectSubHint": "プロジェクトを選択してAIチャットを開始",
+    "hintHelp": "このコードベースを理解する手伝い",
+    "hintAnalyze": "プロジェクト構造を分析",
+    "hintExplain": "主要モジュールを説明",
+    "hintPlan": "新機能を計画"
   },
   "folder": {
     "new": "新規フォルダ",
@@ -398,6 +405,7 @@
     "sidebarHint": "グローバルルールファイルとプロジェクトの AGENTS.md を 1 つのワークスペースでまとめて管理します。",
     "globalSection": "グローバルルール",
     "projectSection": "プロジェクトルール",
+    "noRuleFile": "ルールファイルなし",
     "addProjectRuleDirectory": "プロジェクトディレクトリを追加",
     "addProjectRuleDirectoryHint": "コードプロジェクトのフォルダを選ぶと、PromptHub がその中に AGENTS.md ルールファイルを自動で作成・管理します。AI ツールがこのファイルを読み込みます。",
     "currentProjectBadge": "現在",

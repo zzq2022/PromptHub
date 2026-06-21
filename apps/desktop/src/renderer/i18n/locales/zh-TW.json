@@ -342,7 +342,14 @@
     "copiedMessage": "已複製",
     "stopGenerating": "停止",
     "clearSession": "清空工作階段",
-    "clearSessionConfirm": "清空此工作階段中的所有訊息？此操作不可復原。"
+    "clearSessionConfirm": "清空此工作階段中的所有訊息？此操作不可復原。",
+    "welcomeTitle": "與 {{name}} 對話",
+    "welcomeDesc": "詢問專案相關問題、產生程式碼、分析架構或規劃功能。",
+    "selectProjectSubHint": "選擇一個專案開始 AI 對話",
+    "hintHelp": "幫我理解這個程式碼庫",
+    "hintAnalyze": "分析專案結構",
+    "hintExplain": "解釋主要模組",
+    "hintPlan": "規劃一個新功能"
   },
   "folder": {
     "new": "新增資料夾",
@@ -398,6 +405,7 @@
     "sidebarHint": "把全域規則檔案與專案 AGENTS.md 規則集中在同一個工作台中管理。",
     "globalSection": "全域規則",
     "projectSection": "專案規則",
+    "noRuleFile": "尚無規則檔案",
     "addProjectRuleDirectory": "新增專案目錄",
     "addProjectRuleDirectoryHint": "選擇一個程式碼專案目錄，PromptHub 會自動在其中建立並維護 AGENTS.md 規則檔案，供 AI 工具讀取。",
     "currentProjectBadge": "當前",

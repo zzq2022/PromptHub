@@ -342,7 +342,14 @@
     "copiedMessage": "Kopiert",
     "stopGenerating": "Stopp",
     "clearSession": "Sitzung löschen",
-    "clearSessionConfirm": "Alle Nachrichten in dieser Sitzung löschen? Dies kann nicht rückgängig gemacht werden."
+    "clearSessionConfirm": "Alle Nachrichten in dieser Sitzung löschen? Dies kann nicht rückgängig gemacht werden.",
+    "welcomeTitle": "Mit {{name}} chatten",
+    "welcomeDesc": "Stellen Sie Fragen zum Projekt, generieren Sie Code, analysieren Sie die Architektur oder planen Sie Funktionen.",
+    "selectProjectSubHint": "Wählen Sie ein Projekt für ein KI-Gespräch",
+    "hintHelp": "Helfen Sie mir, diesen Codebase zu verstehen",
+    "hintAnalyze": "Projektstruktur analysieren",
+    "hintExplain": "Hauptmodule erklären",
+    "hintPlan": "Neue Funktion planen"
   },
   "folder": {
     "new": "Neuer Ordner",
@@ -398,6 +405,7 @@
     "sidebarHint": "Verwalten Sie globale Regeldateien und projektbezogene AGENTS.md-Dateien in einem gemeinsamen Arbeitsbereich.",
     "globalSection": "Globale Regeln",
     "projectSection": "Projektregeln",
+    "noRuleFile": "Keine Regeldatei",
     "addProjectRuleDirectory": "Projektverzeichnis hinzufügen",
     "addProjectRuleDirectoryHint": "Wählen Sie ein Code-Projektverzeichnis aus und PromptHub erstellt und pflegt darin automatisch eine AGENTS.md-Regeldatei, die von KI-Tools gelesen wird.",
     "currentProjectBadge": "Aktuell",

@@ -321,6 +321,7 @@
     "sidebarHint": "把全局规则文件和项目 AGENTS.md 规则集中在一个工作台里管理。",
     "globalSection": "全局规则",
     "projectSection": "项目规则",
+    "noRuleFile": "暂无规则文件",
     "addProjectRuleDirectory": "添加项目目录",
     "addProjectRuleDirectoryHint": "选择一个代码项目目录，PromptHub 会自动在其中创建并维护 AGENTS.md 规则文件，供 AI 工具读取。",
     "currentProjectBadge": "当前",
@@ -425,7 +426,14 @@
     "copiedMessage": "已复制",
     "stopGenerating": "停止",
     "clearSession": "清空会话",
-    "clearSessionConfirm": "清空此会话中的所有消息？此操作不可撤销。"
+    "clearSessionConfirm": "清空此会话中的所有消息？此操作不可撤销。",
+    "welcomeTitle": "与 {{name}} 对话",
+    "welcomeDesc": "询问项目相关问题、生成代码、分析架构或规划功能。",
+    "selectProjectSubHint": "选择一个项目开始 AI 对话",
+    "hintHelp": "帮我理解这个代码库",
+    "hintAnalyze": "分析项目结构",
+    "hintExplain": "解释主要模块",
+    "hintPlan": "规划一个新功能"
   },
   "folder": {
     "new": "新建文件夹",

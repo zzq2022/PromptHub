@@ -248,6 +248,13 @@ export function AppearanceSettings() {
         "Global and project rule workspaces",
       ),
     },
+    projects: {
+      label: t("projects.title", "Projects"),
+      description: t(
+        "settings.desktopModuleProjectsDesc",
+        "Project management and AI chat",
+      ),
+    },
   };
 
   const handleDesktopModuleDragEnd = ({ active, over }: DragEndEvent) => {

@@ -211,6 +211,17 @@ function normalizeDesktopHomeModules(value: unknown): DesktopHomeModule[] {
   return deduped;
 }
 
+function mergeDesktopHomeModules(value: unknown): DesktopHomeModule[] {
+  const base = normalizeDesktopHomeModules(value);
+  // Append any newly-added modules not yet in the persisted list
+  for (const mod of DESKTOP_HOME_MODULES) {
+    if (!base.includes(mod)) {
+      base.push(mod);
+    }
+  }
+  return base;
+}
+
 function inferAIProtocol(
   provider: string | undefined,
   apiUrl: string | undefined,
@@ -589,7 +600,8 @@ export type AIUsageScenario =
   | "imageReverse"
   | "promptTest"
   | "imageTest"
-  | "translation";
+  | "translation"
+  | "chat";
 
 export type ScenarioModelDefaults = Partial<Record<AIUsageScenario, string>>;
 export type AIModelRoute =
@@ -605,6 +617,7 @@ export const AI_SCENARIO_MODEL_ROUTE: Record<AIUsageScenario, AIModelRoute> = {
   promptTest: "mainText",
   imageReverse: "visionText",
   imageTest: "imageGeneration",
+  chat: "mainText",
 };
 
 interface ProjectSkillImportPreferences {
@@ -2451,6 +2464,11 @@ export const useSettingsStore = create<SettingsState>()(
           next.skillListPageSize,
         );
 
+        // Always merge newly-added modules so existing users see them
+        next.desktopHomeModules = mergeDesktopHomeModules(
+          next.desktopHomeModules,
+        );
+
         next.syncProvider = clampSyncProvider(
           normalizeSyncProvider(next.syncProvider),
           {
@@ -2769,7 +2787,7 @@ export const useSettingsStore = create<SettingsState>()(
         if (typeof next.backgroundImageEnabled !== "boolean") {
           next.backgroundImageEnabled = true;
         }
-        next.desktopHomeModules = normalizeDesktopHomeModules(
+        next.desktopHomeModules = mergeDesktopHomeModules(
           next.desktopHomeModules,
         );
         delete (next as Record<string, unknown>).desktopHomeLayout;

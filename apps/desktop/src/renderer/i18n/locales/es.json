@@ -342,7 +342,14 @@
     "copiedMessage": "Copiado",
     "stopGenerating": "Detener",
     "clearSession": "Borrar sesión",
-    "clearSessionConfirm": "¿Borrar todos los mensajes de esta sesión? Esta acción no se puede deshacer."
+    "clearSessionConfirm": "¿Borrar todos los mensajes de esta sesión? Esta acción no se puede deshacer.",
+    "welcomeTitle": "Chatear con {{name}}",
+    "welcomeDesc": "Haz preguntas sobre el proyecto, genera código, analiza la arquitectura o planifica funciones.",
+    "selectProjectSubHint": "Selecciona un proyecto para iniciar una conversación con IA",
+    "hintHelp": "Ayúdame a entender esta base de código",
+    "hintAnalyze": "Analizar la estructura del proyecto",
+    "hintExplain": "Explicar los módulos principales",
+    "hintPlan": "Planificar una nueva función"
   },
   "folder": {
     "new": "Nueva carpeta",
@@ -398,6 +405,7 @@
     "sidebarHint": "Gestiona archivos de reglas globales y archivos AGENTS.md de proyectos desde un solo espacio de trabajo.",
     "globalSection": "Reglas globales",
     "projectSection": "Reglas de proyecto",
+    "noRuleFile": "Sin archivo de reglas",
     "addProjectRuleDirectory": "Agregar directorio de proyecto",
     "addProjectRuleDirectoryHint": "Elige una carpeta de proyecto y PromptHub creará y mantendrá automáticamente un archivo de reglas AGENTS.md dentro de ella para que las herramientas de IA lo lean.",
     "currentProjectBadge": "Actual",

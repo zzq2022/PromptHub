@@ -1,7 +1,6 @@
-import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+﻿import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  FolderOpenIcon,
   FolderPlusIcon,
   PencilIcon,
   TrashIcon,
@@ -11,28 +10,31 @@ import {
   UserIcon,
   SendIcon,
   StopCircleIcon,
+  CopyIcon,
+  CheckIcon,
+  SparklesIcon,
 } from "lucide-react";
 import { useSettingsStore } from "../../stores/settings.store";
 import { useToast } from "../ui/Toast";
 import { Modal } from "../ui/Modal";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { Input } from "../ui/Input";
+import { ProjectCard } from "../shared/ProjectCard";
 import type { SkillProject } from "@prompthub/shared/types";
 import { chatCompletion, type AIConfig } from "../../services/ai";
 import { resolveScenarioAIConfig } from "../../services/ai-defaults";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-// ─── Chat message type ───────────────────────────────────────────────
+// --- Chat message type ------------------------------------------------
 interface ChatMessage {
   id: string;
   role: "user" | "assistant";
   content: string;
   timestamp: number;
-  thinking?: string;
 }
 
-// ─── ProjectFormModal ────────────────────────────────────────────────
+// --- ProjectFormModal -------------------------------------------------
 interface ProjectFormModalProps {
   isOpen: boolean;
   editingProject: SkillProject | null;
@@ -146,9 +148,72 @@ function ProjectFormModal({
   );
 }
 
-// ─── ProjectChatPanel ────────────────────────────────────────────────
+// --- Copy button ------------------------------------------------------
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = useCallback(async () => {
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }, [text]);
+  return (
+    <button
+      className="p-1 rounded hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"
+      onClick={handleCopy}
+      title="Copy"
+    >
+      {copied ? <CheckIcon className="w-3.5 h-3.5 text-green-500" /> : <CopyIcon className="w-3.5 h-3.5" />}
+    </button>
+  );
+}
+
+// --- Markdown with code copy ------------------------------------------
+function MarkdownContent({ content }: { content: string }) {
+  return (
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm]}
+      components={{
+        pre: ({ children, ...props }) => (
+          <div className="relative group my-2">
+            <pre className="bg-muted/50 rounded-lg p-3 overflow-x-auto text-sm" {...props}>
+              {children}
+            </pre>
+          </div>
+        ),
+        code: ({ className, children, ...props }) => {
+          const isInline = !className;
+          return isInline ? (
+            <code className="bg-muted/50 px-1.5 py-0.5 rounded text-sm font-mono" {...props}>
+              {children}
+            </code>
+          ) : (
+            <code className={className} {...props}>
+              {children}
+            </code>
+          );
+        },
+      }}
+    >
+      {content}
+    </ReactMarkdown>
+  );
+}
+
+// --- ProjectChatPanel -------------------------------------------------
 interface ProjectChatPanelProps {
   project: SkillProject;
+}
+
+const QUICK_HINTS = [
+  "projects.hintHelp",
+  "projects.hintAnalyze",
+  "projects.hintExplain",
+  "projects.hintPlan",
+];
+
+function formatTime(ts: number): string {
+  const d = new Date(ts);
+  return d.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" });
 }
 
 function ProjectChatPanel({ project }: ProjectChatPanelProps) {
@@ -167,16 +232,21 @@ function ProjectChatPanel({ project }: ProjectChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
-  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  // Auto-scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Build AI config using the standard scenario resolver
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
+    }
+  }, [input]);
+
   const aiConfig = useMemo<AIConfig | null>(
     () =>
       resolveScenarioAIConfig({
@@ -194,84 +264,87 @@ function ProjectChatPanel({ project }: ProjectChatPanelProps) {
     [aiModels, scenarioModelDefaults, modelRouteDefaults, aiProvider, aiApiProtocol, aiApiKey, aiApiUrl, aiModel],
   );
 
-  const sendMessage = useCallback(async () => {
-    const trimmed = input.trim();
-    if (!trimmed || isStreaming) return;
-    if (!aiConfig) {
-      showToast(t("projects.noModelConfigured"), "error");
-      return;
-    }
+  const sendMessage = useCallback(
+    async (text?: string) => {
+      const trimmed = (text ?? input).trim();
+      if (!trimmed || isStreaming) return;
+      if (!aiConfig) {
+        showToast(t("projects.noModelConfigured"), "error");
+        return;
+      }
 
-    const userMsg: ChatMessage = {
-      id: `user-${Date.now()}`,
-      role: "user",
-      content: trimmed,
-      timestamp: Date.now(),
-    };
+      const userMsg: ChatMessage = {
+        id: `user-${Date.now()}`,
+        role: "user",
+        content: trimmed,
+        timestamp: Date.now(),
+      };
 
-    const assistantMsg: ChatMessage = {
-      id: `assistant-${Date.now()}`,
-      role: "assistant",
-      content: "",
-      timestamp: Date.now(),
-      thinking: "",
-    };
+      const assistantMsg: ChatMessage = {
+        id: `assistant-${Date.now()}`,
+        role: "assistant",
+        content: "",
+        timestamp: Date.now(),
+      };
 
-    setMessages((prev) => [...prev, userMsg, assistantMsg]);
-    setInput("");
-    setIsStreaming(true);
-    setStreamingMessageId(assistantMsg.id);
+      setMessages((prev) => [...prev, userMsg, assistantMsg]);
+      setInput("");
+      setIsStreaming(true);
 
-    const systemMessage = {
-      role: "system" as const,
-      content: `You are an AI agent for the project "${project.name}" (root: ${project.rootPath}). Help the user with tasks related to this project.`,
-    };
+      const systemMessage = {
+        role: "system" as const,
+        content: `You are an AI agent for the project "${project.name}" (root: ${project.rootPath}). Help the user with tasks related to this project. Respond concisely and helpfully.`,
+      };
 
-    const chatMessages = [
-      systemMessage,
-      ...messages.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
-      { role: "user" as const, content: trimmed },
-    ];
+      const chatMessages = [
+        systemMessage,
+        ...messages.map((m) => ({
+          role: m.role as "user" | "assistant",
+          content: m.content,
+        })),
+        { role: "user" as const, content: trimmed },
+      ];
 
-    try {
-      const controller = new AbortController();
-      abortRef.current = controller;
-
-      const result = await chatCompletion(
-        aiConfig,
-        chatMessages,
-        {
+      try {
+        const result = await chatCompletion(aiConfig, chatMessages, {
           stream: true,
           onStream: (chunk: string) => {
             setMessages((prev) =>
               prev.map((m) =>
-                m.id === assistantMsg.id ? { ...m, content: m.content + chunk } : m,
+                m.id === assistantMsg.id
+                  ? { ...m, content: m.content + chunk }
+                  : m,
               ),
             );
           },
-        },
-      );
+        });
 
-      if (result.content) {
+        if (result.content) {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantMsg.id
+                ? { ...m, content: result.content }
+                : m,
+            ),
+          );
+        }
+      } catch (err) {
+        const errorMsg =
+          err instanceof Error ? err.message : t("projects.chatError");
         setMessages((prev) =>
           prev.map((m) =>
-            m.id === assistantMsg.id ? { ...m, content: result.content } : m,
+            m.id === assistantMsg.id
+              ? { ...m, content: `⚠️ ${errorMsg}` }
+              : m,
           ),
         );
+      } finally {
+        setIsStreaming(false);
+        abortRef.current = null;
       }
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : t("projects.chatError");
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.id === assistantMsg.id ? { ...m, content: `⚠️ ${errorMsg}` } : m,
-        ),
-      );
-    } finally {
-      setIsStreaming(false);
-      setStreamingMessageId(null);
-      abortRef.current = null;
-    }
-  }, [input, isStreaming, aiConfig, messages, project.name, project.rootPath, t, showToast]);
+    },
+    [input, isStreaming, aiConfig, messages, project.name, project.rootPath, t, showToast],
+  );
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -283,72 +356,112 @@ function ProjectChatPanel({ project }: ProjectChatPanelProps) {
     [sendMessage],
   );
 
+  const handleStop = useCallback(() => {
+    abortRef.current?.abort();
+    setIsStreaming(false);
+  }, []);
+
   const handleClear = useCallback(() => {
     setMessages([]);
     setInput("");
   }, []);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-background">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card/50">
-        <div className="flex items-center gap-2">
-          <BotIcon className="h-5 w-5 text-primary" />
-          <span className="font-medium">{project.name}</span>
-          <span className="text-xs text-muted-foreground truncate max-w-[300px]">
-            {project.rootPath}
-          </span>
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-card/50">
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+            <BotIcon className="h-4 w-4 text-primary" />
+          </div>
+          <div>
+            <div className="text-sm font-medium">{project.name}</div>
+            <div className="text-[11px] text-muted-foreground truncate max-w-[300px]">
+              {project.rootPath}
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            className="p-1.5 rounded-md hover:bg-muted text-muted-foreground"
-            onClick={handleClear}
-            title={t("projects.clearSession")}
-          >
-            <RefreshCwIcon className="h-4 w-4" />
-          </button>
-        </div>
+        <button
+          className="p-1.5 rounded-md hover:bg-muted text-muted-foreground"
+          onClick={handleClear}
+          title={t("projects.clearSession")}
+        >
+          <RefreshCwIcon className="h-4 w-4" />
+        </button>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4">
+      <div className="flex-1 overflow-y-auto scroll-shadow">
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+          <div className="flex flex-col items-center justify-center h-full">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mb-4 border border-primary/10">
               <BotIcon className="h-7 w-7 text-primary/40" />
             </div>
-            <p className="text-sm text-muted-foreground">{t("projects.sessionEmpty")}</p>
+            <h2 className="text-base font-semibold text-foreground mb-1">
+              {t("projects.welcomeTitle", { name: project.name })}
+            </h2>
+            <p className="text-[13px] text-muted-foreground max-w-xs text-center leading-relaxed mb-5">
+              {t("projects.welcomeDesc")}
+            </p>
+            <div className="flex flex-wrap gap-2 max-w-md justify-center">
+              {QUICK_HINTS.map((key) => (
+                <button
+                  key={key}
+                  onClick={() => sendMessage(t(key))}
+                  className="px-3 py-1.5 rounded-full text-[12px] text-muted-foreground bg-muted/50 border border-border hover:bg-muted hover:text-foreground transition-all"
+                >
+                  {t(key)}
+                </button>
+              ))}
+            </div>
           </div>
         ) : (
-          <div className="space-y-4 max-w-3xl mx-auto">
-            {messages.map((msg) => (
-              <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                <div className={`flex gap-2 max-w-[80%] ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
-                  <div className={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs ${
-                    msg.role === "user"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-primary/10 text-primary"
-                  }`}>
-                    {msg.role === "user" ? <UserIcon className="w-3.5 h-3.5" /> : <BotIcon className="w-3.5 h-3.5" />}
-                  </div>
-                  <div className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
-                    msg.role === "user"
-                      ? "bg-primary text-primary-foreground rounded-tr-md"
-                      : "bg-muted rounded-tl-md"
-                  }`}>
-                    {msg.role === "assistant" ? (
-                      <div className="markdown-content">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                          {msg.content || (msg.id === streamingMessageId ? "..." : "")}
-                        </ReactMarkdown>
+          <div className="py-4">
+            {messages.map((msg) => {
+              const isUser = msg.role === "user";
+              return (
+                <div key={msg.id} className="px-4 py-1.5">
+                  <div className="max-w-2xl mx-auto">
+                    {isUser ? (
+                      <div className="flex justify-end gap-2">
+                        <div>
+                          <div className="bg-primary text-primary-foreground px-4 py-2.5 rounded-2xl rounded-tr-md text-sm leading-relaxed shadow-sm">
+                            {msg.content}
+                          </div>
+                          <div className="text-[10px] text-muted-foreground mt-1 text-right pr-1">
+                            {formatTime(msg.timestamp)}
+                          </div>
+                        </div>
+                        <div className="shrink-0 w-7 h-7 rounded-full bg-muted flex items-center justify-center mt-0.5">
+                          <UserIcon className="w-3.5 h-3.5 text-muted-foreground" />
+                        </div>
                       </div>
                     ) : (
-                      <div className="whitespace-pre-wrap">{msg.content}</div>
+                      <div className="flex gap-2.5">
+                        <div className="shrink-0 w-7 h-7 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center mt-0.5 shadow-sm">
+                          <BotIcon className="w-3.5 h-3.5 text-primary-foreground" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="bg-muted/50 px-4 py-2.5 rounded-2xl rounded-tl-md text-sm leading-relaxed shadow-[0_1px_3px_rgba(0,0,0,0.04)] border border-border">
+                            {msg.content ? (
+                              <div className="markdown-content">
+                                <MarkdownContent content={msg.content} />
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground animate-pulse">...</span>
+                            )}
+                          </div>
+                          <div className="text-[10px] text-muted-foreground mt-1 pl-1 flex items-center gap-1">
+                            {formatTime(msg.timestamp)}
+                            {msg.content && <CopyButton text={msg.content} />}
+                          </div>
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
             <div ref={messagesEndRef} />
           </div>
         )}
@@ -356,34 +469,40 @@ function ProjectChatPanel({ project }: ProjectChatPanelProps) {
 
       {/* Input */}
       <div className="border-t border-border px-4 py-3">
-        <div className="flex gap-2 max-w-3xl mx-auto">
+        <div className="flex gap-2 max-w-2xl mx-auto">
           <textarea
-            className="flex-1 resize-none rounded-xl border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+            ref={textareaRef}
+            className="flex-1 resize-none rounded-xl border border-border bg-card px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 max-h-[200px]"
             rows={1}
-            placeholder={t("projects.chatPlaceholder")}
+            placeholder={t("projects.chatPlaceholder", { name: project.name })}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             disabled={isStreaming}
           />
-          <button
-            className={`px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
-              isStreaming
-                ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                : "bg-primary text-primary-foreground hover:bg-primary/90"
-            } disabled:opacity-50`}
-            onClick={isStreaming ? () => abortRef.current?.abort() : sendMessage}
-            disabled={!isStreaming && !input.trim()}
-          >
-            {isStreaming ? <StopCircleIcon className="h-4 w-4" /> : <SendIcon className="h-4 w-4" />}
-          </button>
+          {isStreaming ? (
+            <button
+              className="px-4 py-3 rounded-xl text-sm font-medium bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
+              onClick={handleStop}
+            >
+              <StopCircleIcon className="h-4 w-4" />
+            </button>
+          ) : (
+            <button
+              className="px-4 py-3 rounded-xl text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
+              onClick={() => sendMessage()}
+              disabled={!input.trim()}
+            >
+              <SendIcon className="h-4 w-4" />
+            </button>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-// ─── ProjectsManager (main export) ───────────────────────────────────
+// --- ProjectsManager (main export) ------------------------------------
 export function ProjectsManager() {
   const { t } = useTranslation();
   const { showToast } = useToast();
@@ -434,7 +553,10 @@ export function ProjectsManager() {
             <h2 className="text-sm font-semibold">{t("projects.title")}</h2>
             <button
               className="p-1.5 rounded-md hover:bg-muted text-muted-foreground"
-              onClick={() => { setEditingProject(null); setIsFormOpen(true); }}
+              onClick={() => {
+                setEditingProject(null);
+                setIsFormOpen(true);
+              }}
               title={t("projects.addProject")}
             >
               <FolderPlusIcon className="h-4 w-4" />
@@ -450,42 +572,45 @@ export function ProjectsManager() {
             />
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto space-y-2 p-2">
           {filteredProjects.length === 0 ? (
             <div className="p-4 text-center text-sm text-muted-foreground">
               {t("projects.emptyHint")}
             </div>
           ) : (
             filteredProjects.map((project) => (
-              <div
+              <ProjectCard
                 key={project.id}
-                className={`flex items-center gap-2 px-3 py-2.5 cursor-pointer hover:bg-muted/50 transition-colors ${
-                  selectedProjectId === project.id ? "bg-primary/10 border-r-2 border-primary" : ""
-                }`}
+                name={project.name}
+                rootPath={project.rootPath}
+                isActive={selectedProjectId === project.id}
                 onClick={() => setSelectedProjectId(project.id)}
-              >
-                <FolderOpenIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
-                <div className="min-w-0 flex-1">
-                  <div className="text-sm font-medium truncate">{project.name}</div>
-                  <div className="text-xs text-muted-foreground truncate">{project.rootPath}</div>
-                </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  <button
-                    className="p-1 rounded hover:bg-muted text-muted-foreground"
-                    onClick={(e) => { e.stopPropagation(); setEditingProject(project); setIsFormOpen(true); }}
-                    title={t("projects.editProject")}
-                  >
-                    <PencilIcon className="h-3.5 w-3.5" />
-                  </button>
-                  <button
-                    className="p-1 rounded hover:bg-destructive/10 text-destructive"
-                    onClick={(e) => { e.stopPropagation(); setDeleteTarget(project); }}
-                    title={t("projects.deleteProject")}
-                  >
-                    <TrashIcon className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </div>
+                actions={
+                  <>
+                    <button
+                      className="p-1 rounded hover:bg-muted text-muted-foreground"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingProject(project);
+                        setIsFormOpen(true);
+                      }}
+                      title={t("projects.editProject")}
+                    >
+                      <PencilIcon className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      className="p-1 rounded hover:bg-destructive/10 text-destructive"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteTarget(project);
+                      }}
+                      title={t("projects.deleteProject")}
+                    >
+                      <TrashIcon className="h-3.5 w-3.5" />
+                    </button>
+                  </>
+                }
+              />
             ))
           )}
         </div>
@@ -497,8 +622,15 @@ export function ProjectsManager() {
           <ProjectChatPanel project={selectedProject} />
         ) : (
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <FolderOpenIcon className="h-12 w-12 text-muted-foreground/30 mb-4" />
-            <p className="text-sm text-muted-foreground">{t("projects.selectProjectHint")}</p>
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mb-4 border border-primary/10">
+              <SparklesIcon className="h-8 w-8 text-primary/30" />
+            </div>
+            <p className="text-sm text-muted-foreground mb-1">
+              {t("projects.selectProjectHint")}
+            </p>
+            <p className="text-xs text-muted-foreground/60">
+              {t("projects.selectProjectSubHint")}
+            </p>
           </div>
         )}
       </div>
@@ -507,7 +639,10 @@ export function ProjectsManager() {
       <ProjectFormModal
         isOpen={isFormOpen}
         editingProject={editingProject}
-        onClose={() => { setIsFormOpen(false); setEditingProject(null); }}
+        onClose={() => {
+          setIsFormOpen(false);
+          setEditingProject(null);
+        }}
         onSaved={() => {}}
       />
 
@@ -515,7 +650,9 @@ export function ProjectsManager() {
       <ConfirmDialog
         isOpen={!!deleteTarget}
         title={t("projects.deleteProject")}
-        message={t("projects.deleteProjectConfirm", { name: deleteTarget?.name ?? "" })}
+        message={t("projects.deleteProjectConfirm", {
+          name: deleteTarget?.name ?? "",
+        })}
         onConfirm={handleDelete}
         onClose={() => setDeleteTarget(null)}
         variant="destructive"

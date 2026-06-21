@@ -61,6 +61,7 @@ import {
   DESKTOP_HOME_MODULES,
   type DesktopHomeModule,
 } from "../../stores/settings.store";
+import { ProjectCard } from "../shared/ProjectCard";
 
 type PageType = "home" | "settings";
 type SidebarLayout = "combined" | "rail" | "panel";
@@ -432,25 +433,46 @@ export function Sidebar({
         name: file.platformName,
       }));
 
-    const projectItems = ruleFiles
-      .filter(
-        (file) => file.id.startsWith("project:") && matchesRuleSearch(file),
-      )
-      .map((file) => ({
-        id: file.id,
-        type: "project" as const,
-        platformId: file.platformId,
-        file,
-        path: file.path,
-        exists: file.exists,
-        active: selectedRuleId === file.id,
-        canRemove: true,
-        projectId: file.id.slice("project:".length),
-        description: file.description,
-        icon: "FolderRoot",
-        badge: null,
-        name: file.platformName,
-      }));
+    // Build project items from skillProjects (the unified project data source),
+    // overlaying rule file status when a matching managed rule exists.
+    const projectItems = skillProjects
+      .filter((project) => {
+        if (!normalizedQuery) return true;
+        const haystack = `${project.name} ${project.rootPath}`.toLowerCase();
+        return haystack.includes(normalizedQuery);
+      })
+      .map((project) => {
+        const matchingRuleFile = ruleFiles.find(
+          (file) =>
+            file.id.startsWith("project:") &&
+            file.projectRootPath?.toLowerCase() === project.rootPath.toLowerCase(),
+        );
+        const hasRule = Boolean(matchingRuleFile);
+        const ruleId = matchingRuleFile?.id ?? `project:${project.id}` as RuleFileId;
+        const activeRule = hasRule && selectedRuleId === matchingRuleFile?.id;
+        // Rule project UUID used for removal (must match what addProjectRule stored)
+        const ruleProjectUuid = hasRule
+          ? matchingRuleFile!.id.slice("project:".length)
+          : null;
+
+        return {
+          id: ruleId,
+          type: "project" as const,
+          platformId: "workspace" as const,
+          file: matchingRuleFile ?? null,
+          path: matchingRuleFile?.path ?? "",
+          exists: matchingRuleFile?.exists ?? false,
+          active: activeRule,
+          canRemove: hasRule,
+          projectId: ruleProjectUuid,
+          skillProject: project,
+          description: matchingRuleFile?.description ?? project.name,
+          icon: "FolderRoot",
+          badge: hasRule ? null : "no-rule" as const,
+          name: project.name,
+          rootPath: project.rootPath,
+        };
+      });
 
     return [
       {
@@ -464,7 +486,7 @@ export function Sidebar({
         items: projectItems,
       },
     ];
-  }, [ruleFiles, rulesSearchQuery, selectedRuleId, skillPlatformOrder]);
+  }, [ruleFiles, rulesSearchQuery, selectedRuleId, skillPlatformOrder, skillProjects]);
 
   const handleAddRuleProject = useCallback(async () => {
     const selectedPath = await window.electron?.selectFolder?.();
@@ -498,7 +520,7 @@ export function Sidebar({
     }));
   }, []);
   const showRail = layout !== "panel";
-  const showPanel = layout !== "rail";
+  const showPanel = layout !== "rail" && activeModule !== "projects";
   const railWidthClass = "w-20";
   const combinedWidthClass = "w-[23rem]";
   // Dynamic pane widths are delivered via a CSS custom property so the
@@ -511,17 +533,23 @@ export function Sidebar({
       ? ({ "--sidebar-panel-width": `${sidebarPanelWidth}px` } as CSSProperties)
       : undefined;
   const asideClassName =
-    layout === "rail"
-      ? `${railWidthClass} border-r border-sidebar-border/60 bg-sidebar-accent/25`
-      : layout === "panel"
-        ? `border-r border-sidebar-border bg-sidebar-background/85 app-wallpaper-panel-strong transition-[opacity,transform] duration-smooth ease-out ${
-            isCollapsed
-              ? "w-0 -translate-x-4 opacity-0 pointer-events-none border-r-0"
-              : "w-[var(--sidebar-panel-width)] translate-x-0 opacity-100"
-          }`
-        : `border-r border-sidebar-border app-left-rail-glass app-wallpaper-panel-strong ${
-            isCollapsed ? railWidthClass : combinedWidthClass
-          }`;
+    activeModule === "projects"
+      ? layout === "panel"
+        ? `${railWidthClass} border-r border-sidebar-border/60 bg-sidebar-accent/25`
+        : layout === "rail"
+          ? `${railWidthClass} border-r border-sidebar-border/60 bg-sidebar-accent/25`
+          : `${railWidthClass} border-r border-sidebar-border/60 bg-sidebar-accent/25`
+      : layout === "rail"
+        ? `${railWidthClass} border-r border-sidebar-border/60 bg-sidebar-accent/25`
+        : layout === "panel"
+          ? `border-r border-sidebar-border bg-sidebar-background/85 app-wallpaper-panel-strong transition-[opacity,transform] duration-smooth ease-out ${
+              isCollapsed
+                ? "w-0 -translate-x-4 opacity-0 pointer-events-none border-r-0"
+                : "w-[var(--sidebar-panel-width)] translate-x-0 opacity-100"
+            }`
+          : `border-r border-sidebar-border app-left-rail-glass app-wallpaper-panel-strong ${
+              isCollapsed ? railWidthClass : combinedWidthClass
+            }`;
 
   const confirmLeaveDirtySkillEditor = useCallback(() => {
     const hasUnsaved = (
@@ -630,6 +658,10 @@ export function Sidebar({
     }
 
     if (activeModule === "rules" && isRulesModuleVisible) {
+      return;
+    }
+
+    if (activeModule === "projects" && visibleDesktopModules.includes("projects")) {
       return;
     }
 
@@ -1372,7 +1404,7 @@ export function Sidebar({
                     <>
                       <NavItem
                         icon={<FolderPlusIcon className="w-5 h-5" />}
-                        label={t("nav.projects", "Projects")}
+                        label={t("skill.projectSkill", "Project Skill")}
                         count={skillProjects.length}
                         active={
                           storeView === "projects" && currentPage === "home"
@@ -1797,6 +1829,18 @@ export function Sidebar({
                 </div>
               )}
             </>
+          ) : activeModule === "projects" ? (
+            <>
+              {/* Projects module sidebar panel - managed by ProjectsManager internally */}
+              <div className="flex-1 flex flex-col items-center justify-center px-4">
+                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-3">
+                  <FolderOpenIcon className="h-6 w-6 text-primary/40" />
+                </div>
+                <p className="text-xs text-muted-foreground text-center">
+                  {t("projects.title", "Projects")}
+                </p>
+              </div>
+            </>
           ) : (
             <>
               <div className="flex-shrink-0 flex flex-col px-3 py-4">
@@ -1851,69 +1895,98 @@ export function Sidebar({
 
                       {!collapsedRuleSections[section.id] ? (
                         <div className="space-y-2">
-                          {section.items.map((item) => (
-                            <div
-                              key={item.id}
-                              className={`relative w-full rounded-2xl border px-3 py-3 text-left transition-colors ${
-                                item.active
-                                  ? "border-primary/40 bg-primary/10"
-                                  : "border-border bg-background/60 hover:bg-muted"
-                              }`}
-                            >
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  void selectRule(item.file.id);
-                                  if (currentPage !== "home")
-                                    onNavigate("home");
-                                }}
-                                className="w-full text-left"
+                          {section.items.map((item) => {
+                            if (item.type === "project") {
+                              const rootPath =
+                                "rootPath" in item
+                                  ? (item as { rootPath: string }).rootPath
+                                  : item.path;
+                              return (
+                                <ProjectCard
+                                  key={item.id}
+                                  name={item.name}
+                                  rootPath={rootPath}
+                                  isActive={item.active}
+                                  onClick={() => {
+                                    if (item.file) {
+                                      void selectRule(item.file.id);
+                                    } else {
+                                      void selectRule(item.id);
+                                    }
+                                    if (currentPage !== "home")
+                                      onNavigate("home");
+                                  }}
+                                  indicator={
+                                    item.badge === "no-rule" ? (
+                                      <span className="inline-flex items-center rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                                        {t(
+                                          "rules.noRuleFile",
+                                          "No rule file",
+                                        )}
+                                      </span>
+                                    ) : null
+                                  }
+                                  actions={
+                                    item.canRemove ? (
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          void handleRemoveRuleProject(
+                                            item.projectId!,
+                                          );
+                                        }}
+                                        className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                      >
+                                        <Trash2Icon className="h-3.5 w-3.5" />
+                                        {t("common.remove", "Remove")}
+                                      </button>
+                                    ) : null
+                                  }
+                                />
+                              );
+                            }
+                            return (
+                              <div
+                                key={item.id}
+                                className={`relative w-full rounded-2xl border px-3 py-3 text-left transition-colors ${
+                                  item.active
+                                    ? "border-primary/40 bg-primary/10"
+                                    : "border-border bg-background/60 hover:bg-muted"
+                                }`}
                               >
-                                <div className="flex items-center gap-3">
-                                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
-                                    {item.type === "project" ? (
-                                      <FolderPlusIcon className="h-5 w-5" />
-                                    ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    void selectRule(item.file.id);
+                                    if (currentPage !== "home")
+                                      onNavigate("home");
+                                  }}
+                                  className="w-full text-left"
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
                                       <PlatformIcon
                                         platformId={item.platformId}
                                         size={20}
                                         className="h-5 w-5"
                                       />
-                                    )}
-                                  </div>
-                                  <div className="min-w-0 flex-1">
-                                    <div className="flex items-center gap-2">
-                                      <div className="truncate text-sm font-medium text-foreground">
-                                        {item.name}
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                      <div className="flex items-center gap-2">
+                                        <div className="truncate text-sm font-medium text-foreground">
+                                          {item.name}
+                                        </div>
+                                      </div>
+                                      <div className="mt-1 line-clamp-2 text-xs leading-5 text-muted-foreground">
+                                        {item.file.name}
                                       </div>
                                     </div>
-                                    <div className="mt-1 line-clamp-2 text-xs leading-5 text-muted-foreground">
-                                      {item.type === "project"
-                                        ? item.path
-                                        : item.file.name}
-                                    </div>
                                   </div>
-                                </div>
-                              </button>
-
-                              {item.canRemove && item.projectId ? (
-                                <div className="mt-3 flex justify-end">
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      void handleRemoveRuleProject(
-                                        item.projectId!,
-                                      )
-                                    }
-                                    className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                                  >
-                                    <Trash2Icon className="h-3.5 w-3.5" />
-                                    {t("common.remove", "Remove")}
-                                  </button>
-                                </div>
-                              ) : null}
-                            </div>
-                          ))}
+                                </button>
+                              </div>
+                            );
+                          })}
 
                           {section.id === "project" && canAddRuleProject ? (
                             <button
