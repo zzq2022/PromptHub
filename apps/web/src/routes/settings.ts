@@ -11,7 +11,7 @@ const settingsService = new SettingsService();
 
 const updateSettingsSchema = z.object({
   theme: z.enum(['light', 'dark', 'system']).optional(),
-  language: z.enum(['en', 'zh', 'zh-TW', 'ja', 'fr', 'de', 'es']).optional(),
+  language: z.enum(['en', 'zh']).optional(),
   autoSave: z.boolean().optional(),
   defaultFolderId: z.string().trim().min(1).nullable().optional(),
   customPlatformRootPaths: z.record(z.string()).optional(),

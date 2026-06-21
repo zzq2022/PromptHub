@@ -11,11 +11,6 @@ import { installWindowMocks } from "../../helpers/window";
 
 import en from "../../../src/renderer/i18n/locales/en.json";
 import zh from "../../../src/renderer/i18n/locales/zh.json";
-import zhTw from "../../../src/renderer/i18n/locales/zh-TW.json";
-import ja from "../../../src/renderer/i18n/locales/ja.json";
-import fr from "../../../src/renderer/i18n/locales/fr.json";
-import de from "../../../src/renderer/i18n/locales/de.json";
-import es from "../../../src/renderer/i18n/locales/es.json";
 import type { ScannedSkill, Skill } from "@prompthub/shared/types";
 import { SkillFullDetailPage } from "../../../src/renderer/components/skill/SkillFullDetailPage";
 import { SkillManager } from "../../../src/renderer/components/skill/SkillManager";
@@ -216,11 +211,6 @@ describe("skill i18n smoke", () => {
   it("keeps all locale skill keys aligned with english", () => {
     const locales = {
       zh,
-      "zh-TW": zhTw,
-      ja,
-      fr,
-      de,
-      es,
     } as const;
     const expectedKeys = flattenKeys(
       (en as TranslationTree).skill as TranslationTree,
@@ -238,11 +228,6 @@ describe("skill i18n smoke", () => {
   it("keeps project navigation keys aligned across locales", () => {
     const locales = {
       zh,
-      "zh-TW": zhTw,
-      ja,
-      fr,
-      de,
-      es,
     } as const;
     const requiredKeys = [
       "nav.projects",

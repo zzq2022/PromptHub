@@ -254,12 +254,7 @@ function toWebSettings(backup: DatabaseBackup): Settings {
       : "system";
   const language =
     state.language === "zh" ||
-    state.language === "zh-TW" ||
-    state.language === "en" ||
-    state.language === "ja" ||
-    state.language === "fr" ||
-    state.language === "de" ||
-    state.language === "es"
+    state.language === "en"
       ? state.language
       : "zh";
 

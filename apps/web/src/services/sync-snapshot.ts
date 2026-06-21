@@ -185,7 +185,7 @@ const skillFileSnapshotSchema = z.object({
 
 const settingsSchema = z.object({
   theme: z.enum(['light', 'dark', 'system']),
-  language: z.enum(['en', 'zh', 'zh-TW', 'ja', 'fr', 'de', 'es']),
+  language: z.enum(['en', 'zh']),
   autoSave: z.boolean(),
   defaultFolderId: z.string().optional(),
   customPlatformRootPaths: z.record(z.string()).optional(),
@@ -268,12 +268,7 @@ function normalizeDesktopSettingsSnapshot(settings: unknown): Settings | undefin
 
   if (
     language !== 'en' &&
-    language !== 'zh' &&
-    language !== 'zh-TW' &&
-    language !== 'ja' &&
-    language !== 'fr' &&
-    language !== 'de' &&
-    language !== 'es'
+    language !== 'zh'
   ) {
     return undefined;
   }

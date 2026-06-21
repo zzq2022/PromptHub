@@ -355,7 +355,7 @@ describe('web import/export routes', () => {
           headers: authHeaders(token),
           body: JSON.stringify({
             theme: 'dark',
-            language: 'fr',
+            language: 'zh',
             autoSave: false,
             defaultFolderId: rootFolder.payload.data!.id,
             customPlatformRootPaths: { claude: '/tmp/exported-root' },
@@ -405,7 +405,7 @@ describe('web import/export routes', () => {
         new Request('http://local/api/settings', {
           method: 'PUT',
           headers: authHeaders(token),
-          body: JSON.stringify({ theme: 'light', language: 'de', autoSave: true }),
+          body: JSON.stringify({ theme: 'light', language: 'en', autoSave: true }),
         }),
       );
       expect(noisySettings.status).toBe(200);
@@ -484,7 +484,7 @@ describe('web import/export routes', () => {
 
       expect(restoredPayload.settings).toEqual(expect.objectContaining({
         theme: 'dark',
-        language: 'fr',
+        language: 'zh',
         autoSave: false,
         customPlatformRootPaths: { claude: '/tmp/exported-root' },
         security: {
@@ -654,7 +654,7 @@ describe('web import/export routes', () => {
           settings: {
             state: {
               themeMode: 'dark',
-              language: 'fr',
+              language: 'zh',
               autoSave: false,
               customPlatformRootPaths: {
                 claude: '/tmp/envelope-root',
@@ -686,7 +686,7 @@ describe('web import/export routes', () => {
       expect(exportedPayload.settings).toEqual(
         expect.objectContaining({
           theme: 'dark',
-          language: 'fr',
+          language: 'zh',
           autoSave: false,
           customPlatformRootPaths: {
             claude: '/tmp/envelope-root',

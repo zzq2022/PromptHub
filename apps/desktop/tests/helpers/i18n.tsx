@@ -3,22 +3,12 @@ import { createInstance } from "i18next";
 import { initReactI18next, I18nextProvider } from "react-i18next";
 import type { PropsWithChildren, ReactElement } from "react";
 
-import de from "../../src/renderer/i18n/locales/de.json";
 import en from "../../src/renderer/i18n/locales/en.json";
-import es from "../../src/renderer/i18n/locales/es.json";
-import fr from "../../src/renderer/i18n/locales/fr.json";
-import ja from "../../src/renderer/i18n/locales/ja.json";
-import zhTW from "../../src/renderer/i18n/locales/zh-TW.json";
 import zh from "../../src/renderer/i18n/locales/zh.json";
 
 const resources = {
   en: { translation: en },
   zh: { translation: zh },
-  "zh-TW": { translation: zhTW },
-  ja: { translation: ja },
-  es: { translation: es },
-  de: { translation: de },
-  fr: { translation: fr },
 };
 
 export async function createTestI18n(language = "en") {

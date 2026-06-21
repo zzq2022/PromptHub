@@ -18,15 +18,15 @@ describe("i18n initialization", () => {
   });
 
   it("prefers persisted language over system language", async () => {
-    setNavigatorLanguage("fr-FR");
+    setNavigatorLanguage("en");
     localStorage.setItem(
       "prompthub-settings",
-      JSON.stringify({ state: { language: "de" } }),
+      JSON.stringify({ state: { language: "zh" } }),
     );
 
     const module = await import("../../../src/renderer/i18n");
 
-    expect(module.default.language).toBe("de");
+    expect(module.default.language).toBe("zh");
   });
 
   it("maps system language prefixes when no persisted language exists", async () => {
@@ -34,6 +34,6 @@ describe("i18n initialization", () => {
 
     const module = await import("../../../src/renderer/i18n");
 
-    expect(module.default.language).toBe("zh-TW");
+    expect(module.default.language).toBe("zh");
   });
 });

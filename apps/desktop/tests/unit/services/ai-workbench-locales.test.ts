@@ -1,11 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import de from "../../../src/renderer/i18n/locales/de.json";
 import en from "../../../src/renderer/i18n/locales/en.json";
-import es from "../../../src/renderer/i18n/locales/es.json";
-import fr from "../../../src/renderer/i18n/locales/fr.json";
-import ja from "../../../src/renderer/i18n/locales/ja.json";
-import zhTW from "../../../src/renderer/i18n/locales/zh-TW.json";
 import zh from "../../../src/renderer/i18n/locales/zh.json";
 
 const AI_WORKBENCH_KEYS = [
@@ -81,11 +76,6 @@ const AI_WORKBENCH_KEYS = [
 const locales = {
   en,
   zh,
-  "zh-TW": zhTW,
-  ja,
-  fr,
-  de,
-  es,
 };
 
 describe("AI workbench locale coverage", () => {

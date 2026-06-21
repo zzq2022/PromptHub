@@ -533,20 +533,16 @@ export function Sidebar({
       ? ({ "--sidebar-panel-width": `${sidebarPanelWidth}px` } as CSSProperties)
       : undefined;
   const asideClassName =
-    activeModule === "projects"
-      ? layout === "panel"
-        ? `${railWidthClass} border-r border-sidebar-border/60 bg-sidebar-accent/25`
-        : layout === "rail"
-          ? `${railWidthClass} border-r border-sidebar-border/60 bg-sidebar-accent/25`
-          : `${railWidthClass} border-r border-sidebar-border/60 bg-sidebar-accent/25`
-      : layout === "rail"
-        ? `${railWidthClass} border-r border-sidebar-border/60 bg-sidebar-accent/25`
+    layout === "rail"
+      ? `${railWidthClass} border-r border-sidebar-border/60 bg-sidebar-accent/25`
         : layout === "panel"
-          ? `border-r border-sidebar-border bg-sidebar-background/85 app-wallpaper-panel-strong transition-[opacity,transform] duration-smooth ease-out ${
-              isCollapsed
-                ? "w-0 -translate-x-4 opacity-0 pointer-events-none border-r-0"
-                : "w-[var(--sidebar-panel-width)] translate-x-0 opacity-100"
-            }`
+          ? activeModule === "projects"
+            ? "w-0 -translate-x-4 opacity-0 pointer-events-none border-r-0"
+            : `border-r border-sidebar-border bg-sidebar-background/85 app-wallpaper-panel-strong transition-[opacity,transform] duration-smooth ease-out ${
+                isCollapsed
+                  ? "w-0 -translate-x-4 opacity-0 pointer-events-none border-r-0"
+                  : "w-[var(--sidebar-panel-width)] translate-x-0 opacity-100"
+              }`
           : `border-r border-sidebar-border app-left-rail-glass app-wallpaper-panel-strong ${
               isCollapsed ? railWidthClass : combinedWidthClass
             }`;

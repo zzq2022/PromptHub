@@ -24,20 +24,20 @@ describe("settings language actions", () => {
       "../../../src/renderer/stores/settings.store"
     );
 
-    useSettingsStore.getState().setLanguage("fr-FR");
+    useSettingsStore.getState().setLanguage("en-US");
 
-    expect(useSettingsStore.getState().language).toBe("fr");
-    expect(changeLanguageMock).toHaveBeenCalledWith("fr");
+    expect(useSettingsStore.getState().language).toBe("en");
+    expect(changeLanguageMock).toHaveBeenCalledWith("en");
   });
 
-  it("maps traditional chinese locale aliases to zh-TW", async () => {
+  it("maps traditional chinese locale aliases to zh", async () => {
     const { useSettingsStore } = await import(
       "../../../src/renderer/stores/settings.store"
     );
 
     useSettingsStore.getState().setLanguage("zh-Hant");
 
-    expect(useSettingsStore.getState().language).toBe("zh-TW");
-    expect(changeLanguageMock).toHaveBeenCalledWith("zh-TW");
+    expect(useSettingsStore.getState().language).toBe("zh");
+    expect(changeLanguageMock).toHaveBeenCalledWith("zh");
   });
 });

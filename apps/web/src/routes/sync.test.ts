@@ -693,7 +693,7 @@ describe('web sync routes', () => {
                 settings: {
                   state: {
                     themeMode: 'dark',
-                    language: 'fr',
+                    language: 'zh',
                     autoSave: false,
                     customPlatformRootPaths: {
                       claude: '/tmp/envelope-sync-root',
@@ -760,7 +760,7 @@ describe('web sync routes', () => {
       expect(dataBody.data.settings).toEqual(
         expect.objectContaining({
           theme: 'dark',
-          language: 'fr',
+          language: 'zh',
           autoSave: false,
           customPlatformRootPaths: {
             claude: '/tmp/envelope-sync-root',

@@ -571,9 +571,9 @@ function App() {
     // 应用保存的主题设置
     applyTheme();
 
-    // Sync language setting: use settings store as the source of truth (zh/zh-TW/en/ja/es/de/fr)
+    // Sync language setting: use settings store as the source of truth (zh/en)
     // i18n reads from the persisted store on init, but we also apply it here as a fallback
-    // 同步语言设置：以 settings store 为准（支持 zh/zh-TW/en/ja/es/de/fr）
+    // 同步语言设置：以 settings store 为准（支持 zh/en）
     // i18n 初始化时会尝试从同一个 persist store 读取语言，但这里再兜底一次，避免初始化顺序导致的覆盖问题
     const languageSettings = useSettingsStore.getState();
     if (

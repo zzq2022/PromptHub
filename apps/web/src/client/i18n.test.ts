@@ -27,15 +27,9 @@ describe('client i18n initialization', () => {
     expect(i18n.language).toBe('zh');
   });
 
-  it('maps Traditional Chinese locales to zh-TW', async () => {
-    expect((await loadI18nFor('zh-TW')).language).toBe('zh-TW');
-    expect((await loadI18nFor('zh-HK')).language).toBe('zh-TW');
-  });
-
-  it('keeps supported non-Chinese locales', async () => {
-    const i18n = await loadI18nFor('ja-JP');
-
-    expect(i18n.language).toBe('ja');
+  it('maps Traditional Chinese locales to zh', async () => {
+    expect((await loadI18nFor('zh-TW')).language).toBe('zh');
+    expect((await loadI18nFor('zh-HK')).language).toBe('zh');
   });
 
   it('falls back to English for unsupported locales', async () => {

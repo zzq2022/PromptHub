@@ -5,12 +5,7 @@ import { Select } from "../ui/Select";
 
 const LANGUAGE_OPTIONS = [
   { value: "zh", label: "简体中文" },
-  { value: "zh-TW", label: "繁體中文" },
   { value: "en", label: "English" },
-  { value: "ja", label: "日本語" },
-  { value: "es", label: "Español" },
-  { value: "de", label: "Deutsch" },
-  { value: "fr", label: "Français" },
 ];
 
 export function LanguageSettings() {
