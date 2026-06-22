@@ -369,6 +369,12 @@ export interface SkillProject {
   id: string;
   name: string;
   rootPath: string;
+  /** Project origin — undefined for legacy skill-only projects */
+  origin?: "template" | "imported";
+  /** Agent gateway port (set after gateway start) */
+  gatewayPort?: number;
+  /** Agent gateway process PID (set after gateway start) */
+  gatewayPid?: number;
   scanPaths: string[];
   deployTargets?: string[];
   createdAt: number;

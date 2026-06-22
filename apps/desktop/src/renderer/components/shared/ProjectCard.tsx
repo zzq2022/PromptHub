@@ -53,9 +53,7 @@ export function ProjectCard({
             </div>
           </div>
         </div>
-        {indicator ? (
-          <div className="shrink-0">{indicator}</div>
-        ) : null}
+        {indicator ? <div className="shrink-0">{indicator}</div> : null}
         {actions ? (
           <div className="flex items-center gap-1 shrink-0">{actions}</div>
         ) : null}

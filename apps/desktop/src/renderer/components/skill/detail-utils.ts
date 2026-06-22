@@ -291,7 +291,7 @@ export function getSkillSourceMeta(
     t?.("skill.sourceLocalFolder", "Imported from Local Folder") ||
     "Imported from Local Folder";
   if (agentSource) {
-    const fallback = `Imported from ${agentSource.platformName} Agent Skills`;
+    const fallback = `Imported from ${agentSource.platformName} IDE Skills`;
     sourceLabel =
       t?.("skill.sourceAgentPlatformFolder", fallback, {
         platform: agentSource.platformName,

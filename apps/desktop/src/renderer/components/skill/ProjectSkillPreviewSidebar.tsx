@@ -48,7 +48,7 @@ export function ProjectSkillPreviewSidebar({
   );
   const showSymlinkTarget = Boolean(symlinkTargetPath);
   const sourceTitle = showSymlinkTarget
-    ? t("skill.openAgentShortcut", "Open agent shortcut")
+    ? t("skill.openAgentShortcut", "Open IDE shortcut")
     : t("skill.openLocalSource", "Open Local Skill Folder");
 
   const sortedTargets = useMemo(

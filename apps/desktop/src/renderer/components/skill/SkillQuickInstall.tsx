@@ -76,7 +76,10 @@ export function SkillQuickInstall({ skill, onClose }: SkillQuickInstallProps) {
   const getMissingTargets = (project: SkillProject) => {
     if (!repoPath) return [];
     const scannedSkills = projectScanState[project.id]?.scannedSkills ?? [];
-    const targets = getProjectDeployTargets(project, defaultProjectDeployTargetPath);
+    const targets = getProjectDeployTargets(
+      project,
+      defaultProjectDeployTargetPath,
+    );
     const deployableTargets = getDeployableProjectTargetDirs(
       repoPath,
       skill.name,

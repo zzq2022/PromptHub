@@ -161,8 +161,14 @@ export const useRulesStore = create<RulesState>((set, get) => ({
     }
 
     const requestId = ++latestSelectRuleRequestId;
+    const previousRuleId = currentState.selectedRuleId;
+    const previousFile = currentState.currentFile;
+    const previousDraftContent = currentState.draftContent;
+
     set({
       selectedRuleId: ruleId,
+      currentFile: null,
+      draftContent: "",
       isLoading: true,
       error: null,
       aiSummary: null,
@@ -185,7 +191,13 @@ export const useRulesStore = create<RulesState>((set, get) => ({
         requestId === latestSelectRuleRequestId &&
         get().selectedRuleId === ruleId
       ) {
-        set({ isLoading: false, error: getErrorMessage(error) });
+        set({
+          isLoading: false,
+          error: getErrorMessage(error),
+          selectedRuleId: previousRuleId,
+          currentFile: previousFile,
+          draftContent: previousDraftContent,
+        });
       }
     }
   },

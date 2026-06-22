@@ -33,14 +33,14 @@ export function AgentSkillPreviewSidebar({
     installMode === "symlink" && Boolean(symlinkTargetPath);
   const shortcutTitle =
     installMode === "symlink"
-      ? t("skill.openAgentShortcut", "Open agent shortcut")
+      ? t("skill.openAgentShortcut", "Open IDE shortcut")
       : t("skill.openLocalSource", "Open Local Skill Folder");
 
   return (
     <div className="space-y-6">
       <section className="space-y-4">
         <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em]">
-          {t("skill.agentSource", "Agent Source")}
+          {t("skill.agentSource", "IDE Source")}
         </h3>
         <div className="app-wallpaper-panel rounded-2xl border border-border p-5 space-y-4">
           <div className="flex items-center gap-3">

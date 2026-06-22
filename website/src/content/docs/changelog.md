@@ -1,5 +1,78 @@
 ## [Unreleased]
 
+## [0.7.1] - 2026-06-22
+
+### 新功能 / Features
+
+- 🤖 **Agent 项目管理系统（Phase 1）**：新增完整的 Agent 项目管理框架，支持从模板创建和导入 Agent 项目，内置 Python nanobot Agent 模板（含 FastAPI WebSocket Gateway、Session 管理、长期记忆提取）；通过 WebSocket 实现实时对话的三栏布局 UI（项目列表 → Session 列表 → 聊天面板），12 个测试全部通过
+  - **Agent Project Management System (Phase 1)**: Added a complete Agent project management framework with template-based project creation and import, a built-in Python nanobot Agent template (FastAPI WebSocket Gateway, session management, long-term memory extraction), and a three-column chat UI (project list → session list → chat panel) with real-time WebSocket streaming; all 12 tests passing
+- 💬 **Agent Session 管理改进**：Session ID 改为时间戳命名（`session_YYYYMMDD_HHmmss`），通过 OS 用户名自动归属 Session；新增「新建对话」按钮、Session 切换时自动重连 WebSocket，聊天面板空态展示 4 个建议问题
+  - **Agent Session Management Improvements**: Session IDs now use timestamp naming (`session_YYYYMMDD_HHmmss`) and are auto-assigned to the OS user; added "New Chat" button, WebSocket auto-reconnect on session switch, and 4 suggested questions in the empty chat panel
+- 🧠 **规则选择稳定性加固**：`selectRule` 切换时立即清空当前文件和草稿，旧读取结果不再覆盖新选择；RulesManager 保存按钮在加载期间禁用，防止误保存
+  - **Rules Selection Stability Hardened**: `selectRule` now immediately clears `currentFile` and `draftContent` on switch; stale reads no longer overwrite newer selections; save button is disabled during loading to prevent mis-saves
+
+### 问题修复 / Fixes
+
+- 💥 **Agent venv 启动崩溃修复**：移除 `findAgentPython` 中使用 Electron `process.execPath` 作为 Python 的系统回退逻辑，改为纯 venv-only 模式并提供清晰错误信息；同时从 Tpa_RuYiBot 复制完整的 Python 虚拟环境到 `agent-venv/`（532MB，19677 文件）
+  - **Agent Venv Startup Crash Fix**: Removed the system Python fallback that incorrectly used Electron's `process.execPath` as the Python interpreter; now venv-only with clear error messages; copied the complete Python virtual environment from Tpa_RuYiBot to `agent-venv/` (532MB, 19,677 files)
+- 🧩 **AgentSessionList 格式修复**：修复 `formatSessionTime()` 函数中 `isToday` 检查的语法断裂和删除按钮代码重复
+  - **AgentSessionList Syntax Fix**: Fixed broken `isToday` check and duplicate delete button code in `formatSessionTime()`
+- 🚪 **Web 端退出登录修复**：SkillHub 页面顶部新增退出登录按钮，管理员用户额外显示"管理后台"快捷入口
+  - **Web Logout Fix**: Added a logout button to the SkillHub page header; admin users also see an "Admin Panel" quick-access link
+- 🔓 **登录/注册验证码移除**：登录和注册页面不再要求输入图形验证码，后端同时跳过 captcha 校验（captcha 接口保留但调用变为可选），简化自托管实例的首次使用流程
+  - **Login/Register Captcha Removed**: Login and registration no longer require captcha verification; the captcha endpoint remains available but verification is now optional, simplifying first-use for self-hosted instances
+- 🧩 **Skill 重复发布检查与恢复外键修复**：发布 Skill 到 SkillHub 时新增重复检查，同名 Skill 已存在时提示覆盖或取消；同时修复备份恢复时外键约束失败的问题
+  - **Duplicate Skill Publish Check and Restore FK Fix**: Publishing a Skill to SkillHub now checks for duplicates and prompts to overwrite or cancel; also fixed foreign key constraint failures during backup restore
+- 💥 **桌面端启动崩溃修复（重复 IPC 注册）**：修复账户切换对齐逻辑导致的 IPC handler 重复注册启动崩溃
+  - **Desktop Startup Crash Fix (Duplicate IPC)**: Fixed startup crash caused by duplicate IPC handler registrations during account switch alignment
+- 🔒 **恢复锁定数据库启动错误修复**：修复恢复操作后数据库文件被锁定导致的启动失败，并自动对齐同步账户状态
+  - **Recovery Locked DB Startup Fix**: Fixed startup failure when the database file remained locked after a recovery operation, with automatic sync account state alignment
+- 🖥️ **显示设置页面白屏修复**：修复点击"显示设置"后页面白屏的问题，根因是 `desktopHomeModules` 中存在已过期的模块 ID 导致渲染崩溃；增加 ErrorBoundary 防护和 null 安全检查
+  - **Appearance Settings Blank Screen Fix**: Fixed blank screen when clicking "Appearance Settings"; root cause was stale module IDs in persisted `desktopHomeModules` crashing the render; added ErrorBoundary protection and null-safety guards
+
+### 清理 / Cleanup
+
+- 🧹 **i18n 精简**：清理过期的多语言 locale 文件，仅保留 `zh` 和 `en` 两种语言
+  - **i18n Cleanup**: Removed obsolete locale files, keeping only `zh` and `en`
+- 🗑️ **移除 web-cloudflare 包**：删除 `apps/web-cloudflare` 目录及相关引用
+  - **Removed web-cloudflare package**: Deleted `apps/web-cloudflare` directory and associated references
+- 🗑️ **移除 WebDAV 和 S3 兼容存储同步**：桌面端云备份设置中移除 WebDAV 和 S3 兼容存储两种同步方式，仅保留「自部署 PromptHub」作为唯一云同步源；同步删除主进程 IPC handler、渲染器服务、Zustand store 状态、UI 面板、测试和 `pnpm-lock.yaml` 中相关依赖，共减少约 5800 行冗余代码
+  - **Remove WebDAV and S3 Compatible Storage Sync**: Removed WebDAV and S3 sync providers from the desktop cloud backup settings, keeping only "Self-Hosted PromptHub" as the sole cloud sync source; cleaned up main-process IPC handlers, renderer services, Zustand store state, UI panels, tests, and related `pnpm-lock.yaml` dependencies, removing ~5,800 lines of redundant code
+
+### 需求调整 / Changes
+
+- 🔀 **按账户隔离用户数据目录**：桌面端登录同步账户后，数据目录自动切换到以用户名命名的子目录（如 `data/accounts/zzq02/`），退出登录恢复到本地访客目录；账户切换时自动重载并对齐数据库和设置状态
+  - **User Data Isolation by Account**: After logging into a sync account, the desktop data directory automatically switches to an account-named subdirectory (e.g. `data/accounts/zzq02/`); logging out restores the local guest directory. Account switches auto-reload and re-align database and settings state
+
+## [0.6.0] - 2026-06-19
+
+### 新功能 / Features
+
+- 🔐 **SkillHub 管理员审核流程**：Skill 发布到 SkillHub 改为提交审核机制，用户点击"提交审核"后 skill 进入 pending 状态，需管理员在后台审核通过后才会公开上架；支持驳回操作，驳回后 skill 回到私有状态
+  - **SkillHub Admin Approval Workflow**: Skill publishing to SkillHub now requires admin review. Users click "Submit for Review" to set a skill to pending status; an admin must approve it before it becomes publicly listed. Rejection returns the skill to private status
+- 🛡️ **管理员后台面板**：新增独立管理后台（`/admin`），包含仪表盘统计、待审核技能列表、全量技能管理（筛选/搜索/下架/删除）和用户管理（角色升降/删除）四个页面，非 admin 用户无权访问
+  - **Admin Panel Dashboard**: Added a standalone admin panel (`/admin`) with dashboard statistics, pending skill review, full skill management (filter/search/hide/delete), and user management (role promotion/demotion/delete). Non-admin users are redirected
+- 👥 **用户角色管理**：管理员可在后台查看所有用户列表，提升或撤销其他用户的角色（admin/user），支持防误操作保护（不能删除自己、不能撤销最后一个 admin 的角色）
+  - **User Role Management**: Admins can view all users, promote or demote roles (admin/user), with safety guards preventing self-deletion and last-admin demotion
+- 📊 **管理员仪表盘**：管理后台首页展示技能总数、公开数、待审核数、已通过数、用户总数和管理员数六项统计卡片，待审核数大于零时高亮提醒
+  - **Admin Dashboard Stats**: The admin home page shows six stat cards — total skills, public skills, pending review, approved skills, total users, and admin users — with attention highlighting when pending skills exist
+- 🗄️ **Skill 审核状态字段**：数据库 skills 表新增 `approval_status` 列（pending / approved / rejected），支持完整的审核状态流转，包含 schema 迁移和类型定义
+  - **Skill Approval Status Column**: Added `approval_status` column to the skills table (pending / approved / rejected) for the full approval lifecycle, with schema migration and shared type definitions
+
+### 问题修复 / Fixes
+
+- 🧩 **桌面端启动外键约束失败修复**：修复桌面端 `pnpm dev` 启动时 `FOREIGN KEY constraint failed` 错误，根因是 skills 表中 `ownerUserId` 引用了 `users` 表中不存在的用户记录；现在在创建和导入 skill 时会先验证用户是否存在，不存在则回退为 null
+  - **Desktop Startup FK Constraint Fix**: Fixed `FOREIGN KEY constraint failed` error on desktop `pnpm dev` startup. Root cause was skills with `ownerUserId` referencing non-existent users in the `users` table; now validates user existence before insert, falling back to null if not found
+- 🔗 **桌面→Web SkillHub 发布链路修复**：修复从桌面端发布 skill 到自托管 Web 后 SkillHub 不显示的问题；之前桌面端只修改本地 DB 的 visibility，不推送到 Web；现在会自动将 skill 导入到 Web DB 后再提交审核
+  - **Desktop→Web SkillHub Publish Pipeline Fix**: Fixed skills published from desktop not appearing in the web SkillHub; the desktop now imports the skill to the Web DB and submits it for review as a best-effort mirror operation
+
+### 优化 / Improvements
+
+- 🌐 **7 语言国际化补全**：桌面端和 Web 端同步更新 7 种语言（en / zh / zh-TW / ja / fr / de / es），覆盖审核流程、管理后台导航、表格列标题、操作按钮、确认弹窗和状态提示等全部新增界面文本
+  - **Full 7-Locale i18n Coverage**: Both desktop and web locales updated across all 7 languages (en / zh / zh-TW / ja / fr / de / es), covering approval workflow, admin panel navigation, table headers, action buttons, confirmation dialogs, and status messages
+- 🎨 **管理后台暗色主题适配**：管理后台样式与现有 SkillHub 页面保持一致的暗色设计语言，使用 CSS 变量适配明暗模式，sidebar 固定导航 + 右侧内容区布局
+  - **Admin Panel Dark Theme**: Admin panel styles align with the existing SkillHub page dark design language, using CSS variables for light/dark mode support with a fixed sidebar + content area layout
+
 ## [0.5.8] - 2026-06-04
 
 ### 新功能 / Features

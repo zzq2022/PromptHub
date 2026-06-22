@@ -1,0 +1,32 @@
+{
+  "agents": {
+    "defaults": {
+      "workspace": ".",
+      "provider": "custom",
+      "model": "MiniMax-M2.7",
+      "max_tokens": 4096,
+      "context_window_tokens": 32768,
+      "temperature": 0,
+      "max_tool_iterations": 20,
+      "timezone": "Asia/Shanghai"
+    }
+  },
+  "providers": {
+    "custom": {
+      "api_key": "YOUR_API_KEY_HERE",
+      "api_base": "https://api.minimaxi.com/v1"
+    }
+  },
+  "skills": {},
+  "tools": {
+    "web": {
+      "enable": false
+    },
+    "exec": {
+      "enable": true,
+      "timeout": 30
+    }
+  },
+  "memory_backend": "markdown",
+  "custom_instructions": "Extract ONLY persistent, long-term facts and preferences about the user (e.g., name, personal preferences, language choices, habits). ABSOLUTELY FORBID extracting temporary query results, conversational fillers, or real-time API responses."
+}

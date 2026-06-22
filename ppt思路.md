@@ -12,8 +12,8 @@
 
 ### 🎨 版式布局与设计系统 (Layout & Design System)
 *   **画布尺寸**：标准 16:9 宽屏（1920px × 1080px）浅色扁平风。
-*   **空间构图**：左-中-右三栏非对称卡片布局（左 20% 服务端 SkillHub、中 40% 管理客户端 PromptHub、右 40% 推理客户端 Agent），底部横贯蓝色（**双向同步流**）+ 橙色（**执行流**）+ 翠绿（**回流流**）三色管道。
-*   **配色基线**：浅色背景 `#FFFFFF` / `#F8FAFC`，节点用低饱和度浅色填充（青蓝 / 紫 / 靛 / 橙），深色边框与深色文字保证对比度；hub 节点（我的 Skill / Workspace 镜像）使用稍深一档的填充以突出"真源"语义。
+*   **空间构图**：左-中-右三栏非对称卡片布局（左 20% 服务端 SkillHub、中 40% 管理客户端 PromptHub、右 40% 推理与沙箱执行面 Agent），底部横贯蓝色（**双向同步流**）+ 橙色（**执行与会话流**）+ 翠绿（**审查回流流**）三色管道。
+*   **配色基线**：浅色背景 `#FFFFFF` / `#F8FAFC`，节点用低饱和度浅色填充（青蓝 / 紫 / 靛 / 橙），深色边框与深色文字保证对比度；hub 节点（账户隔离存储 / 我的 Skill / Workspace 镜像）使用稍深一档的填充以突出"数据源"语义。
 
 ---
 
@@ -26,9 +26,9 @@ flowchart TB
     %% ══════════════════════ 顶部：多源商店带 ══════════════════════
     subgraph STORES["🛒  <b>Skill 商店 · 多源导入</b>"]
         direction LR
-        S1["🌐 <b>ClawHub</b><br/><sub>外网公开社区</sub>"]
+        S1["🌐 <b>ClawHub / skill.sh</b><br/><sub>外网公开社区</sub>"]
         S2["☁️ <b>自建 SkillHub</b><br/><sub>团队内部共享</sub>"]
-        S3["🐙 <b>GitHub / skills.sh</b><br/><sub>仓库源</sub>"]
+        S3["🐙 <b>GitHub / Git 仓库</b><br/><sub>分支与目录选择</sub>"]
         S4["📂 <b>本地目录</b><br/><sub>自扫描</sub>"]
     end
 
@@ -37,49 +37,48 @@ flowchart TB
         direction TB
         WS[("🪞 <b>Workspace 镜像</b><br/>Prompts · Folders · Skills<br/>Rules · Media · Settings")]
         PUB["🌍 <b>公开商店</b><br/><sub>/api/skillhub/public*</sub>"]
-        PORT["🔒 <b>审查入口</b><br/><sub>管理员审核 · 接收回流</sub>"]
+        PORT["🔒 <b>审查管理端 (/admin)</b><br/><sub>待审核审批/驳回 · 角色角色管理<br/>仪表盘统计 · 防止自删防空安全守卫</sub>"]
         DEV["📱 <b>设备心跳</b><br/><sub>/api/devices/*</sub>"]
         BE["⚙️ <b>RBAC + 多租户</b><br/><sub>AST 安全检测</sub>"]
     end
 
     subgraph CLIENT_MID["💼  <b>管理客户端 · PromptHub（Local-First）</b>"]
         direction TB
-        MY[("🗄️ <b>我的 Skill</b><br/><b>私有库 · 唯一真源</b><br/><sub>SQLite + managed repo + 版本历史</sub>")]
-        PROJ["📁 <b>项目 Skill</b><br/><sub>.agents/skills / .claude/skills</sub><br/><sub>symlink → 我的 Skill</sub>"]
-        STORE["🛒 <b>Skill 商店</b><br/><sub>多源聚合</sub>"]
-        SYNC["⟳ <b>同步适配器</b><br/><sub>push / pull / 心跳</sub>"]
+        ACC[("👤 <b>账户隔离存储</b><br/><sub>data/accounts/username/</sub><br/><sub>SQLite 数据隔离 & 切换自动重载</sub>")]
+        MY[("🗄️ <b>我的 Skill</b><br/><b>私有库 · 唯一真源</b><br/><sub>managed repo + 版本历史表</sub>")]
+        CHAT["💬 <b>Agent 项目控制台</b><br/><sub>三栏对话UI (项目→会话→聊天)<br/>Session命名 (时间戳+OS用户)</sub>"]
+        SYNC["⟳ <b>同步适配器</b><br/><sub>自部署同步唯一源<br/>(移除WebDAV/S3)</sub>"]
     end
 
-    subgraph CLIENT_RIGHT["🤖  <b>推理客户端 · Agent</b>"]
+    subgraph CLIENT_RIGHT["🤖  <b>推理沙箱面 · Agent / Sandbox</b>"]
         direction TB
-        AGENT_DIR["📂 <b>Agent Skill</b><br/><sub>工具自带目录</sub><br/><sub>.claude/skills / .codex/skills<br/>.cursor/skills / .windsurf/skills</sub>"]
-        WATCH["👁 <b>FsWatcher</b><br/><sub>秒级 symlink 重载</sub>"]
+        VENV["🐍 <b>venv 隔离环境</b><br/><sub>agent-venv (venv-only 纯化启动)</sub>"]
+        NANO["⚡ <b>Python Nanobot 模板</b><br/><sub>FastAPI WebSocket 网关<br/>Session 管理 · 长期记忆提取</sub>"]
         ENGINE["💭 <b>Memory Mesh</b><br/><sub>智能问答引擎</sub>"]
-        SAND["⚙️ <b>Python Sandbox</b><br/><sub>隔离执行</sub>"]
     end
 
     %% ══════════════════════ 数据流（带编号） ══════════════════════
     %% ① 商店 → 我的 Skill（导入）
     STORES ==>|"<b>① 导入</b><br/>浏览 → 一键入库"| MY
 
-    %% ② 我的 Skill → 项目 / Agent（symlink 软链分发）
-    MY -.->|"<b>② symlink</b><br/>(copy 可选)"| PROJ
-    MY -.->|"<b>② symlink</b><br/>(copy 可选)"| AGENT_DIR
+    %% ② 我的 Skill → 推理执行
+    MY -.->|"<b>② symlink / copy</b><br/>分发热重载"| NANO
 
     %% ②→③ 项目 / Agent → 推理执行
-    AGENT_DIR --> WATCH --> SAND
-    ENGINE <-->|"<b>③ 调用</b>"| SAND
+    VENV --> NANO
+    NANO <-->|"<b>③ 实时 WebSocket 通信</b><br/>Chat stream (流式返回)"| CHAT
+    ENGINE <-->|"<b>长期记忆</b>"| NANO
 
     %% ④ 我的 Skill ↔ Workspace 镜像（双向同步备份）
-    SYNC <==>|"<b>④ push / pull</b><br/>PUT / GET /api/sync/data<br/>+ 启动拉取 + 后台定时"| WS
+    SYNC <==>|"<b>④ push / pull</b><br/>自部署唯一源双向同步"| WS
     SYNC -->|"<b>④a 心跳</b>"| DEV
 
     %% ④b 服务端浏览我的私有 skill
-    WS -->|"<b>④b 服务端浏览我的私有</b>"| STORE
-    PUB -->|"<b>④c 服务端公开查询</b>"| STORE
+    WS -->|"<b>④b 服务端浏览</b>"| CHAT
+    PUB -->|"<b>④c 服务端公开查询</b>"| CHAT
 
     %% ⑤ 我的 Skill → 审查入口（发布回流）
-    MY ==>|"<b>⑤ 发布回流</b><br/>POST /api/skillhub/:id/publish"| PORT
+    MY ==>|"<b>⑤ 提交审核</b><br/>pending -> approved / rejected"| PORT
 
     %% ══════════════════════ 样式定义（浅色扁平风） ══════════════════════
     classDef storeFill fill:#E0F2FE,stroke:#0284C7,stroke-width:2px,color:#0C4A6E
@@ -94,60 +93,57 @@ flowchart TB
     class BE,PUB,PORT,DEV serverFill
     class WS mirrorFill
     class MY hubFill
-    class PROJ,STORE,SYNC clientMidFill
-    class AGENT_DIR,WATCH,ENGINE,SAND clientRightFill
+    class ACC,CHAT,SYNC clientMidFill
+    class VENV,NANO,ENGINE clientRightFill
 ```
 
 #### 🗂 图例（图边可放小卡片）
 
 | 流标号 | 线型 / 颜色 | 含义 |
 |---|---|---|
-| ① | 实线蓝（`==>`） | 商店 → 我的 Skill：多源导入 |
-| ② | 虚线靛（`-.->`） | 我的 Skill → 项目 / Agent：**symlink 软链** |
-| ③ | 实线橙（`-->`） | Agent 内部：FsWatcher → Sandbox + 引擎调用 |
-| ④ | 实线蓝绿（`<==>`） | 我 ↔ 服务端 Workspace：**双向同步备份** |
-| ④a | 实线灰 | 心跳上报 |
+| ① | 实线蓝（`==>`） | 商店 → 我的 Skill：多源导入与重复检查 |
+| ② | 虚线靛（`-.->`） | 我的 Skill → 项目 / Agent：**symlink 软链 / copy**，规则选择稳定性加固 |
+| ③ | 实线橙（`-->`） | Client ↔ Python Sandbox：**实时 WebSocket 串流会话** |
+| ④ | 实线蓝绿（`<==>`） | 我 ↔ 服务端 Workspace：**自部署专属双向同步备份** |
+| ④a | 实线灰 | 心跳上报与冲突对齐 |
 | ④b / ④c | 实线灰 | 服务端浏览我的私有 / 公开查询 |
-| ⑤ | 实线翠绿（`==>`） | 我的 Skill → 服务端：**发布回流** |
-
-> **图边可补三色色块**（与正文底部管道一致）：蓝 = 同步流 / 橙 = 执行流 / 翠绿 = 回流流。
+| ⑤ | 实线翠绿（`==>`） | 我的 Skill → 服务端：**提交审核及回流流转** |
 
 ---
 
-### 📝 详细结构化汇报正文 (Detailed Technical Core Text - 约 800 字)
+### 📝 详细结构化汇报正文 (Detailed Technical Core Text - 约 950 字)
 
 #### 一、 三端核心定位与技术特征 (Three Projects: Characteristics & Roles)
-本架构由**服务端**与**双客户端**解耦协作构成。
-1. **【服务端】SkillHub（自建）**：AI 技能的云端元数据中心与核心注册表，承担四类职责：
-   * **技能后端管理 & RBAC**：多租户命名空间、第三方脚本静态 AST 安全检测、管理员审查流；
-   * **公开 Skill 商店**：`/api/skillhub/public*` 公开目录浏览 / 搜索 / ZIP 下载，供 PromptHub 的 Skill 商店层消费；
-   * **个人 Workspace 镜像**：用 `/api/sync/*` 端点（manifest / data 双向 push & pull / status / config / WebDAV push&pull）接收每个用户的整库数据 —— Prompts、Folders、Skills、Rules、Media、Settings 一并打包，让服务端成为用户个人数据的镜像与备份；
-   * **设备管理**：通过 `/api/devices/*` 记录每个用户的设备清单与心跳，便于多设备协作场景下做冲突检测与"最后写入胜出"提示。
-2. **【管理客户端】PromptHub**：本地优先的个人提示词与技能控制台。内部按"**1 真源 + 2 视图 + 1 多源商店 + 1 同步适配器**"五层组织：
-   * **我的 Skill（私有库 · 唯一真源）**：SQLite 元数据 + managed repo 路径，所有保存自动写版本历史（diff / rollback / 命名版本），是所有"被引用 Skill"的最终落点；
-   * **项目 Skill（项目级视图）**：当前打开项目上下文里的 `.agents/skills/` / `.claude/skills/` 等扫描目录，**以 symlink 指向我的 Skill 里的某些条目**，项目维度不污染全局库；
-   * **Skill 商店（多源导入）**：可同时接入 ClawHub（外网公开）、自建 SkillHub、GitHub 仓库（anthropics/skills 等）、skills.sh、本地目录；命中后一键「导入到我的 Skill」，从此私有化、本地化、可版本化；
-   * **Workspace 同步适配器**：通过 `pushToSelfHostedWeb` / `pullFromSelfHostedWeb`（底层调服务端的 `GET/PUT /api/sync/data`）把整库推上/拉回服务端；启动时自动拉取最新一次、后台定时推送当前进度，保证我的 Skill 与服务端 Workspace 镜像始终可双向恢复；
-   * **Symlink 软链分发引擎**：把「我的 Skill」中的条目以 symlink / copy 双模式部署到 15+ Agent 工具的 skill 目录（Agent Skill 视图）。
-3. **【推理客户端】Agent**：独立的智能对话交互与执行客户端。前端承载智能对话问答，核心依靠 **Memory Mesh 双层记忆网格**（短期上下文 + 长期向量特征精简蒸馏）进行智能推理增强；引擎层**通过 FsWatcher 实时监听 Agent Skill 目录的 symlink 变更**，以零停机热挂载方式动态加载 PromptHub 部署的 Skill，并在隔离的 Python 进程沙箱内安全执行投研或通用智能体任务。
+本架构由**服务端**、**管理客户端**与**推理沙箱面**解耦协作构成。
+1. **【服务端】SkillHub（自建）**：AI 技能的云端元数据中心与安全注册表，承担以下核心职责：
+   * **管理员审核后台与安全 RBAC**：独立管理后台 (`/admin`) 支持仪表盘统计、待审核列表、全量技能管理和用户角色（admin/user）升降，对普通用户进行路由拦截阻断，防误操作保护（不能撤销最后一个 admin）；
+   * **审核审批流转机制**：技能发布至云端采取“提交审核”机制，数据库 skills 表增加 `approval_status` (pending / approved / rejected) 状态机，驳回后回滚至私有状态，公开上架后进入商店；
+   * **同步元数据清单与轻量比对 (GET /manifest)**：提供 `/manifest` 端点返回当前云端数据的版本、资源计数、上次同步时间等，便于客户端在传输大数据前进行本地/云端状态的快速增量检测；
+   * **云端数据拉取与数据导出 (GET /data)**：提供 `/data` 读取端点，对登录用户的 Prompts、Folders、Skills、Media 等多维度资产进行导出打包（导出为 JSON 镜像快照），支持客户端的一键拉取还原；
+   * **同步数据推送与原子写入 (PUT /data)**：提供 `/data` 写入端点，接收客户端上传的 Workspace 备份包，自动解析并做 Schema 与合规校验，原子化更新服务端 SQLite 数据库。
+2. **【管理客户端】PromptHub**：本地优先的个人提示词与技能控制台，引入以下三大机制：
+   * **账户隔离本地存储**：桌面端登录同步账户后，数据目录自动隔离切换到以用户名命名的子目录（如 `data/accounts/zzq02/`），退出登录恢复到本地访客目录，账户切换时自动重载并对齐数据库和设置状态；
+   * **Agent 项目与会话管理控制台**：内置完整的 Agent 项目管理框架，支持从模板导入或创建项目。会话 ID 采用时间戳加 OS 用户名命名（`session_YYYYMMDD_HHmmss`），支持新建会话、自动重连 WebSocket 及空态建议问题；
+   * **规则选择加载加固**：规则视图的 `selectRule` 切换时立即清空当前文件和草稿以防止 stale read 覆盖新选择；RulesManager 保存按钮和 textarea 在 `isLoading` 时自动禁用，规避竞态下的误保存。
+3. **【推理沙箱面】Agent (Python Sandbox)**：纯化的本地代码执行与流式推理层：
+   * **venv-only 独立沙箱**：内置 Python 虚拟环境 (`agent-venv/`)，移除不安全的系统 Python 环境变量查找和 Electron 路径 fallback 容错，通过精细化路径解析和纯化 venv 启动规避崩溃；
+   * **FastAPI WebSocket Gateway**：沙箱内运行 Python nanobot Agent 模板（内置 Session 管理与长期记忆提取），通过 WebSocket 长连接与 PromptHub 客户端建立全双工实时会话。
 
 #### 二、 软链治理：单一真源 + 多视图 (Single Source of Truth, Many Views)
-PromptHub 在"我的 Skill → 视图"这一段统一走本地软链：
+PromptHub 在“我的 Skill → 视图”这一段统一走本地软链：
 * **symlink（默认）**：项目 Skill 目录 / Agent Skill 目录里只是一条指向 managed repo 的链接，在 PromptHub 编辑就是真源编辑，所有视图即时同步。
 * **copy**：把快照复制一份到目标目录。适合需要把 Skill "冻结"到某个项目某个版本、或者 Agent 工具不识别 symlink 的场景。
 
-复制还是软链，所有变更都先落回「我的 Skill」再分发，**视图侧（项目 Skill / Agent Skill）永远不持有"独占真源"**，避免"项目里改了一份、桌面里看不到"的歧义。
+所有变更都先落回账户隔离的「我的 Skill」再分发，**视图侧永远不持有"独占真源"**，避免了多端编辑导致的版本冲突与状态漂移。
 
 #### 三、 五大核心数据工作流闭环 (5-Pillar Interconnection & Closed-Loop)
-* **① 商店下载流（Skill 商店 → 我的 Skill）**：管理客户端的 Skill 商店可同时面向 ClawHub、自建 SkillHub、GitHub、本地目录发起浏览 / 搜索 / 分页请求；命中后一键「导入到我的 Skill」，下载落库、生成结构化 Markdown，**从此该 Skill 私有化、本地化、可版本化**。ClawHub 与 SkillHub 上的公开 skill 是"可消费的素材"，「我的 Skill」是"被消费的资产"。
-* **② 技能重载流（我的 Skill → Agent）**：用户在 PromptHub 切换 Skill 激活态 / 选中目标平台 / 选中目标项目时，main 进程通过 `SKILL_INSTALL_MD_SYMLINK` 写一条 OS 级 symlink 到 Agent Skill 目录；Agent 运行时 FsWatcher 秒级捕捉变更并热重载配置，无需重启问答引擎。
-* **③ 推理与工具执行流（Agent ↔ 个人用户）**：用户与 Agent 交互提问时，问答引擎结合 Memory Mesh 记忆，自动匹配并调度由 PromptHub 分发的 Skill，在 Python 隔离沙箱中受限运行脚本，流式拦截 stdout 渲染中间实数与 CoT 思维链。
-* **④ 双向同步备份流（我的 Skill ↔ 服务端 Workspace 镜像）**：PromptHub 的 Workspace 同步适配器把「我的 Skill」及其同源工作区（Prompts / Folders / Rules / Media / Settings）打包成统一快照 —— 启动时 `pullFromSelfHostedWeb` 自动从服务端拉取最新一次镜像（换机恢复 / 跨设备协作），后台定时 `pushToSelfHostedWeb` 把本地最新状态推回服务端做备份；同时调 `/api/devices/heartbeat` 上报心跳，让服务端知道当前设备在同步。Skill 商店层也可通过 `GET /api/skillhub/private` 在服务端浏览"已同步上去的我自己的私有 skill"列表，结合公开商店与个人私有形成"我的 / 公开 / 私有"三段浏览视图。
-* **⑤ 技能发布回流（我的 Skill → SkillHub）**：在本地调试成熟的自定义 Skill，可通过 PromptHub 安全上报通道发布回 SkillHub 服务端（`POST /api/skillhub/:id/publish`），经管理员审查安全合规后入公共商店，再被其他用户从 Skill 商店浏览 / 导入。发布回流失败**不回滚**本地 visibility —— Local-first 永远成立。
+* **① 商店导入流（Skill 商店 → 我的 Skill）**：支持多源（ClawHub、GitHub 仓库等）一键「导入到我的 Skill」。导入时引入重复发布与命名冲突检查，防止本地同名 Variant 被覆盖。
+* **② 技能分发与规则加固流（我的 Skill → Agent 运行空间）**：通过 OS 级 symlink 写入 Agent 规则文件与技能；Rules 工作区通过即时清空加载状态和操作阻断，确保分发后的规则选择与保存状态具有强一致性。
+* **③ 实时对话与沙箱执行流（管理客户端 ↔ venv 沙箱）**：管理客户端的 Agent 聊天面板发起对话时，后台通过 venv 激活内置的 Python Nanobot 进程，建立 WebSocket 连接，实现实时流式问答与 CoT（思维链）中间过程回显。
+* **④ 账户隔离双向云同步流（我的 Skill ↔ 服务端 Workspace 镜像）**：PromptHub 同步适配器向自建服务端发送 `/api/sync/data` 请求。用户可手动进行“测试连接”（成功后对齐账号路径）并执行“备份到远端 (Push)”或“从远端更新 (Pull)”进行覆盖与还原；后台支持启动自动拉取以及定时自动同步（可设时间间隔），确保多设备协作与换机迁移时的数据一致性。
+* **⑤ 技能审核与回流流转（我的 Skill → 云端商店）**：本地调优成熟的 Skill 一键向自建 SkillHub 提交审核。发布流程由原本的本地状态修改改为“上传 Web 数据库 + 写入 pending 状态”，由管理员进行合规审批后，上架至公开商店。
 
 #### 四、 设计取舍与边界 (Trade-offs)
-* **为什么不直接上云？** Local-first 是产品定位，也是合规护城河。「我的 Skill」默认留在用户磁盘；只有用户显式配置自部署 Web 时，Workspace 同步适配器才会上线；服务端是**镜像 / 备份 / 社区注册表**，不是用户的"个人云盘"。
-* **为什么软链而不是双向同步？** 双向同步会引入冲突解决 / 时间窗口 / 离线合并难题；软链本质是"OS 级指针"，写只可能发生在一处（真源侧），视图侧天然只读 / 实时同步，把同步问题退化成了文件系统问题。
-* **为什么 Workspace 同步走整库快照而不是 per-skill diff？** 个人数据规模小（Prompts/Folders/Skills/Rules 总和通常 < 数千条）、整库快照实现最简、冲突恢复策略最清晰；per-skill diff 适合超大协作场景但当前用户画像不必。需要时可叠加。
-* **为什么商店要支持多源？** 不同源有不同的优势：ClawHub 偏社区热度、自建 SkillHub 偏团队内部共享、GitHub 偏可控可审、本地目录偏"我机器上已经有的 skill"。导入是单向收敛 —— 无论从哪来，都会被「我的 Skill」私有化后形成统一管理面。
-* **为什么服务端只承担"注册表 + Workspace 镜像 + 设备列表"三类角色？** 服务端不是"个人云盘"，也不是"执行沙箱"。它的角色是**跨用户的分享 / 发现 / 治理 + 个人备份 / 多端协作**。个人数据始终留在桌面端，技能执行始终在 Agent 端，三方各司其职。
+* **为什么弃用 WebDAV/S3 转向单一自部署同步源？**：多云源增加了冲突合并的复杂性，且产生大量平台特异性冗余代码。采用统一的自部署 PromptHub API 协议能够确保多端设备的心跳对齐、账户隔离迁移和数据库底层重载的原子性。
+* **为什么要在客户端内建 Python venv 纯化沙箱和 WebSocket 对话？**：外部 Agent 工具依赖繁杂且易受系统环境污染崩溃。内建 `agent-venv/` 保证了沙箱执行的开箱即用；WebSocket 能够实现全双工流式会话，使 PromptHub 成为集管理、开发、执行于一体的一站式智能体工作台。
+* **为什么引入审批流和管理员后台面板？**：企业/团队共享 SkillHub 场景下，私有 Skill 的回流与公开必须经过安全审计和 AST 检测。采用“提交审核 -> 管理员审批”的闭环，配合 `/admin` 下的用户角色管理，保障了企业级 AI 资产的安全合规。

@@ -343,7 +343,7 @@ export function SkillPlatformPanel({
                     <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
                       {t(
                         "skill.globalProjectDeployHint",
-                        "Select projects and distribute to their local agent folders.",
+                        "Select projects and distribute to their local IDE folders.",
                       )}
                     </p>
                   </div>

@@ -645,10 +645,7 @@ export function TopBar({
                           "Search project skills...",
                         )
                       : isAgentSkillView
-                        ? t(
-                            "header.searchAgentSkills",
-                            "Search agent skills...",
-                          )
+                        ? t("header.searchAgentSkills", "Search IDE skills...")
                         : t("header.searchSkill", "Search skills...")
                     : isRulesView
                       ? t("rules.searchPlaceholder", "Search rule files...")

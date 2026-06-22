@@ -42,7 +42,10 @@ function clamp(value: number, min: number, max: number): number {
 }
 
 function normalizeAppModule(value: unknown): AppModule {
-  return value === "skill" || value === "rules" || value === "prompt" || value === "projects"
+  return value === "skill" ||
+    value === "rules" ||
+    value === "prompt" ||
+    value === "projects"
     ? value
     : "prompt";
 }

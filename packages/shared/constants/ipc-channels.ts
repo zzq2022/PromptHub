@@ -204,6 +204,30 @@ export const IPC_CHANNELS = {
   VIDEO_EXISTS: "video:exists",
   VIDEO_GET_PATH: "video:getPath",
   VIDEO_CLEAR: "video:clear",
+
+  // ── Agent Project Management ──────────────────────────────────
+  // Project CRUD
+  AGENT_PROJECT_CREATE: "agentProject:create",
+  AGENT_PROJECT_IMPORT: "agentProject:import",
+  AGENT_PROJECT_VERIFY: "agentProject:verify",
+
+  // Gateway process management
+  AGENT_GATEWAY_START: "agentGateway:start",
+  AGENT_GATEWAY_STOP: "agentGateway:stop",
+  AGENT_GATEWAY_STATUS: "agentGateway:status",
+
+  // Session (REST API pass-through to Agent Gateway)
+  AGENT_SESSION_LIST: "agentSession:list",
+  AGENT_SESSION_GET: "agentSession:get",
+  AGENT_SESSION_CREATE: "agentSession:create",
+  AGENT_SESSION_DELETE: "agentSession:delete",
+  AGENT_SESSION_RENAME: "agentSession:rename",
+
+  // User identity (system-level, for session naming)
+  AGENT_GET_USER_ID: "agentSession:getUserId",
+
+  // Memory (read-only, for UI display)
+  AGENT_MEMORY_LOAD: "agentMemory:load",
 } as const;
 
 export type IPCChannel = (typeof IPC_CHANNELS)[keyof typeof IPC_CHANNELS];

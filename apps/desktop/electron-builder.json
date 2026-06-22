@@ -26,6 +26,14 @@
     {
       "from": "../../CHANGELOG.md",
       "to": "CHANGELOG.md"
+    },
+    {
+      "from": "resources/agent-template",
+      "to": "agent-template"
+    },
+    {
+      "from": "resources/agent-venv",
+      "to": "agent-venv"
     }
   ],
   "asarUnpack": ["**/*.node", "**/node-sqlite3-wasm/**"],

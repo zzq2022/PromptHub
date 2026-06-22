@@ -111,7 +111,7 @@ describe("Sidebar", () => {
       skillProjects: [
         {
           id: "project-1",
-          name: "Workspace",
+          name: "Docs Site",
           rootPath: "/tmp/workspace",
           scanPaths: [],
           createdAt: 1,
@@ -134,6 +134,7 @@ describe("Sidebar", () => {
           name: "AGENTS.md",
           description: "Project rule file",
           path: "/tmp/docs-site/AGENTS.md",
+          projectRootPath: "/tmp/workspace",
           exists: false,
           group: "workspace",
         },
@@ -234,7 +235,7 @@ describe("Sidebar", () => {
       .__PROMPTHUB_WEB__;
   });
 
-  it("shows Project Skills as a first-level skill navigation entry on desktop", async () => {
+  it("shows Project Skill as a first-level skill navigation entry on desktop", async () => {
     await act(async () => {
       await renderWithI18n(
         <Sidebar currentPage="home" onNavigate={vi.fn()} />,
@@ -242,10 +243,10 @@ describe("Sidebar", () => {
       );
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /Project Skills/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Project Skill/i }));
 
     expect(useSkillStore.getState().storeView).toBe("projects");
-    expect(screen.getByText("Project Skills")).toBeInTheDocument();
+    expect(screen.getByText("Project Skill")).toBeInTheDocument();
   });
 
   it("shows the detected agent count on the Agent Skills navigation entry", async () => {
@@ -276,7 +277,7 @@ describe("Sidebar", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole("button", { name: /Agent Skills/i }),
+        screen.getByRole("button", { name: /IDE Skills/i }),
       ).toHaveTextContent("2");
     });
   });
@@ -325,7 +326,7 @@ describe("Sidebar", () => {
     });
 
     expect(
-      screen.getByRole("button", { name: /Agent Skills/i }),
+      screen.getByRole("button", { name: /IDE Skills/i }),
     ).toHaveTextContent("2");
   });
 
@@ -427,7 +428,7 @@ describe("Sidebar", () => {
     );
   });
 
-  it("shows Agent Skills as a first-level skill navigation entry on desktop", async () => {
+  it("shows IDE Skills as a first-level skill navigation entry on desktop", async () => {
     await act(async () => {
       await renderWithI18n(
         <Sidebar currentPage="home" onNavigate={vi.fn()} />,
@@ -435,10 +436,10 @@ describe("Sidebar", () => {
       );
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /Agent Skills/i }));
+    fireEvent.click(screen.getByRole("button", { name: /IDE Skills/i }));
 
     expect(useSkillStore.getState().storeView).toBe("agents");
-    expect(screen.getByText("Agent Skills")).toBeInTheDocument();
+    expect(screen.getByText("IDE Skills")).toBeInTheDocument();
   });
 
   it("shows skill library tags only in My Skills", async () => {
@@ -813,7 +814,7 @@ describe("Sidebar", () => {
     });
 
     expect(useUIStore.getState().appModule).toBe("rules");
-    expect(screen.getByText("Global Rules")).toBeInTheDocument();
+    expect(screen.getByText("IDE Rules")).toBeInTheDocument();
     expect(screen.getByText("Project Rules")).toBeInTheDocument();
     expect(screen.getByText("Docs Site")).toBeInTheDocument();
     expect(screen.getByText("Codex CLI")).toBeInTheDocument();
@@ -866,7 +867,7 @@ describe("Sidebar", () => {
       fireEvent.click(screen.getByRole("button", { name: /Rules/i }));
     });
 
-    expect(screen.getByText("Global Rules")).toBeInTheDocument();
+    expect(screen.getByText("IDE Rules")).toBeInTheDocument();
     expect(screen.getByText("Project Rules")).toBeInTheDocument();
     expect(screen.queryByText("Add Project Directory")).not.toBeInTheDocument();
   });

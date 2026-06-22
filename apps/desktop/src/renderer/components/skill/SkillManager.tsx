@@ -615,7 +615,7 @@ export function SkillManager() {
             new Error(
               t(
                 "skill.scanLocalTimeout",
-                "Local skill scan timed out. Check whether an agent folder is inaccessible, then try again.",
+                "Local skill scan timed out. Check whether an IDE folder is inaccessible, then try again.",
               ),
             ),
         );
@@ -666,7 +666,7 @@ export function SkillManager() {
           new Error(
             t(
               "skill.scanLocalTimeout",
-              "Local skill scan timed out. Check whether an agent folder is inaccessible, then try again.",
+              "Local skill scan timed out. Check whether an IDE folder is inaccessible, then try again.",
             ),
           ),
       );
@@ -1824,7 +1824,7 @@ export function SkillManager() {
                   <span className="mt-1 block text-muted-foreground">
                     {t(
                       "skill.deleteCopyInstallationsHelp",
-                      "Leave unchecked to keep copied Agent or project folders as detached copies.",
+                      "Leave unchecked to keep copied IDE or project folders as detached copies.",
                     )}
                   </span>
                 </span>

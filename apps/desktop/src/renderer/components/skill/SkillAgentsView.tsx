@@ -264,7 +264,7 @@ export function SkillAgentsView() {
           showToast(
             t("skill.agentsRefreshComplete", {
               count: nextVisiblePlatforms.length,
-              defaultValue: `Detected ${nextVisiblePlatforms.length} agents`,
+              defaultValue: `Detected ${nextVisiblePlatforms.length} IDEs`,
             }),
             "success",
           );
@@ -277,7 +277,7 @@ export function SkillAgentsView() {
                 return { ok: true };
               } catch (error) {
                 console.error(
-                  `Failed to scan agent skills for ${platform.id}:`,
+                  `Failed to scan IDE skills for ${platform.id}:`,
                   error,
                 );
                 return { ok: false };
@@ -286,18 +286,15 @@ export function SkillAgentsView() {
           );
           if (scanResults.some((result) => !result.ok)) {
             showToast(
-              t("skill.agentScanFailed", "Failed to scan agent skills"),
+              t("skill.agentScanFailed", "Failed to scan IDE skills"),
               "error",
             );
           }
         }
         return nextVisiblePlatforms;
       } catch (error) {
-        console.error("Failed to load skill agents:", error);
-        showToast(
-          t("skill.agentsLoadFailed", "Failed to load agents"),
-          "error",
-        );
+        console.error("Failed to load skill IDEs:", error);
+        showToast(t("skill.agentsLoadFailed", "Failed to load IDEs"), "error");
         return [];
       } finally {
         setIsLoadingPlatforms(false);
@@ -341,9 +338,9 @@ export function SkillAgentsView() {
           );
         }
       } catch (error) {
-        console.error("Failed to scan agent skills:", error);
+        console.error("Failed to scan IDE skills:", error);
         showToast(
-          t("skill.agentScanFailed", "Failed to scan agent skills"),
+          t("skill.agentScanFailed", "Failed to scan IDE skills"),
           "error",
         );
       }
@@ -436,7 +433,7 @@ export function SkillAgentsView() {
       showToast(
         t("skill.agentInstallSuccessCount", {
           count: installedCount,
-          defaultValue: `Installed ${installedCount} skill(s) to agent`,
+          defaultValue: `Installed ${installedCount} skill(s) to IDE`,
         }),
         "success",
       );
@@ -444,7 +441,7 @@ export function SkillAgentsView() {
     } catch (error) {
       console.error("Failed to install skill to agent:", error);
       showToast(
-        t("skill.agentInstallFailed", "Failed to install skill to agent"),
+        t("skill.agentInstallFailed", "Failed to install skill to IDE"),
         "error",
       );
     } finally {
@@ -514,7 +511,7 @@ export function SkillAgentsView() {
       showToast(
         t(
           "skill.platformBuiltinCannotUninstall",
-          "Built-in skills cannot be removed from this agent.",
+          "Built-in skills cannot be removed from this IDE.",
         ),
         "warning",
       );
@@ -534,13 +531,13 @@ export function SkillAgentsView() {
       await scanSelectedPlatform();
       await loadDeployedStatus({ force: true });
       showToast(
-        t("skill.agentUninstallSuccess", "Skill removed from agent"),
+        t("skill.agentUninstallSuccess", "Skill removed from IDE"),
         "success",
       );
     } catch (error) {
-      console.error("Failed to remove agent skill:", error);
+      console.error("Failed to remove IDE skill:", error);
       showToast(
-        t("skill.agentUninstallFailed", "Failed to remove skill from agent"),
+        t("skill.agentUninstallFailed", "Failed to remove skill from IDE"),
         "error",
       );
     } finally {
@@ -608,12 +605,12 @@ export function SkillAgentsView() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     <h2 className="text-lg font-semibold text-foreground">
-                      {t("nav.agentSkills", "Agent Skills")}
+                      {t("nav.agentSkills", "IDE Skills")}
                     </h2>
                     <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
                       {t(
                         "skill.agentsSidebarHint",
-                        "Browse each agent's Skill directory and manage copy or symlink installs.",
+                        "Browse each IDE's Skill directory and manage copy or symlink installs.",
                       )}
                     </p>
                   </div>
@@ -623,9 +620,9 @@ export function SkillAgentsView() {
                     type="button"
                     data-testid="agent-manage-settings-button"
                     onClick={() => requestSettingsSection("skill")}
-                    aria-label={t("skill.manageAgents", "Manage Agents")}
+                    aria-label={t("skill.manageAgents", "Manage IDEs")}
                     className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border app-wallpaper-surface text-muted-foreground transition-colors hover:text-primary disabled:opacity-60"
-                    title={t("skill.manageAgents", "Manage Agents")}
+                    title={t("skill.manageAgents", "Manage IDEs")}
                   >
                     <SettingsIcon className="h-4 w-4" />
                   </button>
@@ -719,13 +716,13 @@ export function SkillAgentsView() {
                   <div className="min-w-0">
                     <h3 className="truncate text-lg font-semibold text-foreground">
                       {selectedPlatform?.name ??
-                        t("nav.agentSkills", "Agent Skills")}
+                        t("nav.agentSkills", "IDE Skills")}
                     </h3>
                     <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
                       {scanResult?.skillsDir ??
                         t(
                           "skill.agentSkillsDirPending",
-                          "Select an agent to scan",
+                          "Select an IDE to scan",
                         )}
                     </p>
                   </div>
@@ -834,7 +831,7 @@ export function SkillAgentsView() {
                 <div className="rounded-2xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
                   <FolderOpenIcon className="mx-auto mb-3 h-10 w-10 opacity-30" />
                   <div className="font-medium text-foreground">
-                    {t("skill.noAgentSkills", "No skills in this agent")}
+                    {t("skill.noAgentSkills", "No Skills in this IDE")}
                   </div>
                 </div>
               ) : (
@@ -988,15 +985,15 @@ export function SkillAgentsView() {
                               disabled={skill.isPlatformBuiltin}
                               aria-label={t(
                                 "skill.uninstallFromAgent",
-                                "Uninstall from agent",
+                                "Uninstall from IDE",
                               )}
                               title={
                                 skill.isPlatformBuiltin
                                   ? t(
                                       "skill.platformBuiltinCannotUninstall",
-                                      "Built-in skills cannot be removed from this agent.",
+                                      "Built-in skills cannot be removed from this IDE.",
                                     )
-                                  : `${t("skill.uninstallFromAgent", "Uninstall from agent")}: ${skill.name}`
+                                  : `${t("skill.uninstallFromAgent", "Uninstall from IDE")}: ${skill.name}`
                               }
                               className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-destructive/20 bg-destructive/5 text-destructive transition-colors hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-50"
                             >
@@ -1040,11 +1037,11 @@ export function SkillAgentsView() {
         title={t("skill.installMySkillToAgent", "Install My Skill")}
         description={t(
           "skill.installMySkillToAgentHint",
-          "Select one or more skills from My Skills and install them into the selected agent's skill folder.",
+          "Select one or more skills from My Skills and install them into the selected IDE's skill folder.",
         )}
         selectHint={t(
           "skill.selectSkillsToAgentHint",
-          "Choose one or more skills to install into this agent.",
+          "Choose one or more skills to install into this IDE.",
         )}
         confirmLabel={(count) =>
           t("skill.importSelectedToAgent", {
@@ -1058,10 +1055,10 @@ export function SkillAgentsView() {
         isOpen={Boolean(pendingUninstall)}
         onClose={() => setPendingUninstall(null)}
         onConfirm={() => void handleConfirmUninstall()}
-        title={t("skill.uninstallFromAgent", "Uninstall from agent")}
+        title={t("skill.uninstallFromAgent", "Uninstall from IDE")}
         message={t(
           "skill.uninstallFromAgentConfirm",
-          "Remove this skill folder from the selected agent? Symlink installs only remove the link.",
+          "Remove this skill folder from the selected IDE? Symlink installs only remove the link.",
         )}
         confirmText={t("common.uninstall", "Uninstall")}
         cancelText={t("common.cancel", "Cancel")}

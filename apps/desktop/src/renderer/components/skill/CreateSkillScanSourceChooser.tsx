@@ -23,7 +23,7 @@ export function CreateSkillScanSourceChooser({
         <p className="mt-1 text-sm text-muted-foreground">
           {t(
             "skill.scanLocalChoicesHint",
-            "Agent skill folders and arbitrary local skill folders are handled separately.",
+            "IDE skill folders and arbitrary local skill folders are handled separately.",
           )}
         </p>
       </div>
@@ -38,12 +38,12 @@ export function CreateSkillScanSourceChooser({
         </div>
         <div>
           <h3 className="font-medium text-foreground">
-            {t("skill.importFromAgentSkills", "Import from Agent Skills")}
+            {t("skill.importFromAgentSkills", "Import from IDE Skills")}
           </h3>
           <p className="text-sm text-muted-foreground">
             {t(
               "skill.importFromAgentSkillsDesc",
-              "Open the Agent Skill manager and import skills from Claude, Cline, Codex, or other agent folders.",
+              "Open the IDE Skill manager and import skills from Claude, Cline, Codex, or other IDE folders.",
             )}
           </p>
         </div>

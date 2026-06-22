@@ -489,4 +489,27 @@ describe("rules store", () => {
     expect(useRulesStore.getState().currentFile?.id).toBe("gemini-global");
     expect(useRulesStore.getState().draftContent).toBe("# Gemini rules");
   });
+
+  it("clears currentFile and draftContent immediately when selecting a new rule", () => {
+    useRulesStore.setState({
+      currentFile: { id: "old-rule", content: "old content" } as any,
+      draftContent: "old content",
+      selectedRuleId: "old-rule",
+    });
+
+    installWindowMocks({
+      api: {
+        rules: {
+          read: vi.fn().mockReturnValue(new Promise(() => {})),
+        },
+      },
+    });
+
+    useRulesStore.getState().selectRule("new-rule");
+
+    expect(useRulesStore.getState().selectedRuleId).toBe("new-rule");
+    expect(useRulesStore.getState().currentFile).toBeNull();
+    expect(useRulesStore.getState().draftContent).toBe("");
+    expect(useRulesStore.getState().isLoading).toBe(true);
+  });
 });

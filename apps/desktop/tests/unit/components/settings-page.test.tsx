@@ -96,7 +96,7 @@ describe("SettingsPage", () => {
     ).toBeInTheDocument();
   });
 
-  it("shows a standalone agent management entry in the desktop settings navigation", async () => {
+  it("shows a standalone IDE management entry in the desktop settings navigation", async () => {
     useSettingsStoreMock.mockReturnValue({
       syncProvider: "manual",
       webdavEnabled: false,
@@ -115,20 +115,20 @@ describe("SettingsPage", () => {
     expect(screen.getByText("general-content")).toBeInTheDocument();
     expect(nav).toHaveTextContent("App Settings");
     expect(nav).toHaveTextContent("Data & Sync");
-    expect(nav).toHaveTextContent("Agent Management");
+    expect(nav).toHaveTextContent("IDE Management");
     expect(nav).not.toHaveTextContent("Platform Preview");
     expect(nav).toHaveTextContent("Security");
     expect(nav).toHaveTextContent("CLI");
     expect(nav.parentElement).not.toHaveClass("app-left-rail-glass");
 
     await act(async () => {
-      screen.getByRole("button", { name: "Agent Management" }).click();
+      screen.getByRole("button", { name: "IDE Management" }).click();
     });
 
     expect(screen.getByText("skill-content")).toBeInTheDocument();
   });
 
-  it("opens the agent management section from a pending settings navigation request", async () => {
+  it("opens the IDE management section from a pending settings navigation request", async () => {
     useSettingsStoreMock.mockReturnValue({
       syncProvider: "manual",
       webdavEnabled: false,

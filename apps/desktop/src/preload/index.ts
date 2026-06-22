@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer, webUtils } from "electron";
 import { IPC_CHANNELS } from "@prompthub/shared/constants/ipc-channels";
 import { aiApi } from "./api/ai";
+import { agentApi } from "./api/agent";
 import { cliApi } from "./api/cli";
 import { folderApi } from "./api/folder";
 import { ioApi } from "./api/io";
@@ -116,6 +117,7 @@ const api = {
   upgradeBackup: upgradeBackupApi,
   io: ioApi,
   ai: aiApi,
+  agent: agentApi,
   cli: cliApi,
 
   // Listen to main process events (with whitelist)

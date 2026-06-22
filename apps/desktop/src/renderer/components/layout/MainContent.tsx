@@ -40,7 +40,9 @@ const RulesManager = lazy(() =>
   import("../rules/RulesManager").then((m) => ({ default: m.RulesManager })),
 );
 const ProjectsManager = lazy(() =>
-  import("../project/ProjectsManager").then((m) => ({ default: m.ProjectsManager })),
+  import("../project/ProjectsManager").then((m) => ({
+    default: m.ProjectsManager,
+  })),
 );
 const EditPromptModal = lazy(() =>
   import("../prompt/EditPromptModal").then((m) => ({

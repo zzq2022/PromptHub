@@ -276,10 +276,10 @@ describe("SkillAgentsView", () => {
     expect(screen.getAllByText("In My Skills").length).toBeGreaterThan(0);
     expect(
       screen.getByText(
-        "Browse each agent's Skill directory and manage copy or symlink installs.",
+        "Browse each IDE's Skill directory and manage copy or symlink installs.",
       ),
     ).toBeInTheDocument();
-    expect(screen.queryByText("Manage Agents")).not.toBeInTheDocument();
+    expect(screen.queryByText("Manage IDEs")).not.toBeInTheDocument();
     expect(screen.getByTestId("agent-manage-settings-button")).toHaveClass(
       "h-10",
       "w-10",
@@ -309,7 +309,7 @@ describe("SkillAgentsView", () => {
     expect(screen.queryByText("linked-skill")).not.toBeInTheDocument();
     fireEvent.click(screen.getByTestId("agent-skill-filter-copy"));
     expect(screen.queryAllByTestId("agent-skill-card")).toHaveLength(0);
-    expect(screen.getByText("No skills in this agent")).toBeInTheDocument();
+    expect(screen.getByText("No Skills in this IDE")).toBeInTheDocument();
     fireEvent.click(screen.getByTestId("agent-skill-filter-all"));
     expect(screen.getAllByTestId("agent-skill-card")).toHaveLength(2);
     expect(screen.getByTestId("agent-sidebar-header")).toHaveClass("h-[132px]");
@@ -358,7 +358,7 @@ describe("SkillAgentsView", () => {
       ).toHaveClass("h-10", "w-10");
     }
     expect(
-      screen.getAllByRole("button", { name: /Uninstall from agent/i }).length,
+      screen.getAllByRole("button", { name: /Uninstall from IDE/i }).length,
     ).toBeGreaterThan(0);
     expect(screen.queryByText("# Copy Skill")).not.toBeInTheDocument();
   });
@@ -387,7 +387,7 @@ describe("SkillAgentsView", () => {
     fireEvent.click(await screen.findByText("linked-skill"));
 
     const shortcutButton = await screen.findByRole("button", {
-      name: /Open agent shortcut/i,
+      name: /Open IDE shortcut/i,
     });
     expect(shortcutButton).toHaveTextContent(
       "/agents/claude/skills/linked-skill",
@@ -530,7 +530,7 @@ describe("SkillAgentsView", () => {
       0,
     );
     expect(api.skill.scanPlatformSkills).not.toHaveBeenCalled();
-    expect(screen.getByText("No skills in this agent")).toBeInTheDocument();
+    expect(screen.getByText("No Skills in this IDE")).toBeInTheDocument();
 
     const agentPlatformCard = (
       await screen.findAllByRole("button", { name: /Claude Code/i })
@@ -580,7 +580,7 @@ describe("SkillAgentsView", () => {
     fireEvent.click(screen.getByRole("button", { name: /Back/i }));
 
     expect(
-      screen.getAllByRole("button", { name: /Uninstall from agent/i }).length,
+      screen.getAllByRole("button", { name: /Uninstall from IDE/i }).length,
     ).toBeGreaterThan(0);
     expect(screen.getAllByText("copy-skill").length).toBeGreaterThan(0);
   });
@@ -639,7 +639,7 @@ describe("SkillAgentsView", () => {
     expect(copyCard).toBeTruthy();
 
     fireEvent.click(
-      within(copyCard!).getByRole("button", { name: /Uninstall from agent/i }),
+      within(copyCard!).getByRole("button", { name: /Uninstall from IDE/i }),
     );
     fireEvent.click(screen.getByText("confirm-uninstall"));
 
@@ -701,7 +701,7 @@ describe("SkillAgentsView", () => {
     ).not.toBeInTheDocument();
 
     const cardUninstall = within(builtinCard!).getByRole("button", {
-      name: /Uninstall from agent/i,
+      name: /Uninstall from IDE/i,
     });
     expect(cardUninstall).toBeDisabled();
 
@@ -834,7 +834,7 @@ describe("SkillAgentsView", () => {
       );
     });
     expect(showToastMock).toHaveBeenCalledWith(
-      "Installed 1 skill(s) to agent",
+      "Installed 1 skill(s) to IDE",
       "success",
     );
   });
@@ -852,7 +852,7 @@ describe("SkillAgentsView", () => {
 
     await waitFor(() => {
       expect(showToastMock).toHaveBeenCalledWith(
-        "Detected 1 agents",
+        "Detected 1 IDEs",
         "success",
       );
     });

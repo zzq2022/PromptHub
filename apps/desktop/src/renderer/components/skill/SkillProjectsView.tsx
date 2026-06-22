@@ -71,8 +71,6 @@ function getExtraProjectScanPaths(
   );
 }
 
-
-
 function getTargetSummary(
   targetDirs: string[],
   projectRootPath: string,
@@ -453,7 +451,13 @@ export function SkillProjectsView() {
   const currentProjectState =
     (selectedProject && projectScanState[selectedProject.id]) || null;
   const currentProjectDeployTargets = useMemo(
-    () => (selectedProject ? resolveProjectDeployTargets(selectedProject, defaultProjectDeployTargetPath) : []),
+    () =>
+      selectedProject
+        ? resolveProjectDeployTargets(
+            selectedProject,
+            defaultProjectDeployTargetPath,
+          )
+        : [],
     [selectedProject, defaultProjectDeployTargetPath],
   );
   const visibleProjectSkills = useMemo(() => {

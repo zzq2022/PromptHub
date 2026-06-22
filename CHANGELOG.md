@@ -1,14 +1,22 @@
 ## [Unreleased]
 
-### 需求调整 / Changes
+## [0.7.1] - 2026-06-22
 
-- 🗑️ **移除 WebDAV 和 S3 兼容存储同步**：桌面端云备份设置中移除 WebDAV 和 S3 兼容存储两种同步方式，仅保留「自部署 PromptHub」作为唯一云同步源；同步删除主进程 IPC handler、渲染器服务、Zustand store 状态、UI 面板、测试和 `pnpm-lock.yaml` 中相关依赖，共减少约 5800 行冗余代码
-  - **Remove WebDAV and S3 Compatible Storage Sync**: Removed WebDAV and S3 sync providers from the desktop cloud backup settings, keeping only "Self-Hosted PromptHub" as the sole cloud sync source; cleaned up main-process IPC handlers, renderer services, Zustand store state, UI panels, tests, and related `pnpm-lock.yaml` dependencies, removing ~5,800 lines of redundant code
-- 🔀 **按账户隔离用户数据目录**：桌面端登录同步账户后，数据目录自动切换到以用户名命名的子目录（如 `data/accounts/zzq02/`），退出登录恢复到本地访客目录；账户切换时自动重载并对齐数据库和设置状态
-  - **User Data Isolation by Account**: After logging into a sync account, the desktop data directory automatically switches to an account-named subdirectory (e.g. `data/accounts/zzq02/`); logging out restores the local guest directory. Account switches auto-reload and re-align database and settings state
+### 新功能 / Features
+
+- 🤖 **Agent 项目管理系统（Phase 1）**：新增完整的 Agent 项目管理框架，支持从模板创建和导入 Agent 项目，内置 Python nanobot Agent 模板（含 FastAPI WebSocket Gateway、Session 管理、长期记忆提取）；通过 WebSocket 实现实时对话的三栏布局 UI（项目列表 → Session 列表 → 聊天面板），12 个测试全部通过
+  - **Agent Project Management System (Phase 1)**: Added a complete Agent project management framework with template-based project creation and import, a built-in Python nanobot Agent template (FastAPI WebSocket Gateway, session management, long-term memory extraction), and a three-column chat UI (project list → session list → chat panel) with real-time WebSocket streaming; all 12 tests passing
+- 💬 **Agent Session 管理改进**：Session ID 改为时间戳命名（`session_YYYYMMDD_HHmmss`），通过 OS 用户名自动归属 Session；新增「新建对话」按钮、Session 切换时自动重连 WebSocket，聊天面板空态展示 4 个建议问题
+  - **Agent Session Management Improvements**: Session IDs now use timestamp naming (`session_YYYYMMDD_HHmmss`) and are auto-assigned to the OS user; added "New Chat" button, WebSocket auto-reconnect on session switch, and 4 suggested questions in the empty chat panel
+- 🧠 **规则选择稳定性加固**：`selectRule` 切换时立即清空当前文件和草稿，旧读取结果不再覆盖新选择；RulesManager 保存按钮在加载期间禁用，防止误保存
+  - **Rules Selection Stability Hardened**: `selectRule` now immediately clears `currentFile` and `draftContent` on switch; stale reads no longer overwrite newer selections; save button is disabled during loading to prevent mis-saves
 
 ### 问题修复 / Fixes
 
+- 💥 **Agent venv 启动崩溃修复**：移除 `findAgentPython` 中使用 Electron `process.execPath` 作为 Python 的系统回退逻辑，改为纯 venv-only 模式并提供清晰错误信息；同时从 Tpa_RuYiBot 复制完整的 Python 虚拟环境到 `agent-venv/`（532MB，19677 文件）
+  - **Agent Venv Startup Crash Fix**: Removed the system Python fallback that incorrectly used Electron's `process.execPath` as the Python interpreter; now venv-only with clear error messages; copied the complete Python virtual environment from Tpa_RuYiBot to `agent-venv/` (532MB, 19,677 files)
+- 🧩 **AgentSessionList 格式修复**：修复 `formatSessionTime()` 函数中 `isToday` 检查的语法断裂和删除按钮代码重复
+  - **AgentSessionList Syntax Fix**: Fixed broken `isToday` check and duplicate delete button code in `formatSessionTime()`
 - 🚪 **Web 端退出登录修复**：SkillHub 页面顶部新增退出登录按钮，管理员用户额外显示"管理后台"快捷入口
   - **Web Logout Fix**: Added a logout button to the SkillHub page header; admin users also see an "Admin Panel" quick-access link
 - 🔓 **登录/注册验证码移除**：登录和注册页面不再要求输入图形验证码，后端同时跳过 captcha 校验（captcha 接口保留但调用变为可选），简化自托管实例的首次使用流程
@@ -21,6 +29,20 @@
   - **Recovery Locked DB Startup Fix**: Fixed startup failure when the database file remained locked after a recovery operation, with automatic sync account state alignment
 - 🖥️ **显示设置页面白屏修复**：修复点击"显示设置"后页面白屏的问题，根因是 `desktopHomeModules` 中存在已过期的模块 ID 导致渲染崩溃；增加 ErrorBoundary 防护和 null 安全检查
   - **Appearance Settings Blank Screen Fix**: Fixed blank screen when clicking "Appearance Settings"; root cause was stale module IDs in persisted `desktopHomeModules` crashing the render; added ErrorBoundary protection and null-safety guards
+
+### 清理 / Cleanup
+
+- 🧹 **i18n 精简**：清理过期的多语言 locale 文件，仅保留 `zh` 和 `en` 两种语言
+  - **i18n Cleanup**: Removed obsolete locale files, keeping only `zh` and `en`
+- 🗑️ **移除 web-cloudflare 包**：删除 `apps/web-cloudflare` 目录及相关引用
+  - **Removed web-cloudflare package**: Deleted `apps/web-cloudflare` directory and associated references
+- 🗑️ **移除 WebDAV 和 S3 兼容存储同步**：桌面端云备份设置中移除 WebDAV 和 S3 兼容存储两种同步方式，仅保留「自部署 PromptHub」作为唯一云同步源；同步删除主进程 IPC handler、渲染器服务、Zustand store 状态、UI 面板、测试和 `pnpm-lock.yaml` 中相关依赖，共减少约 5800 行冗余代码
+  - **Remove WebDAV and S3 Compatible Storage Sync**: Removed WebDAV and S3 sync providers from the desktop cloud backup settings, keeping only "Self-Hosted PromptHub" as the sole cloud sync source; cleaned up main-process IPC handlers, renderer services, Zustand store state, UI panels, tests, and related `pnpm-lock.yaml` dependencies, removing ~5,800 lines of redundant code
+
+### 需求调整 / Changes
+
+- 🔀 **按账户隔离用户数据目录**：桌面端登录同步账户后，数据目录自动切换到以用户名命名的子目录（如 `data/accounts/zzq02/`），退出登录恢复到本地访客目录；账户切换时自动重载并对齐数据库和设置状态
+  - **User Data Isolation by Account**: After logging into a sync account, the desktop data directory automatically switches to an account-named subdirectory (e.g. `data/accounts/zzq02/`); logging out restores the local guest directory. Account switches auto-reload and re-align database and settings state
 
 ## [0.6.0] - 2026-06-19
 

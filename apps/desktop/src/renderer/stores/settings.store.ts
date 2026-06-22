@@ -19,10 +19,7 @@ import {
   normalizeCustomAgents,
 } from "../services/agent-root-paths";
 
-const SUPPORTED_LANGUAGES = [
-  "zh",
-  "en",
-] as const;
+const SUPPORTED_LANGUAGES = ["zh", "en"] as const;
 export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
 
 const normalizeLanguage = (lang: string): SupportedLanguage => {
@@ -57,7 +54,12 @@ const DEFAULT_BACKGROUND_IMAGE_OPACITY = 1;
 const DEFAULT_BACKGROUND_IMAGE_BLUR = 0;
 const LEGACY_BACKGROUND_IMAGE_BLUR_DEFAULT = 14;
 const LOCAL_IMAGE_PROTOCOL_PREFIX = "local-image://";
-export const DESKTOP_HOME_MODULES = ["prompt", "skill", "rules", "projects"] as const;
+export const DESKTOP_HOME_MODULES = [
+  "prompt",
+  "skill",
+  "rules",
+  "projects",
+] as const;
 export type DesktopHomeModule = (typeof DESKTOP_HOME_MODULES)[number];
 const createProjectRecordId = (): string =>
   `project_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
@@ -863,6 +865,7 @@ interface SettingsState {
     rootPath: string;
     scanPaths?: string[];
     deployTargets?: string[];
+    origin?: "template" | "imported";
   }) => SkillProject;
   updateSkillProject: (
     projectId: string,
@@ -874,6 +877,10 @@ interface SettingsState {
     >,
   ) => void;
   removeSkillProject: (projectId: string) => void;
+  updateAgentGateway: (
+    projectId: string,
+    gateway: { gatewayPort?: number; gatewayPid?: number } | null,
+  ) => void;
   updateBuiltinAgentOverride: (
     platformId: string,
     updates: BuiltinAgentOverrideConfig,
@@ -2212,6 +2219,7 @@ export const useSettingsStore = create<SettingsState>()(
               input.deployTargets,
               rootPath,
             ),
+            origin: input.origin,
             createdAt: now,
             updatedAt: now,
           };
@@ -2309,6 +2317,29 @@ export const useSettingsStore = create<SettingsState>()(
             skillProjects: nextProjects,
             projectSkillImportPreferencesByProjectId: nextImportPreferences,
           });
+          syncSettingsToMain({ skillProjects: nextProjects });
+        },
+        updateAgentGateway: (projectId, gateway) => {
+          const currentProjects = get().skillProjects;
+          const nextProjects = currentProjects.map((project) => {
+            if (project.id !== projectId) return project;
+            if (!gateway) {
+              // Clear gateway state
+              return {
+                ...project,
+                gatewayPort: undefined,
+                gatewayPid: undefined,
+                updatedAt: Date.now(),
+              };
+            }
+            return {
+              ...project,
+              gatewayPort: gateway.gatewayPort,
+              gatewayPid: gateway.gatewayPid,
+              updatedAt: Date.now(),
+            };
+          });
+          setTouched({ skillProjects: nextProjects });
           syncSettingsToMain({ skillProjects: nextProjects });
         },
         updateBuiltinAgentOverride: (platformId, updates) => {

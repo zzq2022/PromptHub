@@ -96,12 +96,12 @@ describe("CreateSkillModal GitHub import", () => {
     });
 
     expect(view.getByText("Choose local import source")).toBeTruthy();
-    expect(view.getByText("Import from Agent Skills")).toBeTruthy();
+    expect(view.getByText("Import from IDE Skills")).toBeTruthy();
     expect(view.getByText("Choose Folder and Import")).toBeTruthy();
     expect(scanLocalPreview).not.toHaveBeenCalled();
   });
 
-  it("opens Agent Skill management instead of scanning when importing from agents", async () => {
+  it("opens IDE Skill management instead of scanning when importing from agents", async () => {
     const setStoreView = vi.fn((view: string) => {
       useSkillStore.setState({ storeView: view as never });
     });
@@ -118,7 +118,7 @@ describe("CreateSkillModal GitHub import", () => {
     await act(async () => {
       fireEvent.click(view.getByText("Scan Local"));
     });
-    fireEvent.click(view.getByText("Import from Agent Skills"));
+    fireEvent.click(view.getByText("Import from IDE Skills"));
 
     expect(setStoreView).toHaveBeenCalledWith("agents");
     expect(selectSkill).toHaveBeenCalledWith(null);

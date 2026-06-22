@@ -285,7 +285,8 @@ export function SkillFullDetailPage({
     const selectedProjectTargets = selectedProjects.map((project) => ({
       project,
       targetDirs:
-        targetDirsByProjectId?.[project.id] ?? getProjectDeployTargets(project, defaultProjectDeployTargetPath),
+        targetDirsByProjectId?.[project.id] ??
+        getProjectDeployTargets(project, defaultProjectDeployTargetPath),
     }));
     if (
       !selectedProjectTargets.some(({ targetDirs }) => targetDirs.length > 0)
@@ -1439,7 +1440,7 @@ export function SkillFullDetailPage({
               t={t}
               uninstallDisabledReason={t(
                 "skill.platformBuiltinCannotUninstall",
-                "Built-in skills cannot be removed from this agent.",
+                "Built-in skills cannot be removed from this IDE.",
               )}
             />
           ) : null}
@@ -1917,7 +1918,7 @@ export function SkillFullDetailPage({
                   <span className="mt-1 block text-muted-foreground">
                     {t(
                       "skill.deleteCopyInstallationsHelp",
-                      "Leave unchecked to keep copied Agent or project folders as detached copies.",
+                      "Leave unchecked to keep copied IDE or project folders as detached copies.",
                     )}
                   </span>
                 </span>

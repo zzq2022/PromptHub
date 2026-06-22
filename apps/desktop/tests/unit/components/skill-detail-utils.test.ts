@@ -120,11 +120,11 @@ description: |
     );
 
     expect(github?.sourceLabel).toBe("Imported via Store");
-    expect(local?.sourceLabel).toBe("Imported from Cursor Agent Skills");
+    expect(local?.sourceLabel).toBe("Imported from Cursor IDE Skills");
     expect(localSourceUrl?.kind).toBe("local");
     expect(localSourceUrl?.sourceLabel).toBe("Imported from Local Folder");
     expect(cherry?.kind).toBe("local");
-    expect(cherry?.sourceLabel).toBe("Imported from Cherry Studio Agent Skills");
+    expect(cherry?.sourceLabel).toBe("Imported from Cherry Studio IDE Skills");
   });
 
   it("treats self-hosted git URLs as remote git repositories instead of local folders", () => {

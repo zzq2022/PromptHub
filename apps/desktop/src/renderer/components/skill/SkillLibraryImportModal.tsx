@@ -460,7 +460,7 @@ export function SkillLibraryImportModal({
           {description ??
             t(
               "skill.importFromMySkillsHint",
-              "Select one or more skills from My Skills and deploy them into this project's local agent folders.",
+              "Select one or more skills from My Skills and deploy them into this project's local IDE folders.",
             )}
         </p>
 

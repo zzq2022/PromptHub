@@ -9,3 +9,6 @@ export * from "./ai-client";
 export * from "./ai-config";
 export * from "./rules-rewrite";
 export * from "./skillhub";
+export * from "./agent-project";
+export * from "./agent-gateway";
+export * from "./agent-session";

@@ -13,6 +13,9 @@ import {
   CopyIcon,
   CheckIcon,
   SparklesIcon,
+  PlayIcon,
+  SquareIcon,
+  GaugeIcon,
 } from "lucide-react";
 import { useSettingsStore } from "../../stores/settings.store";
 import { useToast } from "../ui/Toast";
@@ -20,11 +23,18 @@ import { Modal } from "../ui/Modal";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { Input } from "../ui/Input";
 import { ProjectCard } from "../shared/ProjectCard";
-import type { SkillProject } from "@prompthub/shared/types";
+import type { SkillProject, AgentSessionInfo } from "@prompthub/shared/types";
 import { chatCompletion, type AIConfig } from "../../services/ai";
 import { resolveScenarioAIConfig } from "../../services/ai-defaults";
+import { generateSessionId } from "../../services/agent-service";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+
+// --- Agent-specific imports ---
+import { CreateAgentDialog } from "./CreateAgentDialog";
+import { ImportProjectDialog } from "./ImportProjectDialog";
+import { AgentChatPanel } from "./AgentChatPanel";
+import { AgentSessionList } from "./AgentSessionList";
 
 // --- Chat message type ------------------------------------------------
 interface ChatMessage {
@@ -69,7 +79,10 @@ function ProjectFormModal({
     if (selected) {
       setRootPath(selected);
       if (!name) {
-        const parts = selected.replace(/\\/g, "/").replace(/\/+$/, "").split("/");
+        const parts = selected
+          .replace(/\\/g, "/")
+          .replace(/\/+$/, "")
+          .split("/");
         setName(parts[parts.length - 1] ?? "");
       }
     }
@@ -95,17 +108,31 @@ function ProjectFormModal({
     } finally {
       setSaving(false);
     }
-  }, [name, rootPath, editingProject, addSkillProject, updateSkillProject, showToast, t, onSaved, onClose]);
+  }, [
+    name,
+    rootPath,
+    editingProject,
+    addSkillProject,
+    updateSkillProject,
+    showToast,
+    t,
+    onSaved,
+    onClose,
+  ]);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <div className="p-6 max-w-lg w-full">
         <h2 className="text-lg font-semibold mb-4">
-          {editingProject ? t("projects.editProject") : t("projects.addProject")}
+          {editingProject
+            ? t("projects.editProject")
+            : t("projects.addProject")}
         </h2>
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-medium mb-1 block">{t("projects.nameLabel")}</label>
+            <label className="text-sm font-medium mb-1 block">
+              {t("projects.nameLabel")}
+            </label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -113,7 +140,9 @@ function ProjectFormModal({
             />
           </div>
           <div>
-            <label className="text-sm font-medium mb-1 block">{t("projects.pathLabel")}</label>
+            <label className="text-sm font-medium mb-1 block">
+              {t("projects.pathLabel")}
+            </label>
             <div className="flex gap-2">
               <Input
                 value={rootPath}
@@ -129,9 +158,14 @@ function ProjectFormModal({
               </button>
             </div>
           </div>
-          <p className="text-xs text-muted-foreground">{t("projects.addProjectHint")}</p>
+          <p className="text-xs text-muted-foreground">
+            {t("projects.addProjectHint")}
+          </p>
           <div className="flex justify-end gap-2 pt-2">
-            <button className="px-4 py-2 text-sm rounded-md hover:bg-muted" onClick={onClose}>
+            <button
+              className="px-4 py-2 text-sm rounded-md hover:bg-muted"
+              onClick={onClose}
+            >
               {t("common.cancel")}
             </button>
             <button
@@ -162,7 +196,11 @@ function CopyButton({ text }: { text: string }) {
       onClick={handleCopy}
       title="Copy"
     >
-      {copied ? <CheckIcon className="w-3.5 h-3.5 text-green-500" /> : <CopyIcon className="w-3.5 h-3.5" />}
+      {copied ? (
+        <CheckIcon className="w-3.5 h-3.5 text-green-500" />
+      ) : (
+        <CopyIcon className="w-3.5 h-3.5" />
+      )}
     </button>
   );
 }
@@ -175,7 +213,10 @@ function MarkdownContent({ content }: { content: string }) {
       components={{
         pre: ({ children, ...props }) => (
           <div className="relative group my-2">
-            <pre className="bg-muted/50 rounded-lg p-3 overflow-x-auto text-sm" {...props}>
+            <pre
+              className="bg-muted/50 rounded-lg p-3 overflow-x-auto text-sm"
+              {...props}
+            >
               {children}
             </pre>
           </div>
@@ -183,7 +224,10 @@ function MarkdownContent({ content }: { content: string }) {
         code: ({ className, children, ...props }) => {
           const isInline = !className;
           return isInline ? (
-            <code className="bg-muted/50 px-1.5 py-0.5 rounded text-sm font-mono" {...props}>
+            <code
+              className="bg-muted/50 px-1.5 py-0.5 rounded text-sm font-mono"
+              {...props}
+            >
               {children}
             </code>
           ) : (
@@ -221,7 +265,9 @@ function ProjectChatPanel({ project }: ProjectChatPanelProps) {
   const { showToast } = useToast();
 
   const aiModels = useSettingsStore((s) => s.aiModels);
-  const scenarioModelDefaults = useSettingsStore((s) => s.scenarioModelDefaults);
+  const scenarioModelDefaults = useSettingsStore(
+    (s) => s.scenarioModelDefaults,
+  );
   const modelRouteDefaults = useSettingsStore((s) => s.modelRouteDefaults);
   const aiProvider = useSettingsStore((s) => s.aiProvider);
   const aiApiProtocol = useSettingsStore((s) => s.aiApiProtocol);
@@ -261,7 +307,16 @@ function ProjectChatPanel({ project }: ProjectChatPanelProps) {
         aiApiUrl,
         aiModel,
       }),
-    [aiModels, scenarioModelDefaults, modelRouteDefaults, aiProvider, aiApiProtocol, aiApiKey, aiApiUrl, aiModel],
+    [
+      aiModels,
+      scenarioModelDefaults,
+      modelRouteDefaults,
+      aiProvider,
+      aiApiProtocol,
+      aiApiKey,
+      aiApiUrl,
+      aiModel,
+    ],
   );
 
   const sendMessage = useCallback(
@@ -322,9 +377,7 @@ function ProjectChatPanel({ project }: ProjectChatPanelProps) {
         if (result.content) {
           setMessages((prev) =>
             prev.map((m) =>
-              m.id === assistantMsg.id
-                ? { ...m, content: result.content }
-                : m,
+              m.id === assistantMsg.id ? { ...m, content: result.content } : m,
             ),
           );
         }
@@ -333,9 +386,7 @@ function ProjectChatPanel({ project }: ProjectChatPanelProps) {
           err instanceof Error ? err.message : t("projects.chatError");
         setMessages((prev) =>
           prev.map((m) =>
-            m.id === assistantMsg.id
-              ? { ...m, content: `⚠️ ${errorMsg}` }
-              : m,
+            m.id === assistantMsg.id ? { ...m, content: `⚠️ ${errorMsg}` } : m,
           ),
         );
       } finally {
@@ -343,7 +394,16 @@ function ProjectChatPanel({ project }: ProjectChatPanelProps) {
         abortRef.current = null;
       }
     },
-    [input, isStreaming, aiConfig, messages, project.name, project.rootPath, t, showToast],
+    [
+      input,
+      isStreaming,
+      aiConfig,
+      messages,
+      project.name,
+      project.rootPath,
+      t,
+      showToast,
+    ],
   );
 
   const handleKeyDown = useCallback(
@@ -448,7 +508,9 @@ function ProjectChatPanel({ project }: ProjectChatPanelProps) {
                                 <MarkdownContent content={msg.content} />
                               </div>
                             ) : (
-                              <span className="text-muted-foreground animate-pulse">...</span>
+                              <span className="text-muted-foreground animate-pulse">
+                                ...
+                              </span>
                             )}
                           </div>
                           <div className="text-[10px] text-muted-foreground mt-1 pl-1 flex items-center gap-1">
@@ -508,14 +570,29 @@ export function ProjectsManager() {
   const { showToast } = useToast();
   const skillProjects = useSettingsStore((s) => s.skillProjects);
   const removeSkillProject = useSettingsStore((s) => s.removeSkillProject);
+  const updateAgentGateway = useSettingsStore((s) => s.updateAgentGateway);
 
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
+    null,
+  );
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingProject, setEditingProject] = useState<SkillProject | null>(null);
+  const [editingProject, setEditingProject] = useState<SkillProject | null>(
+    null,
+  );
   const [deleteTarget, setDeleteTarget] = useState<SkillProject | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredProjects = useMemo(() => {
+  // Agent-specific state
+  const [isCreateAgentOpen, setIsCreateAgentOpen] = useState(false);
+  const [isImportAgentOpen, setIsImportAgentOpen] = useState(false);
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [activeSession, setActiveSession] = useState<AgentSessionInfo | null>(
+    null,
+  );
+  const [gatewayLoading, setGatewayLoading] = useState(false);
+
+  const displayedProjects = useMemo(() => {
+    // Show ALL projects (unified list — no tab separation)
     if (!searchQuery.trim()) return skillProjects;
     const q = searchQuery.toLowerCase();
     return skillProjects.filter(
@@ -530,6 +607,16 @@ export function ProjectsManager() {
     [skillProjects, selectedProjectId],
   );
 
+  const isAgentProject =
+    selectedProject?.origin === "template" ||
+    selectedProject?.origin === "imported";
+
+  // Reset active session when project changes
+  useEffect(() => {
+    setActiveSessionId(null);
+    setActiveSession(null);
+  }, [selectedProjectId]);
+
   const handleDelete = useCallback(() => {
     if (!deleteTarget) return;
     try {
@@ -537,12 +624,58 @@ export function ProjectsManager() {
       if (selectedProjectId === deleteTarget.id) {
         setSelectedProjectId(null);
       }
-      showToast(t("projects.title"), "success");
+      showToast(
+        isAgentProject ? t("agentProject.deleteSuccess") : t("projects.title"),
+        "success",
+      );
     } catch (err) {
       showToast(err instanceof Error ? err.message : "Error", "error");
     }
     setDeleteTarget(null);
-  }, [deleteTarget, removeSkillProject, selectedProjectId, showToast, t]);
+  }, [
+    deleteTarget,
+    removeSkillProject,
+    selectedProjectId,
+    showToast,
+    t,
+    isAgentProject,
+  ]);
+
+  // Gateway start/stop handlers
+  const handleGatewayToggle = useCallback(async () => {
+    if (!selectedProject?.rootPath) return;
+    setGatewayLoading(true);
+    try {
+      if (selectedProject.gatewayPort) {
+        // Stop gateway
+        await window.api.agent.stopGateway(selectedProject.rootPath);
+        updateAgentGateway(selectedProject.id, null);
+        showToast(t("agentProject.gatewayStopped"), "success");
+      } else {
+        // Start gateway
+        const result = await window.api.agent.startGateway(
+          selectedProject.rootPath,
+        );
+        updateAgentGateway(selectedProject.id, {
+          gatewayPort: result.port,
+          gatewayPid: result.pid,
+        });
+        showToast(
+          t("agentProject.gatewayRunning", { port: result.port }),
+          "success",
+        );
+      }
+    } catch (err) {
+      showToast(
+        err instanceof Error
+          ? err.message
+          : t("agentProject.gatewayStartFailed"),
+        "error",
+      );
+    } finally {
+      setGatewayLoading(false);
+    }
+  }, [selectedProject, updateAgentGateway, showToast, t]);
 
   return (
     <div className="flex h-full">
@@ -550,18 +683,27 @@ export function ProjectsManager() {
       <div className="w-72 border-r border-border flex flex-col shrink-0 bg-card/30">
         <div className="p-3 border-b border-border">
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-sm font-semibold">{t("projects.title")}</h2>
-            <button
-              className="p-1.5 rounded-md hover:bg-muted text-muted-foreground"
-              onClick={() => {
-                setEditingProject(null);
-                setIsFormOpen(true);
-              }}
-              title={t("projects.addProject")}
-            >
-              <FolderPlusIcon className="h-4 w-4" />
-            </button>
+            <h2 className="text-sm font-semibold">
+              {t("agentProject.agentTab")}
+            </h2>
+            <div className="flex gap-1">
+              <button
+                className="p-1.5 rounded-md hover:bg-muted text-muted-foreground"
+                onClick={() => setIsCreateAgentOpen(true)}
+                title={t("agentProject.createTitle")}
+              >
+                <FolderPlusIcon className="h-4 w-4" />
+              </button>
+              <button
+                className="p-1.5 rounded-md hover:bg-muted text-muted-foreground"
+                onClick={() => setIsImportAgentOpen(true)}
+                title={t("agentProject.importTitle")}
+              >
+                <GaugeIcon className="h-4 w-4" />
+              </button>
+            </div>
           </div>
+
           <div className="relative">
             <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <input
@@ -573,12 +715,12 @@ export function ProjectsManager() {
           </div>
         </div>
         <div className="flex-1 overflow-y-auto space-y-2 p-2">
-          {filteredProjects.length === 0 ? (
+          {displayedProjects.length === 0 ? (
             <div className="p-4 text-center text-sm text-muted-foreground">
               {t("projects.emptyHint")}
             </div>
           ) : (
-            filteredProjects.map((project) => (
+            displayedProjects.map((project) => (
               <ProjectCard
                 key={project.id}
                 name={project.name}
@@ -587,17 +729,6 @@ export function ProjectsManager() {
                 onClick={() => setSelectedProjectId(project.id)}
                 actions={
                   <>
-                    <button
-                      className="p-1 rounded hover:bg-muted text-muted-foreground"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEditingProject(project);
-                        setIsFormOpen(true);
-                      }}
-                      title={t("projects.editProject")}
-                    >
-                      <PencilIcon className="h-3.5 w-3.5" />
-                    </button>
                     <button
                       className="p-1 rounded hover:bg-destructive/10 text-destructive"
                       onClick={(e) => {
@@ -616,10 +747,69 @@ export function ProjectsManager() {
         </div>
       </div>
 
+      {/* Middle: Agent session list (only for agent projects with gateway running) */}
+      {isAgentProject && selectedProject?.gatewayPort && (
+        <div className="w-56 shrink-0">
+          <AgentSessionList
+            project={selectedProject}
+            activeSessionId={activeSessionId}
+            onSelectSession={(session) => {
+              setActiveSessionId(session.session_id);
+              setActiveSession(session);
+            }}
+            onNewChat={() => {
+              const newId = generateSessionId();
+              setActiveSessionId(newId);
+              setActiveSession({
+                session_id: newId,
+                title: newId,
+                created_at: Date.now() / 1000,
+                updated_at: Date.now() / 1000,
+                message_count: 0,
+              });
+              // AgentChatPanel will detect the new session and connect/switch
+            }}
+          />
+        </div>
+      )}
+
       {/* Right: Chat panel or empty state */}
       <div className="flex-1 min-w-0">
         {selectedProject ? (
-          <ProjectChatPanel project={selectedProject} />
+          isAgentProject ? (
+            selectedProject.gatewayPort ? (
+              <AgentChatPanel
+                project={selectedProject}
+                activeSession={activeSession}
+              />
+            ) : (
+              // Agent project with no gateway running
+              <div className="flex flex-col items-center justify-center h-full text-center">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mb-4 border border-primary/10">
+                  <BotIcon className="h-8 w-8 text-primary/30" />
+                </div>
+                <p className="text-sm text-muted-foreground mb-4 max-w-xs">
+                  {t("agentProject.startAgentHint")}
+                </p>
+                <button
+                  className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                  onClick={handleGatewayToggle}
+                  disabled={gatewayLoading}
+                >
+                  {gatewayLoading ? (
+                    <RefreshCwIcon className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <PlayIcon className="h-4 w-4" />
+                  )}
+                  {gatewayLoading
+                    ? t("agentProject.gatewayStarting")
+                    : t("agentProject.gatewayStart")}
+                </button>
+              </div>
+            )
+          ) : (
+            <ProjectChatPanel project={selectedProject} />
+          )
         ) : (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mb-4 border border-primary/10">
@@ -635,7 +825,7 @@ export function ProjectsManager() {
         )}
       </div>
 
-      {/* Form modal */}
+      {/* Skill project form modal */}
       <ProjectFormModal
         isOpen={isFormOpen}
         editingProject={editingProject}
@@ -646,13 +836,46 @@ export function ProjectsManager() {
         onSaved={() => {}}
       />
 
+      {/* Agent project dialogs */}
+      <CreateAgentDialog
+        isOpen={isCreateAgentOpen}
+        onClose={() => setIsCreateAgentOpen(false)}
+        onCreated={(result) => {
+          // The core already copied the project. Add it to the store.
+          const addSkillProject = useSettingsStore.getState().addSkillProject;
+          addSkillProject({
+            name: result.name,
+            rootPath: result.rootPath,
+            origin: "template",
+          });
+        }}
+      />
+      <ImportProjectDialog
+        isOpen={isImportAgentOpen}
+        onClose={() => setIsImportAgentOpen(false)}
+        onImported={(result) => {
+          const addSkillProject = useSettingsStore.getState().addSkillProject;
+          addSkillProject({
+            name: result.name,
+            rootPath: result.rootPath,
+            origin: "imported",
+          });
+        }}
+      />
+
       {/* Delete confirm */}
       <ConfirmDialog
         isOpen={!!deleteTarget}
         title={t("projects.deleteProject")}
-        message={t("projects.deleteProjectConfirm", {
-          name: deleteTarget?.name ?? "",
-        })}
+        message={
+          isAgentProject
+            ? t("agentProject.confirmDelete", {
+                name: deleteTarget?.name ?? "",
+              })
+            : t("projects.deleteProjectConfirm", {
+                name: deleteTarget?.name ?? "",
+              })
+        }
         onConfirm={handleDelete}
         onClose={() => setDeleteTarget(null)}
         variant="destructive"

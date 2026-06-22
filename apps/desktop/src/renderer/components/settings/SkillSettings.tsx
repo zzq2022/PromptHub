@@ -495,7 +495,10 @@ export function SkillSettings() {
       </SettingSection>
 
       <SettingSection
-        title={t("settings.projectDeployDefaultSettings", "Project Deploy Default Settings")}
+        title={t(
+          "settings.projectDeployDefaultSettings",
+          "Project Deploy Default Settings",
+        )}
       >
         <div className="p-4 space-y-4">
           <p className="text-xs text-muted-foreground">
@@ -507,7 +510,10 @@ export function SkillSettings() {
           <div className="space-y-3">
             <div>
               <div className="text-xs font-medium text-foreground mb-1.5">
-                {t("settings.projectDeployDefaultTarget", "Default Target Folder")}
+                {t(
+                  "settings.projectDeployDefaultTarget",
+                  "Default Target Folder",
+                )}
               </div>
               <p className="text-[11px] text-muted-foreground mb-2">
                 {t(
@@ -518,7 +524,9 @@ export function SkillSettings() {
               <input
                 type="text"
                 value={settings.defaultProjectDeployTargetPath}
-                onChange={(e) => settings.setDefaultProjectDeployTargetPath(e.target.value)}
+                onChange={(e) =>
+                  settings.setDefaultProjectDeployTargetPath(e.target.value)
+                }
                 className="w-full h-9 px-3 rounded-lg bg-muted border-0 text-sm font-mono placeholder:text-muted-foreground/50"
                 placeholder=".agents/skills"
               />
@@ -529,7 +537,9 @@ export function SkillSettings() {
               </div>
               <div className="flex gap-3">
                 <button
-                  onClick={() => settings.setProjectSkillImportModePreference("copy")}
+                  onClick={() =>
+                    settings.setProjectSkillImportModePreference("copy")
+                  }
                   className={`flex-1 p-3 rounded-xl border-2 transition-all text-left ${
                     settings.projectSkillImportModePreference === "copy"
                       ? "border-primary bg-primary/5"
@@ -547,7 +557,9 @@ export function SkillSettings() {
                   </p>
                 </button>
                 <button
-                  onClick={() => settings.setProjectSkillImportModePreference("symlink")}
+                  onClick={() =>
+                    settings.setProjectSkillImportModePreference("symlink")
+                  }
                   className={`flex-1 p-3 rounded-xl border-2 transition-all text-left ${
                     settings.projectSkillImportModePreference === "symlink"
                       ? "border-primary bg-primary/5"
@@ -578,7 +590,7 @@ export function SkillSettings() {
             <p className="text-xs text-muted-foreground">
               {t(
                 "settings.platformDisplayOrderDesc",
-                "Control which agent platforms are enabled and how they are ordered across Skills and Rules.",
+                "Control which IDE platforms are enabled and how they are ordered across Skills and Rules.",
               )}
             </p>
             <button
@@ -699,13 +711,13 @@ export function SkillSettings() {
       </SettingSection>
 
       <SettingSection
-        title={t("settings.agentConfigurations", "Agent Configurations")}
+        title={t("settings.agentConfigurations", "IDE Configurations")}
       >
         <div className="p-4 space-y-3">
           <p className="text-xs text-muted-foreground">
             {t(
               "settings.agentConfigurationsDesc",
-              "Manage built-in and custom agent roots plus derived asset paths in one place. Skills, Rules, Agents, Commands, and config files all derive from these settings.",
+              "Manage built-in and custom IDE roots plus derived asset paths in one place. Skills, Rules, Agents, Commands, and config files all derive from these settings.",
             )}
           </p>
           <div className="rounded-lg border border-border overflow-hidden">
@@ -871,7 +883,7 @@ export function SkillSettings() {
                     <div className="text-[10px] text-muted-foreground/80">
                       {t(
                         "settings.agentConfigurationsHint",
-                        "PromptHub treats each built-in platform as an agent config. Override any relative path only when the tool uses a non-standard layout.",
+                        "PromptHub treats each built-in platform as an IDE config. Override any relative path only when the tool uses a non-standard layout.",
                       )}
                     </div>
                   </div>
@@ -987,14 +999,14 @@ export function SkillSettings() {
         </div>
       </SettingSection>
 
-      <SettingSection title={t("settings.customAgents", "Custom Agents")}>
+      <SettingSection title={t("settings.customAgents", "Custom IDEs")}>
         <div className="p-4 space-y-3">
           <div className="rounded-xl border border-border/70 app-wallpaper-surface p-4 space-y-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <p className="max-w-3xl text-xs text-muted-foreground">
                 {t(
                   "settings.customAgentsDesc",
-                  "Add your own agent/tool entries with a name and root directory. PromptHub will derive scan paths and known local assets from each custom agent.",
+                  "Add your own IDE/tool entries with a name and root directory. PromptHub will derive scan paths and known local assets from each custom IDE.",
                 )}
               </p>
               <button
@@ -1011,7 +1023,7 @@ export function SkillSettings() {
             <div className="grid gap-4">
               <div className="grid gap-1">
                 <label className="text-xs font-medium text-muted-foreground">
-                  {t("settings.customAgentNameLabel", "Agent name")}
+                  {t("settings.customAgentNameLabel", "IDE name")}
                 </label>
                 <input
                   type="text"
@@ -1019,7 +1031,7 @@ export function SkillSettings() {
                   onChange={(e) => setNewAgentName(e.target.value)}
                   placeholder={t(
                     "settings.customAgentNamePlaceholder",
-                    "Agent name, e.g. Team Agents",
+                    "IDE name, e.g. Team IDEs",
                   )}
                   className="h-10 w-full rounded-lg bg-muted px-3 text-sm placeholder:text-muted-foreground/50"
                 />
@@ -1041,7 +1053,7 @@ export function SkillSettings() {
                     }}
                     placeholder={t(
                       "settings.customAgentRootPathPlaceholder",
-                      "Enter agent root, e.g. ~/.agents or ~/workspace/.opencode",
+                      "Enter IDE root, e.g. ~/.agents or ~/workspace/.opencode",
                     )}
                     className="h-10 w-full flex-1 rounded-lg bg-muted px-3 text-sm font-mono placeholder:text-muted-foreground/50"
                   />
@@ -1187,7 +1199,7 @@ export function SkillSettings() {
                         <div className="grid w-full gap-4 rounded-xl border border-border/60 bg-muted/20 p-4">
                           <div className="grid gap-1">
                             <label className="text-xs font-medium text-muted-foreground">
-                              {t("settings.customAgentNameLabel", "Agent name")}
+                              {t("settings.customAgentNameLabel", "IDE name")}
                             </label>
                             <input
                               type="text"
@@ -1198,7 +1210,7 @@ export function SkillSettings() {
                               className="h-10 w-full rounded-md bg-muted px-3 text-sm"
                               placeholder={t(
                                 "settings.customAgentNamePlaceholder",
-                                "Agent name, e.g. Team Agents",
+                                "IDE name, e.g. Team IDEs",
                               )}
                             />
                           </div>
@@ -1220,7 +1232,7 @@ export function SkillSettings() {
                                 className="h-10 w-full flex-1 rounded-md bg-muted px-3 text-sm font-mono"
                                 placeholder={t(
                                   "settings.customAgentRootPathPlaceholder",
-                                  "Enter agent root, e.g. ~/.agents or ~/workspace/.opencode",
+                                  "Enter IDE root, e.g. ~/.agents or ~/workspace/.opencode",
                                 )}
                               />
                               <button
@@ -1432,14 +1444,11 @@ export function SkillSettings() {
           setPendingDeleteAgent(null);
         }}
         variant="destructive"
-        title={t(
-          "settings.confirmDeleteCustomAgentTitle",
-          "Delete Custom Agent",
-        )}
+        title={t("settings.confirmDeleteCustomAgentTitle", "Delete Custom IDE")}
         message={t("settings.confirmDeleteCustomAgentMessage", {
           name: pendingDeleteAgent?.name ?? "",
           defaultValue:
-            'Are you sure you want to delete custom agent "{{name}}"? This only removes it from PromptHub settings.',
+            'Are you sure you want to delete custom IDE "{{name}}"? This only removes it from PromptHub settings.',
         })}
         confirmText={t("common.delete", "Delete")}
         cancelText={t("common.cancel", "Cancel")}

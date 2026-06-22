@@ -339,7 +339,8 @@ export function Sidebar({
   const runtimeCapabilities = getRuntimeCapabilities();
   const webRuntime = isWebRuntime();
   const canAddRuleProject = !webRuntime;
-  const activeModule: AppModule = appModule === "rules" || appModule === "projects" ? appModule : viewMode;
+  const activeModule: AppModule =
+    appModule === "rules" || appModule === "projects" ? appModule : viewMode;
 
   useEffect(() => {
     if (storeView === "store") {
@@ -445,10 +446,12 @@ export function Sidebar({
         const matchingRuleFile = ruleFiles.find(
           (file) =>
             file.id.startsWith("project:") &&
-            file.projectRootPath?.toLowerCase() === project.rootPath.toLowerCase(),
+            file.projectRootPath?.toLowerCase() ===
+              project.rootPath.toLowerCase(),
         );
         const hasRule = Boolean(matchingRuleFile);
-        const ruleId = matchingRuleFile?.id ?? `project:${project.id}` as RuleFileId;
+        const ruleId =
+          matchingRuleFile?.id ?? (`project:${project.id}` as RuleFileId);
         const activeRule = hasRule && selectedRuleId === matchingRuleFile?.id;
         // Rule project UUID used for removal (must match what addProjectRule stored)
         const ruleProjectUuid = hasRule
@@ -468,7 +471,7 @@ export function Sidebar({
           skillProject: project,
           description: matchingRuleFile?.description ?? project.name,
           icon: "FolderRoot",
-          badge: hasRule ? null : "no-rule" as const,
+          badge: hasRule ? null : ("no-rule" as const),
           name: project.name,
           rootPath: project.rootPath,
         };
@@ -477,7 +480,7 @@ export function Sidebar({
     return [
       {
         id: "global" as const,
-        title: "Global Rules",
+        title: "IDE Rules",
         items: globalItems,
       },
       {
@@ -486,7 +489,13 @@ export function Sidebar({
         items: projectItems,
       },
     ];
-  }, [ruleFiles, rulesSearchQuery, selectedRuleId, skillPlatformOrder, skillProjects]);
+  }, [
+    ruleFiles,
+    rulesSearchQuery,
+    selectedRuleId,
+    skillPlatformOrder,
+    skillProjects,
+  ]);
 
   const handleAddRuleProject = useCallback(async () => {
     const selectedPath = await window.electron?.selectFolder?.();
@@ -535,17 +544,17 @@ export function Sidebar({
   const asideClassName =
     layout === "rail"
       ? `${railWidthClass} border-r border-sidebar-border/60 bg-sidebar-accent/25`
-        : layout === "panel"
-          ? activeModule === "projects"
-            ? "w-0 -translate-x-4 opacity-0 pointer-events-none border-r-0"
-            : `border-r border-sidebar-border bg-sidebar-background/85 app-wallpaper-panel-strong transition-[opacity,transform] duration-smooth ease-out ${
-                isCollapsed
-                  ? "w-0 -translate-x-4 opacity-0 pointer-events-none border-r-0"
-                  : "w-[var(--sidebar-panel-width)] translate-x-0 opacity-100"
-              }`
-          : `border-r border-sidebar-border app-left-rail-glass app-wallpaper-panel-strong ${
-              isCollapsed ? railWidthClass : combinedWidthClass
-            }`;
+      : layout === "panel"
+        ? activeModule === "projects"
+          ? "w-0 -translate-x-4 opacity-0 pointer-events-none border-r-0"
+          : `border-r border-sidebar-border bg-sidebar-background/85 app-wallpaper-panel-strong transition-[opacity,transform] duration-smooth ease-out ${
+              isCollapsed
+                ? "w-0 -translate-x-4 opacity-0 pointer-events-none border-r-0"
+                : "w-[var(--sidebar-panel-width)] translate-x-0 opacity-100"
+            }`
+        : `border-r border-sidebar-border app-left-rail-glass app-wallpaper-panel-strong ${
+            isCollapsed ? railWidthClass : combinedWidthClass
+          }`;
 
   const confirmLeaveDirtySkillEditor = useCallback(() => {
     const hasUnsaved = (
@@ -657,7 +666,10 @@ export function Sidebar({
       return;
     }
 
-    if (activeModule === "projects" && visibleDesktopModules.includes("projects")) {
+    if (
+      activeModule === "projects" &&
+      visibleDesktopModules.includes("projects")
+    ) {
       return;
     }
 
@@ -1415,7 +1427,7 @@ export function Sidebar({
                       />
                       <NavItem
                         icon={<BotIcon className="w-5 h-5" />}
-                        label={t("nav.agentSkills", "Agent Skills")}
+                        label={t("nav.agentSkills", "IDE Skills")}
                         count={visibleSkillAgentCount}
                         active={
                           storeView === "agents" && currentPage === "home"
@@ -1883,7 +1895,7 @@ export function Sidebar({
                           )}
                           <span>
                             {section.id === "global"
-                              ? t("rules.globalSection", "Global Rules")
+                              ? t("rules.globalSection", "IDE Rules")
                               : t("rules.projectSection", "Project Rules")}
                           </span>
                         </button>
@@ -1906,8 +1918,12 @@ export function Sidebar({
                                   onClick={() => {
                                     if (item.file) {
                                       void selectRule(item.file.id);
-                                    } else {
-                                      void selectRule(item.id);
+                                    } else if (item.skillProject) {
+                                      void addRuleProject({
+                                        id: item.skillProject.id,
+                                        name: item.skillProject.name,
+                                        rootPath: item.skillProject.rootPath,
+                                      });
                                     }
                                     if (currentPage !== "home")
                                       onNavigate("home");
@@ -1915,10 +1931,7 @@ export function Sidebar({
                                   indicator={
                                     item.badge === "no-rule" ? (
                                       <span className="inline-flex items-center rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                                        {t(
-                                          "rules.noRuleFile",
-                                          "No rule file",
-                                        )}
+                                        {t("rules.noRuleFile", "No rule file")}
                                       </span>
                                     ) : null
                                   }

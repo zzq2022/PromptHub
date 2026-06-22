@@ -1,0 +1,24 @@
+# Python virtual environment
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Session history (managed by Agent)
+sessions/*.jsonl
+sessions/*_extractor.json
+
+# Memory files (managed by Agent)
+memory/**/MEMORY.md
+memory/**/HISTORY.md
+
+# Agent runtime
+gateway.pid
+logs/
+dist/
+*.log
+*.tmp
+__temp_*
+.env

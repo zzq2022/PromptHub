@@ -7,6 +7,9 @@ import { registerImageIPC } from "./image.ipc";
 import { registerRulesIPC } from "./rules.ipc";
 import { registerSkillIPC } from "./skill.ipc";
 import { registerAIIPC } from "./ai.ipc";
+import { registerAgentProjectIPC } from "./agent-project";
+import { registerAgentGatewayIPC } from "./agent-gateway";
+import { registerAgentSessionIPC } from "./agent-session";
 import { PromptDB } from "../database/prompt";
 import { FolderDB } from "../database/folder";
 import { SkillDB } from "../database/skill";
@@ -158,6 +161,9 @@ export function registerAllIPC(
     registerIpcGroup("skill", () => registerSkillIPC(skillDB));
     registerIpcGroup("image", () => registerImageIPC());
     registerIpcGroup("ai", () => registerAIIPC());
+    registerIpcGroup("agentProject", () => registerAgentProjectIPC());
+    registerIpcGroup("agentGateway", () => registerAgentGatewayIPC());
+    registerIpcGroup("agentSession", () => registerAgentSessionIPC());
   } finally {
     ipcMain.handle = originalHandle;
   }

@@ -60,7 +60,7 @@ describe("TopBar Agent Skill search", () => {
       );
     });
 
-    expect(screen.getByPlaceholderText("搜索 Agent Skill...")).toHaveValue("ada");
+    expect(screen.getByPlaceholderText("搜索 IDE Skill...")).toHaveValue("ada");
     expect(screen.queryByText("无结果")).not.toBeInTheDocument();
   });
 });

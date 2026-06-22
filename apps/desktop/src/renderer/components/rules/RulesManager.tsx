@@ -392,7 +392,7 @@ export function RulesManager() {
                 <button
                   type="button"
                   onClick={() => void handleSave()}
-                  disabled={!currentFile || isSaving || !hasChanges}
+                  disabled={!currentFile || isSaving || !hasChanges || isLoading}
                   className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium shadow-sm transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
                     hasChanges
                       ? "bg-primary text-primary-foreground hover:bg-primary/90"
@@ -432,7 +432,8 @@ export function RulesManager() {
                   <textarea
                     value={aiInstruction}
                     onChange={(event) => setAiInstruction(event.target.value)}
-                    className="mt-3 h-24 w-full resize-none rounded-xl border border-border bg-background p-3 text-sm text-foreground outline-none transition-colors focus:border-primary/40 focus:ring-1 focus:ring-primary/40"
+                    readOnly={isRewriting || isLoading}
+                    className={`mt-3 h-24 w-full resize-none rounded-xl border border-border bg-background p-3 text-sm text-foreground outline-none transition-colors focus:border-primary/40 focus:ring-1 focus:ring-primary/40 ${(isRewriting || isLoading) ? "opacity-50 cursor-not-allowed" : ""}`}
                     placeholder={t(
                       "rules.aiRewritePlaceholder",
                       "Example: add testing requirements, reorganize sections, or strengthen constraints while keeping the current markdown headings where possible.",
@@ -455,6 +456,7 @@ export function RulesManager() {
                     disabled={
                       !currentFile ||
                       isRewriting ||
+                      isLoading ||
                       !aiInstruction.trim() ||
                       isPreviewingVersion
                     }
@@ -767,8 +769,8 @@ export function RulesManager() {
                     <textarea
                       value={editorContent}
                       onChange={(event) => setDraftContent(event.target.value)}
-                      readOnly={isRewriting}
-                      className={`h-full min-h-0 w-full flex-1 resize-none bg-card p-5 font-mono text-sm leading-relaxed text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:ring-1 focus:ring-primary/30 ${isRewriting ? "cursor-not-allowed opacity-50" : ""}`}
+                      readOnly={isRewriting || isLoading}
+                      className={`h-full min-h-0 w-full flex-1 resize-none bg-card p-5 font-mono text-sm leading-relaxed text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:ring-1 focus:ring-primary/30 ${(isRewriting || isLoading) ? "cursor-not-allowed opacity-50" : ""}`}
                       placeholder={t(
                         "rules.emptyHint",
                         "Rule content will appear here.",
