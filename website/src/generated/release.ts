@@ -9,15 +9,15 @@ export const HERO_VERSION_BADGE = {
 
 export const RELEASE_DOWNLOAD_URLS = {
   macArm64:
-    "https://github.com/legeling/PromptHub/releases/latest/download/PromptHub-0.7.1-arm64.dmg",
+    "https://pub-fff1cbc0121241d480624bd3de5a2735.r2.dev/latest/PromptHub-arm64.dmg",
   macX64:
-    "https://github.com/legeling/PromptHub/releases/latest/download/PromptHub-0.7.1-x64.dmg",
+    "https://pub-fff1cbc0121241d480624bd3de5a2735.r2.dev/latest/PromptHub-x64.dmg",
   windowsX64:
-    "https://github.com/legeling/PromptHub/releases/latest/download/PromptHub-Setup-0.7.1-x64.exe",
+    "https://pub-fff1cbc0121241d480624bd3de5a2735.r2.dev/latest/PromptHub-Setup-x64.exe",
   windowsArm64:
-    "https://github.com/legeling/PromptHub/releases/latest/download/PromptHub-Setup-0.7.1-arm64.exe",
+    "https://pub-fff1cbc0121241d480624bd3de5a2735.r2.dev/latest/PromptHub-Setup-arm64.exe",
   linuxAppImage:
-    "https://github.com/legeling/PromptHub/releases/latest/download/PromptHub-0.7.1-x64.AppImage",
+    "https://pub-fff1cbc0121241d480624bd3de5a2735.r2.dev/latest/PromptHub-x64.AppImage",
   linuxDeb:
-    "https://github.com/legeling/PromptHub/releases/latest/download/PromptHub-0.7.1-amd64.deb",
+    "https://pub-fff1cbc0121241d480624bd3de5a2735.r2.dev/latest/PromptHub-amd64.deb",
 } as const;
