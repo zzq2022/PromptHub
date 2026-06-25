@@ -10,6 +10,8 @@ type DeltaCallback = (text: string) => void;
 type TurnEndCallback = () => void;
 type ErrorCallback = (error: string) => void;
 type AttachedCallback = (chatId: string) => void;
+type ConnectionChangeCallback = (connected: boolean) => void;
+type ReasoningDeltaCallback = (text: string) => void;
 
 interface AgentConnection {
   ws: WebSocket;
@@ -20,12 +22,16 @@ interface AgentConnection {
   turnEndCallbacks: Set<TurnEndCallback>;
   errorCallbacks: Set<ErrorCallback>;
   attachedCallbacks: Set<AttachedCallback>;
+  connectionChangeCallbacks: Set<ConnectionChangeCallback>;
+  reasoningDeltaCallbacks: Set<ReasoningDeltaCallback>;
 }
 
 const connections = new Map<string, AgentConnection>();
 let cachedUserId: string | null = null;
 
+/** Maximum delay between reconnection attempts (caps exponential backoff). */
 const RECONNECT_DELAY_MS = 2000;
+/** Number of reconnection attempts before giving up. */
 const MAX_RECONNECT_ATTEMPTS = 3;
 
 /**
@@ -69,27 +75,18 @@ export function buildChatId(userId: string, sessionId: string): string {
 }
 
 /**
- * Connect to an Agent Gateway via WebSocket.
+ * Single-shot WebSocket connection attempt.
+ * Resolves when the "attached" event is received, rejects on error or close.
  */
-export async function connectToAgent(
+function connectOnce(
   projectId: string,
   port: number,
-  userId?: string,
-  sessionId?: string,
+  chatId: string,
 ): Promise<void> {
-  // Disconnect existing connection for this project
-  if (connections.has(projectId)) {
-    disconnectFromAgent(projectId);
-  }
-
-  const resolvedUserId = userId ?? getCachedUserId();
-  const resolvedSessionId = sessionId ?? generateSessionId();
-  const chatId = buildChatId(resolvedUserId, resolvedSessionId);
-  const wsUrl = `ws://127.0.0.1:${port}`;
-
   return new Promise<void>((resolve, reject) => {
+    const wsUrl = `ws://127.0.0.1:${port}`;
     const ws = new WebSocket(wsUrl);
-    let resolved = false;
+    let settled = false;
 
     const conn: AgentConnection = {
       ws,
@@ -100,6 +97,8 @@ export async function connectToAgent(
       turnEndCallbacks: new Set(),
       errorCallbacks: new Set(),
       attachedCallbacks: new Set(),
+      connectionChangeCallbacks: new Set(),
+      reasoningDeltaCallbacks: new Set(),
     };
 
     ws.onopen = () => {
@@ -113,8 +112,8 @@ export async function connectToAgent(
 
         if (data.event === "attached") {
           connections.set(projectId, conn);
-          if (!resolved) {
-            resolved = true;
+          if (!settled) {
+            settled = true;
             resolve();
           }
           for (const cb of conn.attachedCallbacks) {
@@ -130,9 +129,60 @@ export async function connectToAgent(
           return;
         }
 
+        // Handle final message event (sent when streaming completes)
+        if (data.event === "message" && typeof data.text === "string") {
+          for (const cb of conn.deltaCallbacks) {
+            cb(data.text);
+          }
+          return;
+        }
+
+        // Handle streaming end signal
+        if (data.event === "stream_end") {
+          return;
+        }
+
         if (data.event === "turn_end") {
           for (const cb of conn.turnEndCallbacks) {
             cb();
+          }
+          return;
+        }
+
+        if (data.event === "reasoning_delta" && typeof data.text === "string") {
+          for (const cb of conn.reasoningDeltaCallbacks) {
+            cb(data.text);
+          }
+          return;
+        }
+
+        if (data.event === "reasoning_end") {
+          // Reasoning ended — can notify reasoning callbacks with empty string
+          for (const cb of conn.reasoningDeltaCallbacks) {
+            cb("");
+          }
+          return;
+        }
+
+        // Handle tool execution progress events for display
+        if (data.kind === "progress" && Array.isArray(data.tool_events)) {
+          const progressText = data.tool_events
+            .map((evt: { name?: string; phase?: string; result?: string; error?: string }) => {
+              const phase = evt.phase === "start" ? "▶" : evt.phase === "end" ? "✓" : "•";
+              const name = evt.name ?? "tool";
+              const summary = evt.result
+                ? `\n  └ ${evt.result.slice(0, 120)}`
+                : evt.error
+                  ? `\n  └ ❌ ${evt.error.slice(0, 120)}`
+                  : "";
+              return `${phase} ${name}${summary}`;
+            })
+            .join("\n");
+
+          if (progressText) {
+            for (const cb of conn.deltaCallbacks) {
+              cb(`\n\`\`\`tool\n${progressText}\n\`\`\`\n`);
+            }
           }
           return;
         }
@@ -150,39 +200,101 @@ export async function connectToAgent(
     };
 
     ws.onerror = () => {
-      if (!resolved) {
-        resolved = true;
+      if (!settled) {
+        settled = true;
         reject(new Error(`Failed to connect to Agent Gateway on port ${port}`));
       }
     };
 
     ws.onclose = () => {
       connections.delete(projectId);
-      if (!resolved) {
-        resolved = true;
+      if (!settled) {
+        settled = true;
         reject(new Error("WebSocket closed before connection was established"));
+      }
+      // Notify subscribers that the connection dropped
+      for (const cb of conn.connectionChangeCallbacks) {
+        cb(false);
       }
     };
   });
 }
 
 /**
+ * Connect to an Agent Gateway via WebSocket with exponential backoff retry.
+ *
+ * Retry pattern (up to MAX_RECONNECT_ATTEMPTS):
+ *   Attempt 1: immediate
+ *   Attempt 2: ~200ms
+ *   Attempt 3: ~600ms
+ *   (total window ≈ 800ms before MAX_RECONNECT_DELAY_MS kicks in)
+ */
+export async function connectToAgent(
+  projectId: string,
+  port: number,
+  userId?: string,
+  sessionId?: string,
+): Promise<void> {
+  // Disconnect existing connection for this project
+  if (connections.has(projectId)) {
+    disconnectFromAgent(projectId);
+  }
+
+  // Resolve chat ID
+  let chatId: string;
+  if (sessionId && sessionId.startsWith("websocket:")) {
+    // Existing session from nanobot — strip the "websocket:" prefix
+    // so the server finds the existing session key
+    chatId = sessionId.slice("websocket:".length);
+  } else {
+    const resolvedUserId = userId ?? getCachedUserId();
+    const resolvedSessionId = sessionId ?? generateSessionId();
+    chatId = buildChatId(resolvedUserId, resolvedSessionId);
+  }
+
+  let lastError: Error | undefined;
+  for (let attempt = 0; attempt < MAX_RECONNECT_ATTEMPTS; attempt++) {
+    try {
+      return await connectOnce(projectId, port, chatId);
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err));
+      if (attempt < MAX_RECONNECT_ATTEMPTS - 1) {
+        // Exponential backoff: 200ms, 600ms, 1400ms, ...
+        const delay = Math.min(
+          RECONNECT_DELAY_MS,
+          200 * Math.pow(3, attempt),
+        );
+        await new Promise((r) => setTimeout(r, delay));
+      }
+    }
+  }
+
+  throw lastError ?? new Error("Failed to connect to Agent Gateway");
+}
+
+/**
  * Disconnect from an Agent Gateway.
+ * Closes the WebSocket connection and cleans up all registered callbacks.
  */
 export function disconnectFromAgent(projectId: string): void {
   const conn = connections.get(projectId);
   if (!conn) return;
 
+  // Properly close the WebSocket
   try {
-    conn.ws.send(
-      JSON.stringify({
-        type: "attach",
-        chat_id: conn.chatId,
-      }),
-    );
+    conn.ws.close(1000, "Client disconnect");
   } catch {
-    // WebSocket may be closed — connection will be re-established on next use
+    // WebSocket already closed — ignore
   }
+
+  // Clear all callbacks
+  conn.deltaCallbacks.clear();
+  conn.turnEndCallbacks.clear();
+  conn.errorCallbacks.clear();
+  conn.attachedCallbacks.clear();
+  conn.reasoningDeltaCallbacks.clear();
+
+  connections.delete(projectId);
 }
 
 /**
@@ -214,7 +326,9 @@ export function switchAgentSession(
   const conn = connections.get(projectId);
   if (!conn) return;
 
-  conn.chatId = buildChatId(userId, sessionId);
+  conn.chatId = sessionId.startsWith("websocket:")
+    ? sessionId.slice("websocket:".length)
+    : buildChatId(userId, sessionId);
 
   // Send new attach message
   conn.ws.send(
@@ -260,6 +374,23 @@ export function onAgentTurnEnd(
 }
 
 /**
+ * Subscribe to reasoning_delta events (thinking process).
+ * Returns an unsubscribe function.
+ */
+export function onAgentReasoningDelta(
+  projectId: string,
+  callback: ReasoningDeltaCallback,
+): () => void {
+  const conn = connections.get(projectId);
+  if (!conn) return () => {};
+
+  conn.reasoningDeltaCallbacks.add(callback);
+  return () => {
+    conn.reasoningDeltaCallbacks.delete(callback);
+  };
+}
+
+/**
  * Subscribe to error events.
  * Returns an unsubscribe function.
  */
@@ -290,6 +421,31 @@ export function onAgentAttached(
   conn.attachedCallbacks.add(callback);
   return () => {
     conn.attachedCallbacks.delete(callback);
+  };
+}
+
+/**
+ * Subscribe to connection status changes (connected/disconnected).
+ * Fires immediately with the current status, then on every change.
+ * Returns an unsubscribe function.
+ */
+export function onAgentConnectionChange(
+  projectId: string,
+  callback: ConnectionChangeCallback,
+): () => void {
+  // Fire immediately with current status
+  const connected = isAgentConnected(projectId);
+  callback(connected);
+
+  const conn = connections.get(projectId);
+  if (!conn) {
+    // not connected — just return noop
+    return () => {};
+  }
+
+  conn.connectionChangeCallbacks.add(callback);
+  return () => {
+    conn.connectionChangeCallbacks.delete(callback);
   };
 }
 

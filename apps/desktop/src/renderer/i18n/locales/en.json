@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "PromptHub",
+    "name": "AgentWork",
     "description": "Local Prompt Manager with Version Control"
   },
   "filter": {
@@ -34,7 +34,7 @@
     "search": "Search Prompt...",
     "new": "New",
     "settings": "Settings",
-    "topbarWebTitle": "PromptHub Web",
+    "topbarWebTitle": "AgentWork Web",
     "searchProjectSkills": "Search project skills...",
     "searchAgentSkills": "Search IDE skills...",
     "searchSkill": "Search skills...",
@@ -2398,6 +2398,7 @@
     "sessions": "Sessions",
     "noSessions": "No sessions yet",
     "noSession": "Select a session",
+    "noSessionDesc": "Select a session from the sidebar to start chatting",
     "sessionLoadFailed": "Failed to load sessions",
     "refreshSessions": "Refresh sessions",
     "deleteSession": "Delete session",
@@ -2418,6 +2419,11 @@
     "gatewayStopped": "Gateway stopped",
     "gatewayStartFailed": "Failed to start Agent Gateway",
     "gatewayStopFailed": "Failed to stop Agent Gateway",
+    "progressPreparing": "Preparing launch environment...",
+    "progressPython": "Locating Python environment...",
+    "progressSpawning": "Spawning Gateway process...",
+    "progressHealthCheck": "Waiting for service health check...",
+    "progressStopping": "Stopping Gateway...",
     "agentTab": "Agent",
     "skillTab": "Skills",
     "startAgentHint": "Start the Agent Gateway to chat with your AI agent in real time.",

@@ -312,3 +312,24 @@ def load_user_memory(user_id: str, session_key: str) -> str:
     if mem_file.exists():
         return mem_file.read_text(encoding="utf-8")
     return ""
+
+
+def save_session_turn(workspace: Path, user_id: str, session_id: str, prompt: str, answer: str) -> None:
+    """保存/同步单次对话到 session JSONL（避免重复写入，并运行 slim 和 extract_memory）"""
+    from nanobot.session.manager import SessionManager
+    
+    session_key = f"websocket:{user_id}__{session_id}"
+    sessions = SessionManager(workspace=workspace)
+    session = sessions.get_or_create(session_key)
+    
+    # 检查最后一条消息是否已经是本轮回复，避免重复写入
+    has_user = any(m.get("role") == "user" and m.get("content") == prompt for m in session.messages[-2:])
+    has_assistant = any(m.get("role") == "assistant" and m.get("content") == answer for m in session.messages[-2:])
+    
+    if not (has_user and has_assistant):
+        session.add_message("user", prompt)
+        session.add_message("assistant", answer)
+        sessions.save(session)
+    
+    # 瘦身 session
+    slim_session(workspace, session_key)

@@ -602,7 +602,7 @@ export function TopBar({
               </span>
               <div className="min-w-0">
                 <div className="truncate">
-                  {t("header.topbarWebTitle", "PromptHub Web")}
+                  {t("header.topbarWebTitle", "AgentWork Web")}
                 </div>
               </div>
             </div>

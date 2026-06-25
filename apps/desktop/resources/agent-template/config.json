@@ -3,7 +3,7 @@
     "defaults": {
       "workspace": ".",
       "provider": "custom",
-      "model": "MiniMax-M2.7",
+      "model": "MiniMax-M3",
       "max_tokens": 4096,
       "context_window_tokens": 32768,
       "temperature": 0,

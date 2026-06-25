@@ -40,10 +40,10 @@ export function TitleBar() {
       <div className="flex items-center gap-2 px-3">
         <img
           src={appIconUrl}
-          alt="PromptHub"
+          alt="AgentWork"
           className="h-4 w-4 rounded-[4px]"
         />
-        <span className="text-xs text-muted-foreground">PromptHub</span>
+        <span className="text-xs text-muted-foreground">AgentWork</span>
       </div>
 
       {/* 窗口控制按钮 */}

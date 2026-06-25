@@ -590,6 +590,7 @@ export function ProjectsManager() {
     null,
   );
   const [gatewayLoading, setGatewayLoading] = useState(false);
+  const [gatewayProgress, setGatewayProgress] = useState("");
 
   const displayedProjects = useMemo(() => {
     // Show ALL projects (unified list — no tab separation)
@@ -616,6 +617,33 @@ export function ProjectsManager() {
     setActiveSessionId(null);
     setActiveSession(null);
   }, [selectedProjectId]);
+
+  // ── Startup: verify saved gateway PIDs and clear stale ones ──
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      for (const project of skillProjects) {
+        if (!project.gatewayPid && !project.gatewayPort) continue;
+        if (cancelled) return;
+        try {
+          const isAlive = await window.api.agent.verifyProcessPid(
+            project.gatewayPid ?? 0,
+          );
+          if (!isAlive && !cancelled) {
+            console.log(
+              `[GatewayStartup] Stale gateway detected for "${project.name}" (PID ${project.gatewayPid}), clearing state`,
+            );
+            updateAgentGateway(project.id, null);
+          }
+        } catch {
+          // If verify fails (e.g. channel not ready), skip silently
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []); // Run once on mount
 
   const handleDelete = useCallback(() => {
     if (!deleteTarget) return;
@@ -645,31 +673,59 @@ export function ProjectsManager() {
   const handleGatewayToggle = useCallback(async () => {
     if (!selectedProject?.rootPath) return;
     setGatewayLoading(true);
+    setGatewayProgress(t("agentProject.progressPreparing"));
     try {
       if (selectedProject.gatewayPort) {
-        // Stop gateway
+        setGatewayProgress(t("agentProject.progressStopping"));
         await window.api.agent.stopGateway(selectedProject.rootPath);
         updateAgentGateway(selectedProject.id, null);
         showToast(t("agentProject.gatewayStopped"), "success");
       } else {
-        // Start gateway
-        const result = await window.api.agent.startGateway(
-          selectedProject.rootPath,
-        );
-        updateAgentGateway(selectedProject.id, {
-          gatewayPort: result.port,
-          gatewayPid: result.pid,
-        });
-        showToast(
-          t("agentProject.gatewayRunning", { port: result.port }),
-          "success",
-        );
+        // Show progressive status messages during startup
+        setGatewayProgress(t("agentProject.progressPython"));
+        // Use timeout-based progress for visual feedback since IPC is a single call
+        const progressTimer = setTimeout(() => {
+          setGatewayProgress(t("agentProject.progressSpawning"));
+        }, 3000);
+        const healthCheckTimer = setTimeout(() => {
+          setGatewayProgress(t("agentProject.progressHealthCheck"));
+        }, 8000);
+
+        try {
+          const result = await window.api.agent.startGateway(
+            selectedProject.rootPath,
+            selectedProject.gatewayPort,
+          );
+          clearTimeout(progressTimer);
+          clearTimeout(healthCheckTimer);
+          setGatewayProgress("");
+          updateAgentGateway(selectedProject.id, {
+            gatewayPort: result.port,
+            gatewayPid: result.pid,
+          });
+          showToast(
+            t("agentProject.gatewayRunning", { port: result.port }),
+            "success",
+          );
+        } catch (err) {
+          clearTimeout(progressTimer);
+          clearTimeout(healthCheckTimer);
+          setGatewayProgress("");
+          showToast(
+            err instanceof Error
+              ? err.message
+              : t("agentProject.gatewayStartFailed"),
+            "error",
+          );
+        }
       }
     } catch (err) {
+      // Stop case error (start case has its own inner catch)
+      setGatewayProgress("");
       showToast(
         err instanceof Error
           ? err.message
-          : t("agentProject.gatewayStartFailed"),
+          : t("agentProject.gatewayStopFailed"),
         "error",
       );
     } finally {
@@ -805,6 +861,14 @@ export function ProjectsManager() {
                     ? t("agentProject.gatewayStarting")
                     : t("agentProject.gatewayStart")}
                 </button>
+                {gatewayLoading && gatewayProgress && (
+                  <div className="mt-3 flex flex-col items-center gap-1">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-pulse" />
+                      {gatewayProgress}
+                    </div>
+                  </div>
+                )}
               </div>
             )
           ) : (

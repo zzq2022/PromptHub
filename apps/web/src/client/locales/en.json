@@ -1,7 +1,7 @@
 {
   "auth": {
-    "loginTitle": "Login to PromptHub",
-    "loginDescription": "Sign in with an existing account to access your self-hosted PromptHub workspace.",
+    "loginTitle": "Login to AgentWork",
+    "loginDescription": "Sign in with an existing account to access your self-hosted AgentWork workspace.",
     "registerTitle": "Create Account",
     "username": "Username",
     "password": "Password",
@@ -17,7 +17,7 @@
     "loginError": "Invalid credentials",
     "registerError": "Registration failed",
     "setupBadge": "Initial Setup",
-    "setupTitle": "Set Up Your Self-Hosted PromptHub",
+    "setupTitle": "Set Up Your Self-Hosted AgentWork",
     "setupDescription": "This deployment has not been initialized yet. Create the first administrator account to unlock the web workspace.",
     "setupHint": "The first account becomes the local admin for this self-hosted instance. Public sign-up stays closed afterward unless you explicitly enable it.",
     "confirmPassword": "Confirm Password",
@@ -94,7 +94,7 @@
     "noPrompts": "No prompts found."
   },
   "layout": {
-    "appName": "PromptHub Web",
+    "appName": "AgentWork Web",
     "logout": "Logout",
     "home": "Prompts",
     "notFound": "Not Found"
@@ -154,7 +154,7 @@
     "themeSystem": "System",
     "language": "Language",
     "autoSave": "Auto Save",
-    "webDataPathPlaceholder": "PromptHub Web Self-Hosted Data Directory",
+    "webDataPathPlaceholder": "AgentWork Web Self-Hosted Data Directory",
     "save": "Save Settings",
     "saved": "Settings updated.",
     "languages": {
@@ -203,7 +203,7 @@
   },
   "importExport": {
     "title": "Import / Export",
-    "description": "Move your PromptHub data between environments.",
+    "description": "Move your AgentWork data between environments.",
     "exportTitle": "Export Data",
     "importTitle": "Import Data",
     "exportBtn": "Export Backup",

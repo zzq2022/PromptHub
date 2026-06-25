@@ -12,6 +12,7 @@ import {
   startAgentGateway,
   stopAgentGateway,
   getAgentGatewayStatus,
+  verifyProcessPid,
 } from "@prompthub/core";
 import { getAgentResourcesPath } from "../agent-resources";
 
@@ -21,9 +22,12 @@ export function registerAgentGatewayIPC(): void {
     async (
       _event,
       projectRootPath: string,
+      existingPort?: number,
     ): Promise<AgentGatewayStartResult> => {
       const resourcesPath = getAgentResourcesPath();
-      return startAgentGateway(projectRootPath, resourcesPath);
+      // startAgentGateway is now async — it waits for the health endpoint;
+      // existingPort is passed through so previously assigned ports can be reused
+      return await startAgentGateway(projectRootPath, resourcesPath, existingPort);
     },
   );
 
@@ -38,6 +42,13 @@ export function registerAgentGatewayIPC(): void {
     IPC_CHANNELS.AGENT_GATEWAY_STATUS,
     async (_event, projectRootPath: string): Promise<AgentGatewayStatus> => {
       return getAgentGatewayStatus(projectRootPath);
+    },
+  );
+
+  ipcMain.handle(
+    IPC_CHANNELS.AGENT_GATEWAY_VERIFY_PID,
+    async (_event, pid: number): Promise<boolean> => {
+      return verifyProcessPid(pid);
     },
   );
 }

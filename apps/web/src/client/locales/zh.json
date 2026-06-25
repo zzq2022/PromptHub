@@ -1,7 +1,7 @@
 {
   "auth": {
-    "loginTitle": "登录 PromptHub",
-    "loginDescription": "使用现有账户登录，进入你的自部署 PromptHub 工作区。",
+    "loginTitle": "登录 AgentWork",
+    "loginDescription": "使用现有账户登录，进入你的自部署 AgentWork 工作区。",
     "registerTitle": "创建账户",
     "username": "用户名",
     "password": "密码",
@@ -17,7 +17,7 @@
     "loginError": "用户名或密码错误",
     "registerError": "注册失败",
     "setupBadge": "首次配置",
-    "setupTitle": "初始化你的自部署 PromptHub",
+    "setupTitle": "初始化你的自部署 AgentWork",
     "setupDescription": "当前部署尚未完成初始化，请先创建第一个管理员账户，再进入网页版工作区。",
     "setupHint": "首个账户会成为这个自部署实例的本地管理员。除非你明确开启公开注册，否则初始化完成后将默认关闭新增注册。",
     "confirmPassword": "确认密码",
@@ -94,7 +94,7 @@
     "noPrompts": "暂无提示词。"
   },
   "layout": {
-    "appName": "PromptHub Web",
+    "appName": "AgentWork Web",
     "logout": "退出",
     "home": "提示词",
     "notFound": "未找到页面"
@@ -154,7 +154,7 @@
     "themeSystem": "跟随系统",
     "language": "语言",
     "autoSave": "自动保存",
-    "webDataPathPlaceholder": "PromptHub 自部署网页数据目录",
+    "webDataPathPlaceholder": "AgentWork 自部署网页数据目录",
     "save": "保存设置",
     "saved": "设置已更新。",
     "languages": {
@@ -203,7 +203,7 @@
   },
   "importExport": {
     "title": "导入 / 导出",
-    "description": "在不同环境之间迁移 PromptHub 数据。",
+    "description": "在不同环境之间迁移 AgentWork 数据。",
     "exportTitle": "导出数据",
     "importTitle": "导入数据",
     "exportBtn": "导出备份",

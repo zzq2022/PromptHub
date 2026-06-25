@@ -28,6 +28,7 @@ import {
   performDatabaseRecovery,
 } from "./database";
 import { registerAllIPC } from "./ipc";
+import { stopAllGateways } from "@prompthub/core";
 import { getMinimizeOnLaunchSetting } from "./settings/settings-readers";
 import { createMenu } from "./menu";
 import {
@@ -2081,6 +2082,7 @@ app.on("window-all-closed", () => {
 // 应用退出前清理
 app.on("before-quit", () => {
   isQuitting = true;
+  stopAllGateways();
   closeDatabase();
 });
 

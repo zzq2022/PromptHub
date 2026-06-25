@@ -96,7 +96,7 @@ export function DesktopWorkspacePage() {
     <ToastProvider>
       <div className="workspace-web-wrapper">
         <nav className="workspace-topbar">
-          <span className="workspace-topbar-brand">PromptHub</span>
+          <span className="workspace-topbar-brand">AgentWork</span>
           <div className="workspace-topbar-right">
             {isAdmin && (
               <a

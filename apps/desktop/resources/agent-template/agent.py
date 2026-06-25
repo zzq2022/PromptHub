@@ -43,23 +43,37 @@ async def main():
     args = parser.parse_args()
 
     session_id = args.session or f"cli_{int(time.time())}"
+    session_key = f"websocket:{args.user}__{session_id}"
+    db_path = WORKSPACE / "chinook.db"
 
-    config = load_config(str(WORKSPACE / "config.json"))
-    agent = create_agent_loop(config, WORKSPACE)
+    # Initialize the AgentLoop with correct parameters
+    agent = create_agent_loop(WORKSPACE, db_path, user_id=args.user, session_key=session_key)
 
-    memory = load_user_memory(WORKSPACE, args.user)
-    messages = []
+    # Load long-term memory with correct parameters
+    memory = load_user_memory(args.user, session_key)
+
+    # Build prompt with injected memory if exists
+    prompt = args.prompt
     if memory:
-        messages.append({"role": "system", "content": f"## User Memory\n{memory}"})
-    messages.append({"role": "user", "content": args.prompt})
+        prompt = (
+            f"以下是用户 [{args.user}] 的长期记忆，供本次对话参考：\n\n"
+            f"{memory}\n\n---\n用户当前问题：{args.prompt}"
+        )
 
-    result = await agent.run(messages)
+    # Use Nanobot facade to run a single turn
+    from nanobot.nanobot import Nanobot
+    bot = Nanobot(agent)
+    result = await bot.run(prompt, session_key=session_key)
 
-    # 保存本轮对话到 session JSONL（与 gateway 模式写入同一文件）
-    save_session_turn(WORKSPACE, args.user, session_id, args.prompt, result)
+    # Save session turn & slim session
+    save_session_turn(WORKSPACE, args.user, session_id, args.prompt, result.content)
 
-    print(result)
+    # Extract memory asynchronously after turn ends
+    await extract_memory(WORKSPACE, args.prompt, result.content, args.user, session_key)
+
+    print(result.content)
 
 
 if __name__ == "__main__":
     asyncio.run(main())
+

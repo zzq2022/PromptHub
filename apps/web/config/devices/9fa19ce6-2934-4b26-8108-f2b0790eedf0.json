@@ -7,7 +7,17 @@
     "clientVersion": "self-hosted-web",
     "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0",
     "firstSeenAt": "2026-06-16T13:18:31.146Z",
-    "lastSeenAt": "2026-06-20T15:05:24.277Z"
+    "lastSeenAt": "2026-06-24T12:41:46.582Z"
+  },
+  {
+    "id": "3994cd7f-577a-4aa5-bbf6-bb1175d24e2a",
+    "type": "browser",
+    "name": "Microsoft Edge",
+    "platform": "Windows",
+    "clientVersion": "self-hosted-web",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0",
+    "firstSeenAt": "2026-06-23T06:59:05.683Z",
+    "lastSeenAt": "2026-06-23T06:59:05.686Z"
   },
   {
     "id": "f37ffde0-42f0-4fcf-babc-33c02510a628",

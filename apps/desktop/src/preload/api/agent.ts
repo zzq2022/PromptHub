@@ -37,10 +37,11 @@ export const agentApi = {
     }>,
 
   // ── Gateway process management ──────────────────────────────
-  startGateway: (projectRootPath: string) =>
+  startGateway: (projectRootPath: string, existingPort?: number) =>
     ipcRenderer.invoke(
       IPC_CHANNELS.AGENT_GATEWAY_START,
       projectRootPath,
+      existingPort,
     ) as Promise<AgentGatewayStartResult>,
 
   stopGateway: (projectRootPath: string) =>
@@ -54,6 +55,12 @@ export const agentApi = {
       IPC_CHANNELS.AGENT_GATEWAY_STATUS,
       projectRootPath,
     ) as Promise<AgentGatewayStatus>,
+
+  verifyProcessPid: (pid: number) =>
+    ipcRenderer.invoke(
+      IPC_CHANNELS.AGENT_GATEWAY_VERIFY_PID,
+      pid,
+    ) as Promise<boolean>,
 
   // ── Session management ──────────────────────────────────────
   listSessions: (port: number) =>

@@ -40,6 +40,31 @@ let resourcesDir: string;
 const PY_EXIT_IMMEDIATELY = 'import sys; sys.exit(0)';
 const PY_KEEPALIVE = 'import time; time.sleep(60)';
 
+/**
+ * Minimal HTTP server that responds 200 on GET /health.
+ * Used by tests that need a healthy gateway for health-check to pass.
+ */
+const PY_HEALTHY_GATEWAY = `
+from http.server import HTTPServer, BaseHTTPRequestHandler
+import os
+
+class _Handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        if self.path == '/health':
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/plain')
+            self.end_headers()
+            self.wfile.write(b'ok')
+        else:
+            self.send_response(404)
+            self.end_headers()
+    def log_message(self, *a): pass
+
+_port = int(os.environ.get('AGENT_PORT', '18792'))
+_server = HTTPServer(('127.0.0.1', _port), _Handler)
+_server.serve_forever()
+`;
+
 beforeEach(() => {
   tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "gateway-test-"));
   resourcesDir = path.join(tmpDir, "resources");
@@ -74,24 +99,24 @@ afterEach(() => {
 // startAgentGateway
 // ─────────────────────────────────────────────
 describe("startAgentGateway", () => {
-  it("throws if run_gateway.py does not exist", () => {
+  it("throws if run_gateway.py does not exist", async () => {
     const projectDir = path.join(tmpDir, "empty-project");
     fs.mkdirSync(projectDir, { recursive: true });
 
     if (!hasPython) {
       // Without Python, findAgentPython throws before the gateway script check
-      expect(() => startAgentGateway(projectDir, resourcesDir)).toThrow(
+      await expect(startAgentGateway(projectDir, resourcesDir)).rejects.toThrow(
         /Agent venv Python not found/,
       );
       return;
     }
 
-    expect(() => startAgentGateway(projectDir, resourcesDir)).toThrow(
+    await expect(startAgentGateway(projectDir, resourcesDir)).rejects.toThrow(
       /Gateway script not found/,
     );
   });
 
-  it("throws if agent-venv does not exist", () => {
+  it("throws if agent-venv does not exist", async () => {
     const projectDir = path.join(tmpDir, "no-venv-project");
     fs.mkdirSync(projectDir, { recursive: true });
     fs.writeFileSync(path.join(projectDir, "run_gateway.py"), PY_EXIT_IMMEDIATELY);
@@ -99,53 +124,53 @@ describe("startAgentGateway", () => {
     const emptyResourcesDir = path.join(tmpDir, "empty-resources");
     fs.mkdirSync(emptyResourcesDir, { recursive: true });
 
-    expect(() => startAgentGateway(projectDir, emptyResourcesDir)).toThrow(
+    await expect(startAgentGateway(projectDir, emptyResourcesDir)).rejects.toThrow(
       /Agent venv Python not found/,
     );
   });
 
-  it.skipIf(!hasPython)("returns a result with port and pid > 0", () => {
+  it.skipIf(!hasPython)("returns a result with port and pid > 0", async () => {
     const projectDir = path.join(tmpDir, "project-ok");
     fs.mkdirSync(projectDir, { recursive: true });
-    fs.writeFileSync(path.join(projectDir, "run_gateway.py"), PY_EXIT_IMMEDIATELY);
+    fs.writeFileSync(path.join(projectDir, "run_gateway.py"), PY_HEALTHY_GATEWAY);
 
-    const result = startAgentGateway(projectDir, resourcesDir);
+    const result = await startAgentGateway(projectDir, resourcesDir);
 
     expect(result.port).toBeGreaterThan(0);
     expect(result.pid).toBeGreaterThan(0);
   });
 
-  it.skipIf(!hasPython)("returns existing gateway if already running for the same project", () => {
+  it.skipIf(!hasPython)("returns existing gateway if already running for the same project", async () => {
     const projectDir = path.join(tmpDir, "project-unique");
     fs.mkdirSync(projectDir, { recursive: true });
-    fs.writeFileSync(path.join(projectDir, "run_gateway.py"), PY_EXIT_IMMEDIATELY);
+    fs.writeFileSync(path.join(projectDir, "run_gateway.py"), PY_HEALTHY_GATEWAY);
 
-    const first = startAgentGateway(projectDir, resourcesDir);
-    const second = startAgentGateway(projectDir, resourcesDir);
+    const first = await startAgentGateway(projectDir, resourcesDir);
+    const second = await startAgentGateway(projectDir, resourcesDir);
 
     expect(first.port).toBe(second.port);
     expect(first.pid).toBe(second.pid);
   });
 
-  it.skipIf(!hasPython)("uses provided port if existingPort is specified", () => {
+  it.skipIf(!hasPython)("uses provided port if existingPort is specified", async () => {
     const projectDir = path.join(tmpDir, "project-custom-port");
     fs.mkdirSync(projectDir, { recursive: true });
-    fs.writeFileSync(path.join(projectDir, "run_gateway.py"), PY_EXIT_IMMEDIATELY);
+    fs.writeFileSync(path.join(projectDir, "run_gateway.py"), PY_HEALTHY_GATEWAY);
 
-    const result = startAgentGateway(projectDir, resourcesDir, 9999);
+    const result = await startAgentGateway(projectDir, resourcesDir, 9999);
     expect(result.port).toBe(9999);
   });
 
-  it.skipIf(!hasPython)("generates distinct ports for different projects", () => {
+  it.skipIf(!hasPython)("generates distinct ports for different projects", async () => {
     const dir1 = path.join(tmpDir, "proj-a");
     const dir2 = path.join(tmpDir, "proj-b");
     fs.mkdirSync(dir1, { recursive: true });
     fs.mkdirSync(dir2, { recursive: true });
-    fs.writeFileSync(path.join(dir1, "run_gateway.py"), PY_EXIT_IMMEDIATELY);
-    fs.writeFileSync(path.join(dir2, "run_gateway.py"), PY_EXIT_IMMEDIATELY);
+    fs.writeFileSync(path.join(dir1, "run_gateway.py"), PY_HEALTHY_GATEWAY);
+    fs.writeFileSync(path.join(dir2, "run_gateway.py"), PY_HEALTHY_GATEWAY);
 
-    const r1 = startAgentGateway(dir1, resourcesDir);
-    const r2 = startAgentGateway(dir2, resourcesDir);
+    const r1 = await startAgentGateway(dir1, resourcesDir);
+    const r2 = await startAgentGateway(dir2, resourcesDir);
 
     expect(r1.pid).not.toBe(r2.pid);
   });
@@ -160,13 +185,13 @@ describe("getAgentGatewayStatus", () => {
     expect(status.isRunning).toBe(false);
   });
 
-  it.skipIf(!hasPython)("returns isRunning: true after starting (process exists)", () => {
+  it.skipIf(!hasPython)("returns isRunning: true after starting (process exists)", async () => {
     const projectDir = path.join(tmpDir, "status-project");
     fs.mkdirSync(projectDir, { recursive: true });
-    // Keep-alive Python script
-    fs.writeFileSync(path.join(projectDir, "run_gateway.py"), PY_KEEPALIVE);
+    // Use a keep-alive gateway for the duration of the check
+    fs.writeFileSync(path.join(projectDir, "run_gateway.py"), PY_HEALTHY_GATEWAY);
 
-    startAgentGateway(projectDir, resourcesDir);
+    await startAgentGateway(projectDir, resourcesDir);
 
     const status = getAgentGatewayStatus(projectDir);
     expect(status.isRunning).toBe(true);
@@ -179,12 +204,12 @@ describe("getAgentGatewayStatus", () => {
 // stopAgentGateway
 // ─────────────────────────────────────────────
 describe("stopAgentGateway", () => {
-  it.skipIf(!hasPython)("stops a running gateway and removes from status", () => {
+  it.skipIf(!hasPython)("stops a running gateway and removes from status", async () => {
     const projectDir = path.join(tmpDir, "stop-project");
     fs.mkdirSync(projectDir, { recursive: true });
-    fs.writeFileSync(path.join(projectDir, "run_gateway.py"), PY_KEEPALIVE);
+    fs.writeFileSync(path.join(projectDir, "run_gateway.py"), PY_HEALTHY_GATEWAY);
 
-    startAgentGateway(projectDir, resourcesDir);
+    await startAgentGateway(projectDir, resourcesDir);
     stopAgentGateway(projectDir);
 
     // stopAgentGateway removes from the in-memory registry immediately
@@ -200,16 +225,16 @@ describe("stopAgentGateway", () => {
 // stopAllGateways
 // ─────────────────────────────────────────────
 describe("stopAllGateways", () => {
-  it.skipIf(!hasPython)("stops all running gateways", () => {
+  it.skipIf(!hasPython)("stops all running gateways", async () => {
     const projectDir1 = path.join(tmpDir, "all-stop-1");
     const projectDir2 = path.join(tmpDir, "all-stop-2");
     fs.mkdirSync(projectDir1, { recursive: true });
     fs.mkdirSync(projectDir2, { recursive: true });
-    fs.writeFileSync(path.join(projectDir1, "run_gateway.py"), PY_KEEPALIVE);
-    fs.writeFileSync(path.join(projectDir2, "run_gateway.py"), PY_KEEPALIVE);
+    fs.writeFileSync(path.join(projectDir1, "run_gateway.py"), PY_HEALTHY_GATEWAY);
+    fs.writeFileSync(path.join(projectDir2, "run_gateway.py"), PY_HEALTHY_GATEWAY);
 
-    startAgentGateway(projectDir1, resourcesDir);
-    startAgentGateway(projectDir2, resourcesDir);
+    await startAgentGateway(projectDir1, resourcesDir);
+    await startAgentGateway(projectDir2, resourcesDir);
 
     expect(getAgentGatewayStatus(projectDir1).isRunning).toBe(true);
     expect(getAgentGatewayStatus(projectDir2).isRunning).toBe(true);

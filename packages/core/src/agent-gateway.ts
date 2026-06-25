@@ -50,18 +50,54 @@ function findAgentPython(resourcesPath: string): string {
 }
 
 /**
+ * Health check timeout (ms) before considering gateway startup failed.
+ * FastAPI/uvicorn typically starts in under 3s on modern hardware.
+ * Exported so tests can reduce the timeout.
+ */
+export const GATEWAY_HEALTH_TIMEOUT_MS = 15_000;
+export const GATEWAY_HEALTH_POLL_MS = 500;
+
+/**
+ * Poll a health endpoint until it responds 200 or timeout expires.
+ * Uses HTTP HEAD-like fetch to minimise overhead.
+ */
+async function waitForGatewayReady(url: string, timeoutMs: number): Promise<void> {
+  const start = Date.now();
+  let lastError: string | undefined;
+  while (Date.now() - start < timeoutMs) {
+    try {
+      const resp = await fetch(url, { signal: AbortSignal.timeout(2000) });
+      if (resp.ok) return;
+      lastError = `HTTP ${resp.status}`;
+    } catch (err: unknown) {
+      // Service not ready yet – swallow and retry
+      lastError = err instanceof Error ? err.message : String(err);
+    }
+    await new Promise((r) => setTimeout(r, GATEWAY_HEALTH_POLL_MS));
+  }
+  throw new Error(
+    `Agent Gateway did not become healthy within ${timeoutMs}ms. Last error: ${lastError ?? "unknown"}`,
+  );
+}
+
+/**
  * Start an Agent gateway process for a given project.
  *
  * Sets up environment so that:
  * - PATH includes venv/Scripts (for nanobot ExecTool subprocess isolation)
  * - PYTHONPATH points to venv site-packages
  * - PROMPTHUB_PYTHON points to the venv Python (for agent internal use)
+ *
+ * This function is **async**: after spawning the process it waits for the
+ * HTTP health endpoint to respond before returning. If the gateway does not
+ * become healthy within `GATEWAY_HEALTH_TIMEOUT_MS`, the child process is
+ * killed and an error is thrown.
  */
-export function startAgentGateway(
+export async function startAgentGateway(
   projectRootPath: string,
   resourcesPath: string,
   existingPort?: number,
-): AgentGatewayStartResult {
+): Promise<AgentGatewayStartResult> {
   const projectId = projectRootPath; // Use path as key
 
   if (runningGateways.has(projectId)) {
@@ -91,6 +127,8 @@ export function startAgentGateway(
   const pythonDir = path.dirname(pythonPath);
   const venvPath = `${pythonDir}${path.delimiter}${currentPath}`;
 
+  const isWin = process.platform === "win32";
+
   const child = spawn(pythonPath, [gatewayScript], {
     cwd: projectRootPath,
     env: {
@@ -103,10 +141,18 @@ export function startAgentGateway(
       AGENT_PORT: String(port),
     },
     stdio: ["ignore", "pipe", "pipe"],
-    detached: false,
+    detached: isWin,
+    windowsHide: true,
   });
 
   const pid = child.pid ?? 0;
+
+  // Collect stderr for error diagnostics (keep last 500 chars)
+  let stderrBuffer = "";
+  child.stderr?.on("data", (chunk: Buffer) => {
+    const text = chunk.toString("utf-8");
+    stderrBuffer = (stderrBuffer + text).slice(-500);
+  });
 
   child.on("error", (err) => {
     console.error(`[AgentGateway] Process error for ${projectRootPath}:`, err);
@@ -117,7 +163,28 @@ export function startAgentGateway(
     runningGateways.delete(projectId);
   });
 
+  // Register immediately so getAgentGatewayStatus works during startup
   runningGateways.set(projectId, { child, port, pid });
+
+  try {
+    await waitForGatewayReady(
+      `http://127.0.0.1:${port}/api/health`,
+      GATEWAY_HEALTH_TIMEOUT_MS,
+    );
+  } catch (err) {
+    // Health check failed — kill the process and clean up
+    try {
+      child.kill("SIGTERM");
+    } catch { /* ignore */ }
+    runningGateways.delete(projectId);
+
+    const detail = stderrBuffer
+      ? `\nProcess stderr (tail):\n${stderrBuffer}`
+      : "";
+    throw new Error(
+      `${(err instanceof Error ? err.message : String(err))}${detail}`,
+    );
+  }
 
   return { port, pid };
 }
@@ -165,6 +232,20 @@ export function getAgentGatewayStatus(
   } catch {
     runningGateways.delete(projectRootPath);
     return { isRunning: false };
+  }
+}
+
+/**
+ * Check if a given PID is still running on the system.
+ * Uses signal 0 which doesn't actually send a signal — just checks existence.
+ */
+export function verifyProcessPid(pid: number): boolean {
+  if (pid <= 0) return false;
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
   }
 }
 

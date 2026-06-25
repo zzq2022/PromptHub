@@ -28,6 +28,7 @@ import {
   switchAgentSession,
   getCachedUserId,
   getDefaultUserId,
+  onAgentConnectionChange,
 } from "../../services/agent-service";
 
 interface ChatMessage {
@@ -77,42 +78,50 @@ export function AgentChatPanel({
     }
   }, [input]);
 
-  // Connect to gateway when project changes
+  // Cache userId on mount/project change.
+  // Only connect if there is already an activeSession (user selected one).
   useEffect(() => {
-    if (!project.rootPath) return;
-
     let cancelled = false;
 
-    async function connect() {
-      if (isAgentConnected(project.id)) return;
+    async function init() {
+      if (!project.rootPath) return;
+      // Ensure userId is cached before any session interaction
+      await getDefaultUserId();
 
-      setConnectionStatus("connecting");
-      setConnectionError("");
-      try {
-        // Ensure userId is cached before connecting
-        await getDefaultUserId();
-        await connectToAgent(project.id, project.gatewayPort ?? 18792);
-        if (!cancelled) {
-          setConnectionStatus("connected");
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setConnectionStatus("error");
-          setConnectionError(
-            err instanceof Error ? err.message : "Connection failed",
+      // If user already selected a session inside this panel,
+      // ensure the connection is active
+      if (activeSession?.session_id && !isAgentConnected(project.id)) {
+        const port = project.gatewayPort;
+        if (!port) return;
+        setConnectionStatus("connecting");
+        setConnectionError("");
+        try {
+          await connectToAgent(
+            project.id,
+            port,
+            getCachedUserId(),
+            activeSession.session_id,
           );
+          if (!cancelled) setConnectionStatus("connected");
+        } catch (err) {
+          if (!cancelled) {
+            setConnectionStatus("error");
+            setConnectionError(
+              err instanceof Error ? err.message : "Connection failed",
+            );
+          }
         }
       }
     }
 
-    connect();
+    init();
 
     return () => {
       cancelled = true;
-      disconnectFromAgent(project.id);
-      setConnectionStatus("disconnected");
     };
-  }, [project.id, project.rootPath, project.gatewayPort]);
+    // Intentionally only run on mount/project change — session switching is handled below
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [project.id, project.rootPath]);
 
   // Re-attach WebSocket when activeSession changes
   const prevSessionRef = useRef<string | null>(null);
@@ -134,7 +143,13 @@ export function AgentChatPanel({
     } else {
       setConnectionStatus("connecting");
       setConnectionError("");
-      connectToAgent(project.id, project.gatewayPort ?? 18792, getCachedUserId(), currentId)
+      const port = project.gatewayPort;
+      if (!port) {
+        setConnectionStatus("error");
+        setConnectionError("Gateway port not configured. Start the gateway first.");
+        return;
+      }
+      connectToAgent(project.id, port, getCachedUserId(), currentId)
         .then(() => setConnectionStatus("connected"))
         .catch((err) => {
           setConnectionStatus("error");
@@ -182,6 +197,18 @@ export function AgentChatPanel({
       unsubError();
     };
   }, [project.id, connectionStatus]);
+
+  // Listen for WebSocket connection changes (e.g. unexpected disconnect)
+  useEffect(() => {
+    const unsub = onAgentConnectionChange(project.id, (connected) => {
+      if (!connected) {
+        setConnectionStatus("disconnected");
+        setIsStreaming(false);
+        assistantIdRef.current = null;
+      }
+    });
+    return unsub;
+  }, [project.id]);
 
   const sendMessage = useCallback(() => {
     const trimmed = input.trim();
@@ -235,11 +262,21 @@ export function AgentChatPanel({
   );
 
   const handleReconnect = useCallback(async () => {
+    if (!project.gatewayPort) {
+      setConnectionStatus("error");
+      setConnectionError("Gateway not available - port not assigned");
+      return;
+    }
     disconnectFromAgent(project.id);
     setConnectionStatus("connecting");
     setConnectionError("");
     try {
-      await connectToAgent(project.id, project.gatewayPort ?? 18792);
+      await connectToAgent(
+        project.id,
+        project.gatewayPort,
+        getCachedUserId(),
+        activeSession?.session_id,
+      );
       setConnectionStatus("connected");
     } catch (err) {
       setConnectionStatus("error");
@@ -247,7 +284,7 @@ export function AgentChatPanel({
         err instanceof Error ? err.message : "Connection failed",
       );
     }
-  }, [project.id, project.gatewayPort]);
+  }, [project.id, project.gatewayPort, activeSession?.session_id]);
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -316,35 +353,63 @@ export function AgentChatPanel({
       {/* Messages */}
       <div className="flex-1 overflow-y-auto scroll-shadow">
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full">
+          <div className="flex flex-col items-center justify-center h-full px-4">
             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mb-4 border border-primary/10">
               <BotIcon className="h-7 w-7 text-primary/40" />
             </div>
-            <h2 className="text-base font-semibold text-foreground mb-1">
-              {t("agentProject.welcomeTitle", { name: project.name })}
-            </h2>
-            <p className="text-[13px] text-muted-foreground max-w-xs text-center leading-relaxed">
-              {connectionStatus === "connected"
-                ? t("agentProject.welcomeDesc")
-                : t("agentProject.waitingForGateway")}
-            </p>
-            {connectionStatus === "connected" && (
-              <div className="mt-5 flex flex-wrap justify-center gap-2 max-w-sm">
-                {(t("agentProject.suggestedQuestions", {
-                  returnObjects: true,
-                }) as string[]).map((q) => (
+            {!activeSession ? (
+              <>
+                <h2 className="text-base font-semibold text-foreground mb-1">
+                  {t("agentProject.welcomeTitle", { name: project.name })}
+                </h2>
+                <p className="text-[13px] text-muted-foreground max-w-xs text-center leading-relaxed">
+                  {t("agentProject.noSessionDesc")}
+                </p>
+              </>
+            ) : connectionStatus === "connected" ? (
+              <>
+                <h2 className="text-base font-semibold text-foreground mb-1">
+                  {t("agentProject.welcomeTitle", { name: project.name })}
+                </h2>
+                <p className="text-[13px] text-muted-foreground max-w-xs text-center leading-relaxed">
+                  {t("agentProject.welcomeDesc")}
+                </p>
+                <div className="mt-5 flex flex-wrap justify-center gap-2 max-w-sm">
+                  {(t("agentProject.suggestedQuestions", {
+                    returnObjects: true,
+                  }) as string[]).map((q) => (
+                    <button
+                      key={q}
+                      className="px-3 py-1.5 text-xs rounded-full border border-border bg-muted/30 hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"
+                      onClick={() => {
+                        setInput(q);
+                        textareaRef.current?.focus();
+                      }}
+                    >
+                      {q}
+                    </button>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <>
+                <h2 className="text-base font-semibold text-foreground mb-1">
+                  {t("agentProject.welcomeTitle", { name: project.name })}
+                </h2>
+                <p className="text-[13px] text-muted-foreground max-w-xs text-center leading-relaxed">
+                  {connectionStatus === "error"
+                    ? connectionError || t("agentProject.connectionFailed")
+                    : t("agentProject.waitingForGateway")}
+                </p>
+                {connectionStatus === "error" && (
                   <button
-                    key={q}
-                    className="px-3 py-1.5 text-xs rounded-full border border-border bg-muted/30 hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"
-                    onClick={() => {
-                      setInput(q);
-                      textareaRef.current?.focus();
-                    }}
+                    className="mt-3 px-4 py-1.5 text-xs rounded-lg bg-primary/10 hover:bg-primary/20 text-primary transition-colors"
+                    onClick={handleReconnect}
                   >
-                    {q}
+                    {t("agentProject.reconnect")}
                   </button>
-                ))}
-              </div>
+                )}
+              </>
             )}
           </div>
         ) : (
