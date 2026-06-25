@@ -115,3 +115,12 @@ packages/shared/types/index.js.map
 *.temp
 *.tsbuildinfo
 .omx/
+
+# ========================
+# Scratch / Presentation files
+# ========================
+ppt思路*
+compare_venvs.ps1
+query_db.py
+scratch/
+
