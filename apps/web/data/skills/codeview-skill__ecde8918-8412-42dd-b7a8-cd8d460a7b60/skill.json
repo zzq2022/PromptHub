@@ -1,0 +1,32 @@
+{
+  "id": "ecde8918-8412-42dd-b7a8-cd8d460a7b60",
+  "ownerUserId": "96dda1e7-fa8d-4d30-bfe8-3e80d273097c",
+  "visibility": "private",
+  "name": "codeview-skill",
+  "description": "技术指标/财务因子文档化 — 公式 → 代入样例 → 计算展开 → 取值参考 → 语义",
+  "protocol_type": "skill",
+  "version": "1.2.0",
+  "author": "User",
+  "source_url": "C:\\Users\\Administrator\\.claude\\skills\\codeview_skill",
+  "local_repo_path": "C:\\Users\\Administrator\\AppData\\Roaming\\PromptHub\\users\\zzq02\\data\\skills\\codeview-skill--e0e05e18\\repo",
+  "tags": [],
+  "original_tags": [],
+  "is_favorite": false,
+  "currentVersion": 0,
+  "versionTrackingEnabled": true,
+  "icon_url": null,
+  "icon_emoji": null,
+  "icon_background": null,
+  "category": "general",
+  "is_builtin": false,
+  "registry_slug": null,
+  "content_url": null,
+  "prerequisites": [],
+  "compatibility": [
+    "prompthub"
+  ],
+  "mcp_config": null,
+  "safetyReport": null,
+  "created_at": 1782305876928,
+  "updated_at": 1782307077079
+}

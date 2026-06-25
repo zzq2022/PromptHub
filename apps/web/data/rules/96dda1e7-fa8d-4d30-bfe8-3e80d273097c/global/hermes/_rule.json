@@ -1,0 +1,14 @@
+{
+  "id": "hermes-global",
+  "platformId": "hermes",
+  "platformName": "Hermes Agent",
+  "platformIcon": "Bot",
+  "platformDescription": "Global Hermes Agent instructions stored in the local Hermes configuration directory.",
+  "name": "AGENTS.md",
+  "description": "Global Hermes Agent rules loaded from the local Hermes configuration.",
+  "path": "C:\\Users\\Administrator\\.hermes\\AGENTS.md",
+  "managedPath": "D:\\Pyprojects\\PromptHub-main2\\apps\\web\\data\\rules\\96dda1e7-fa8d-4d30-bfe8-3e80d273097c\\global\\hermes\\AGENTS.md",
+  "targetPath": "C:\\Users\\Administrator\\.hermes\\AGENTS.md",
+  "projectRootPath": null,
+  "syncStatus": "synced"
+}

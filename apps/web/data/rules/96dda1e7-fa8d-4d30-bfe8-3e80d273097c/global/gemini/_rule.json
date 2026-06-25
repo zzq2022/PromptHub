@@ -1,0 +1,14 @@
+{
+  "id": "gemini-global",
+  "platformId": "gemini",
+  "platformName": "Gemini CLI",
+  "platformIcon": "Sparkles",
+  "platformDescription": "Global Gemini CLI context stored next to the managed Gemini settings directory.",
+  "name": "GEMINI.md",
+  "description": "Global Gemini CLI context loaded from the local Gemini configuration.",
+  "path": "C:\\Users\\Administrator\\.gemini\\GEMINI.md",
+  "managedPath": "D:\\Pyprojects\\PromptHub-main2\\apps\\web\\data\\rules\\96dda1e7-fa8d-4d30-bfe8-3e80d273097c\\global\\gemini\\GEMINI.md",
+  "targetPath": "C:\\Users\\Administrator\\.gemini\\GEMINI.md",
+  "projectRootPath": null,
+  "syncStatus": "synced"
+}

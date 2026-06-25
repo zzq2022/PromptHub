@@ -1,0 +1,14 @@
+{
+  "id": "codex-global",
+  "platformId": "codex",
+  "platformName": "Codex CLI",
+  "platformIcon": "Terminal",
+  "platformDescription": "Global Codex instructions stored next to the managed Codex settings directory.",
+  "name": "AGENTS.md",
+  "description": "Global Codex instructions loaded from the local Codex configuration.",
+  "path": "C:\\Users\\Administrator\\.codex\\AGENTS.md",
+  "managedPath": "D:\\Pyprojects\\PromptHub-main2\\apps\\web\\data\\rules\\96dda1e7-fa8d-4d30-bfe8-3e80d273097c\\global\\codex\\AGENTS.md",
+  "targetPath": "C:\\Users\\Administrator\\.codex\\AGENTS.md",
+  "projectRootPath": null,
+  "syncStatus": "synced"
+}

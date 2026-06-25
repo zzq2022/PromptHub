@@ -1,0 +1,14 @@
+{
+  "id": "opencode-global",
+  "platformId": "opencode",
+  "platformName": "OpenCode",
+  "platformIcon": "Terminal",
+  "platformDescription": "Global OpenCode rules stored next to the managed OpenCode skills directory.",
+  "name": "AGENTS.md",
+  "description": "Global OpenCode rules loaded from the local OpenCode configuration.",
+  "path": "C:\\Users\\Administrator\\.config\\opencode\\AGENTS.md",
+  "managedPath": "D:\\Pyprojects\\PromptHub-main2\\apps\\web\\data\\rules\\96dda1e7-fa8d-4d30-bfe8-3e80d273097c\\global\\opencode\\AGENTS.md",
+  "targetPath": "C:\\Users\\Administrator\\.config\\opencode\\AGENTS.md",
+  "projectRootPath": null,
+  "syncStatus": "synced"
+}

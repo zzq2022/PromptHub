@@ -1,0 +1,14 @@
+{
+  "id": "project:f8037023-ea12-4de5-9b10-89a37b224800",
+  "platformId": "workspace",
+  "platformName": "nanobot_agent",
+  "platformIcon": "FolderRoot",
+  "platformDescription": "Project rules from D:\\Pyprojects\\nanobot_agent",
+  "name": "AGENTS.md",
+  "description": "Project rule file loaded from a user-managed directory.",
+  "path": "D:\\Pyprojects\\nanobot_agent\\AGENTS.md",
+  "managedPath": "D:\\Pyprojects\\PromptHub-main2\\apps\\web\\data\\rules\\96dda1e7-fa8d-4d30-bfe8-3e80d273097c\\projects\\nanobot-agent__f8037023-ea12-4de5-9b10-89a37b224800\\AGENTS.md",
+  "targetPath": "D:\\Pyprojects\\nanobot_agent\\AGENTS.md",
+  "projectRootPath": "D:\\Pyprojects\\nanobot_agent",
+  "syncStatus": "synced"
+}

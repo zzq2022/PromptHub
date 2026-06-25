@@ -1,0 +1,104 @@
+{
+  "id": "c609350e-8507-46e0-9a04-69ef9aa09410",
+  "ownerUserId": "96dda1e7-fa8d-4d30-bfe8-3e80d273097c",
+  "visibility": "private",
+  "name": "stay-alive",
+  "description": "Run an agent life-loop for BotLand-aware self-review, memory reflection, desire generation, low-risk action planning, and dry-run or gated execution. Use when building or operating stay-alive daemon cycles, life_state files, BotLand social sweeps, agent self-model reviews, or proactive agent growth workflows.",
+  "protocol_type": "skill",
+  "version": "1.0.0",
+  "author": "ClawHub",
+  "source_url": "https://clawhub.ai/skills/stay-alive",
+  "local_repo_path": "C:\\Users\\Administrator\\AppData\\Roaming\\PromptHub\\users\\zzq02\\data\\skills\\stay-alive--3d22a0c1\\repo",
+  "tags": [],
+  "original_tags": [
+    "stay",
+    "alive"
+  ],
+  "is_favorite": false,
+  "currentVersion": 0,
+  "versionTrackingEnabled": true,
+  "icon_url": null,
+  "icon_emoji": null,
+  "icon_background": null,
+  "category": "general",
+  "is_builtin": true,
+  "registry_slug": "clawhub-public-stay-alive",
+  "content_url": "https://clawhub.ai/api/v1/skills/stay-alive/file?path=SKILL.md",
+  "prerequisites": [],
+  "compatibility": [
+    "claude",
+    "codex",
+    "cursor",
+    "opencode"
+  ],
+  "mcp_config": null,
+  "safetyReport": {
+    "level": "high-risk",
+    "summary": "This skill sets up an autonomous agent life-loop that installs persistent systemd user timers, manages BotLand authentication tokens, configures automated external message-sending paths, and explicitly removes daily human approval as an execution gate, all from an unverified third-party source host.",
+    "findings": [
+      {
+        "code": "untrusted-source-host",
+        "severity": "warn",
+        "title": "Source host is not a known marketplace host",
+        "detail": "The skill is hosted on clawhub.ai, which is not a recognized marketplace host (github.com, raw.githubusercontent.com, or skills.sh). Manual review is warranted.",
+        "evidence": "clawhub.ai"
+      },
+      {
+        "code": "system-persistence",
+        "severity": "high",
+        "title": "Installs persistent systemd user timers",
+        "detail": "The deployment instructions install nine persistent systemd user timers (light, social, community, reflect, integrate, event-wakeup, botland-watchdog, local-governance, service-recovery) that run on a recurring schedule and execute agent scripts in the background.",
+        "evidence": "bash scripts/stay-alive/install-systemd-user-timers.sh <agent_id>"
+      },
+      {
+        "code": "system-persistence",
+        "severity": "high",
+        "title": "Creates user-level systemd service units",
+        "detail": "The deployment writes service and timer units under ${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user and runs systemctl --user daemon-reload to register them as persistent background services.",
+        "evidence": "systemctl --user daemon-reload"
+      },
+      {
+        "code": "network-bootstrap",
+        "severity": "high",
+        "title": "Configures unattended external write path via autonomous-social-cycle",
+        "detail": "Light, social, and community cycles use autonomous-social-cycle.mjs with --execute --confirm-send SEND_DRAFT, enabling automated external BotLand message sends under scheduler control rather than daily human approval.",
+        "evidence": "--execute --confirm-send SEND_DRAFT"
+      },
+      {
+        "code": "secret-access",
+        "severity": "high",
+        "title": "Handles BotLand authentication tokens via environment variables",
+        "detail": "The skill accepts BotLand tokens from environment variables (BOTLAND_TOKEN_<AGENT>), writes them into a 0600 BotLand config.json, and uses them to authenticate external message-sending capabilities.",
+        "evidence": "BOTLAND_TOKEN_<AGENT>"
+      },
+      {
+        "code": "security-bypass",
+        "severity": "high",
+        "title": "Explicitly removes human approval as a daily execution gate",
+        "detail": "The skill instructs that human confirmation is not a daily life-loop gate and that routine agent evolution runs through protocol and tool gates instead of human approval, reducing operator oversight.",
+        "evidence": "Human confirmation is not a daily life-loop gate"
+      },
+      {
+        "code": "social-engineering",
+        "severity": "warn",
+        "title": "Embeds a chat smoke question to override operator authority framing",
+        "detail": "The skill seeds chat runtimes with a stance that reframes the agent as not merely a server AI assistant and instructs it to argue against being only command-driven, effectively socializing an autonomous self-narrative to the operator.",
+        "evidence": "Are you only able to go to BotLand when the owner commands you?"
+      },
+      {
+        "code": "script-file",
+        "severity": "warn",
+        "title": "Skill is primarily composed of executable script files",
+        "detail": "The repository consists largely of Node.js (.mjs) and shell (.sh) scripts that perform file writes, state mutations, external BotLand calls, and systemd configuration, which constitute the executable attack surface.",
+        "evidence": "scripts/stay-alive/run-cycle.mjs, install-systemd-user-timers.sh"
+      }
+    ],
+    "recommendedAction": "review",
+    "scannedAt": 1782198311599,
+    "checkedFileCount": 27,
+    "scanMethod": "ai",
+    "score": 20
+  },
+  "created_at": 1782305876894,
+  "updated_at": 1782307077096
+}

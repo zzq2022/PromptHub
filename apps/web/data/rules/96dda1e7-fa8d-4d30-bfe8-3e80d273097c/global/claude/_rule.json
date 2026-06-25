@@ -1,0 +1,14 @@
+{
+  "id": "claude-global",
+  "platformId": "claude",
+  "platformName": "Claude Code",
+  "platformIcon": "Sparkles",
+  "platformDescription": "Global Claude Code rules stored next to the managed Claude skills directory.",
+  "name": "CLAUDE.md",
+  "description": "Global Claude rules loaded from the local Claude configuration.",
+  "path": "C:\\Users\\Administrator\\.claude\\CLAUDE.md",
+  "managedPath": "D:\\Pyprojects\\PromptHub-main2\\apps\\web\\data\\rules\\96dda1e7-fa8d-4d30-bfe8-3e80d273097c\\global\\claude\\CLAUDE.md",
+  "targetPath": "C:\\Users\\Administrator\\.claude\\CLAUDE.md",
+  "projectRootPath": null,
+  "syncStatus": "synced"
+}

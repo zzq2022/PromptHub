@@ -1,0 +1,14 @@
+{
+  "id": "project:project_1782049182432_gt4pq13e",
+  "platformId": "workspace",
+  "platformName": "myagentbot3",
+  "platformIcon": "FolderRoot",
+  "platformDescription": "Project rules from D:\\apps\\myagentbot3",
+  "name": "AGENTS.md",
+  "description": "Project rule file loaded from a user-managed directory.",
+  "path": "D:\\apps\\myagentbot3\\AGENTS.md",
+  "managedPath": "D:\\Pyprojects\\PromptHub-main2\\apps\\web\\data\\rules\\96dda1e7-fa8d-4d30-bfe8-3e80d273097c\\projects\\myagentbot3__project_1782049182432_gt4pq13e\\AGENTS.md",
+  "targetPath": "D:\\apps\\myagentbot3\\AGENTS.md",
+  "projectRootPath": "D:\\apps\\myagentbot3",
+  "syncStatus": "synced"
+}

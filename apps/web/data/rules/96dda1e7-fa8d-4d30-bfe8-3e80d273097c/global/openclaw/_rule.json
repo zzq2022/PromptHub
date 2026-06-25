@@ -1,0 +1,14 @@
+{
+  "id": "openclaw-global",
+  "platformId": "openclaw",
+  "platformName": "OpenClaw",
+  "platformIcon": "Bot",
+  "platformDescription": "OpenClaw workspace persona and tone file injected into every session.",
+  "name": "SOUL.md",
+  "description": "Global OpenClaw persona rules loaded from the local workspace bootstrap directory.",
+  "path": "C:\\Users\\Administrator\\.openclaw\\workspace\\SOUL.md",
+  "managedPath": "D:\\Pyprojects\\PromptHub-main2\\apps\\web\\data\\rules\\96dda1e7-fa8d-4d30-bfe8-3e80d273097c\\global\\openclaw\\SOUL.md",
+  "targetPath": "C:\\Users\\Administrator\\.openclaw\\workspace\\SOUL.md",
+  "projectRootPath": null,
+  "syncStatus": "synced"
+}
