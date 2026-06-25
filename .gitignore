@@ -117,10 +117,12 @@ packages/shared/types/index.js.map
 .omx/
 
 # ========================
-# Scratch / Presentation files
+# Scratch / Presentation files / Local Docs
 # ========================
 ppt思路*
 compare_venvs.ps1
 query_db.py
 scratch/
+.kiro/
+docs/
 
