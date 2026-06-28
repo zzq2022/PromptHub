@@ -230,6 +230,8 @@ describe("SkillDB", () => {
     const concreteDb = new SkillDB({ prepare } as any);
 
     vi.spyOn(concreteDb, "getByName").mockReturnValue(null);
+    vi.spyOn(concreteDb, "getByOwnerAndName").mockReturnValue(null);
+    vi.spyOn(concreteDb, "resolveOwnerUserId" as any).mockImplementation((id) => id);
 
     concreteDb.create({
       name: "custom-skill",

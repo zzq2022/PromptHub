@@ -42,7 +42,7 @@ function resolvePlatformPath(
     return targetPath.replace(/\//g, "\\");
   }
 
-  return path.resolve(targetPath);
+  return targetPath.replace(/\\/g, "/");
 }
 
 function dirnamePlatformPath(
@@ -51,7 +51,7 @@ function dirnamePlatformPath(
 ): string {
   return platform === "win32"
     ? path.win32.dirname(targetPath)
-    : path.dirname(targetPath);
+    : path.posix.dirname(targetPath);
 }
 
 function joinPlatformPath(
@@ -61,7 +61,7 @@ function joinPlatformPath(
 ): string {
   return platform === "win32"
     ? path.win32.join(basePath, childPath)
-    : path.join(basePath, childPath);
+    : path.posix.join(basePath, childPath);
 }
 
 export interface DataPathResolverOptions {

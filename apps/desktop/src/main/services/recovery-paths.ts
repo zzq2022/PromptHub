@@ -18,7 +18,7 @@ function resolveForPlatform(
 ): string {
   return platform === "win32"
     ? path.win32.resolve(targetPath)
-    : path.resolve(targetPath);
+    : path.posix.resolve(targetPath);
 }
 
 function joinForPlatform(
@@ -28,7 +28,7 @@ function joinForPlatform(
 ): string {
   return platform === "win32"
     ? path.win32.join(basePath, childPath)
-    : path.join(basePath, childPath);
+    : path.posix.join(basePath, childPath);
 }
 
 function normalizeForPlatform(

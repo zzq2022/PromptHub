@@ -117,7 +117,7 @@ describe("skill-installer-repo variant container", () => {
         source_id: "source-writer-main",
         local_repo_path: "/prompthub/skills/skill-1/repo",
       }),
-    ).resolves.toBe(path.normalize("/prompthub/skills/skill-1"));
+    ).resolves.toBe("/prompthub/skills/skill-1");
   });
 
   it("writes SKILL.md into the repo subdirectory and sidecar metadata into .prompthub", async () => {
@@ -168,7 +168,7 @@ describe("skill-installer-repo variant container", () => {
 
     expect(fsMocks.symlink).not.toHaveBeenCalled();
     expect(fsMocks.cp).toHaveBeenCalledWith(
-      path.normalize("/external/writer"),
+      "/external/writer",
       path.normalize("/prompthub/skills/writer--7dc211f6/repo"),
       expect.objectContaining({
         recursive: true,

@@ -2,6 +2,7 @@
  * @vitest-environment node
  */
 import { EventEmitter } from "events";
+import path from "path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const handleMock = vi.fn();
@@ -194,8 +195,8 @@ describe("image IPC", () => {
       handlers[IPC_CHANNELS.IMAGE_SAVE](null, ["/Users/demo/Pictures/allowed.png"]),
     ).resolves.toEqual(["saved-image.png"]);
     expect(copyFileMock).toHaveBeenCalledWith(
-      "/Users/demo/Pictures/allowed.png",
-      "/tmp/prompthub-images/saved-image.png",
+      path.resolve("/Users/demo/Pictures/allowed.png"),
+      path.join("/tmp/prompthub-images", "saved-image.png"),
     );
   });
 
@@ -224,8 +225,8 @@ describe("image IPC", () => {
       handlers[IPC_CHANNELS.VIDEO_SAVE](null, ["/Users/demo/Movies/allowed.mp4"]),
     ).resolves.toEqual(["saved-video.mp4"]);
     expect(copyFileMock).toHaveBeenCalledWith(
-      "/Users/demo/Movies/allowed.mp4",
-      "/tmp/prompthub-videos/saved-video.mp4",
+      path.resolve("/Users/demo/Movies/allowed.mp4"),
+      path.join("/tmp/prompthub-videos", "saved-video.mp4"),
     );
   });
 

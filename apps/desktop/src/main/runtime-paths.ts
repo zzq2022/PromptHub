@@ -224,6 +224,7 @@ export function getDatabasePath(): string {
   const userDataPath = getUserDataPath();
   const unifiedDbPath = path.join(getDataDir(), "prompthub.db");
   const legacyDbPath = getLegacyDatabasePath();
+  const globalLegacyDbPath = path.join(getBaseUserDataPath(), "prompthub.db");
   const marker = readLayoutMarker(userDataPath);
 
   if (marker?.dbLayoutVersion === "0.5.7" && fs.existsSync(unifiedDbPath)) {
@@ -232,6 +233,10 @@ export function getDatabasePath(): string {
 
   if (fs.existsSync(legacyDbPath)) {
     return legacyDbPath;
+  }
+
+  if (fs.existsSync(globalLegacyDbPath)) {
+    return globalLegacyDbPath;
   }
 
   return unifiedDbPath;

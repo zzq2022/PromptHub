@@ -119,7 +119,7 @@ describe("skill-installer-platform symlink install", () => {
     );
     expect(fsMocks.cp).toHaveBeenCalledWith(
       expect.anything(),
-      "/platform/skills/demo-skill",
+      path.join("/platform/skills", "demo-skill"),
       expect.objectContaining({
         recursive: true,
         filter: expect.any(Function),
@@ -138,7 +138,7 @@ describe("skill-installer-platform symlink install", () => {
     expect(fsMocks.symlink).not.toHaveBeenCalled();
     expect(fsMocks.cp).toHaveBeenCalledWith(
       "/external/skills/linked-demo",
-      "/platform/skills/linked-demo",
+      path.join("/platform/skills", "linked-demo"),
       expect.objectContaining({
         recursive: true,
         filter: expect.any(Function),
@@ -280,13 +280,13 @@ describe("skill-installer-platform symlink install", () => {
     );
 
     expect(fsMocks.symlink).toHaveBeenCalledWith(
-      "/prompthub/skills/demo-skill",
-      "/platform/skills/demo-skill",
+      path.normalize("/prompthub/skills/demo-skill"),
+      path.normalize("/platform/skills/demo-skill"),
       "dir",
     );
     expect(fsMocks.cp).toHaveBeenCalledWith(
-      "/prompthub/skills/demo-skill",
-      "/platform/skills/demo-skill",
+      path.normalize("/prompthub/skills/demo-skill"),
+      path.join("/platform/skills", "demo-skill"),
       expect.objectContaining({
         recursive: true,
         filter: expect.any(Function),
@@ -306,15 +306,15 @@ describe("skill-installer-platform symlink install", () => {
       "claude",
     );
 
-    expect(fsMocks.mkdir).toHaveBeenCalledWith("/prompthub/skills/demo-skill", {
+    expect(fsMocks.mkdir).toHaveBeenCalledWith(path.normalize("/prompthub/skills/demo-skill"), {
       recursive: true,
     });
     expect(fsMocks.mkdir).toHaveBeenCalledWith("/platform/skills", {
       recursive: true,
     });
     expect(fsMocks.symlink).toHaveBeenCalledWith(
-      "/prompthub/skills/demo-skill",
-      "/platform/skills/demo-skill",
+      path.normalize("/prompthub/skills/demo-skill"),
+      path.join("/platform/skills", "demo-skill"),
       "dir",
     );
     expect(result).toEqual({
@@ -339,8 +339,8 @@ describe("skill-installer-platform symlink install", () => {
     );
 
     expect(fsMocks.cp).toHaveBeenCalledWith(
-      "/prompthub/skills/demo-skill",
-      "/platform/skills/demo-skill",
+      path.normalize("/prompthub/skills/demo-skill"),
+      path.join("/platform/skills", "demo-skill"),
       expect.objectContaining({
         recursive: true,
         filter: expect.any(Function),
@@ -377,14 +377,14 @@ describe("skill-installer-platform symlink install", () => {
 
     expect(fsMocks.cp).toHaveBeenCalledWith(
       "/prompthub/skills/skill-a",
-      "/platform/skills/writer",
+      path.join("/platform/skills", "writer"),
       expect.objectContaining({
         recursive: true,
         filter: expect.any(Function),
       }),
     );
     expect(fsMocks.writeFile).toHaveBeenCalledWith(
-      "/platform/skills/.prompthub-platform-activations.json",
+      path.join("/platform/skills", ".prompthub-platform-activations.json"),
       expect.stringContaining('"writer"'),
       "utf-8",
     );
@@ -401,11 +401,11 @@ describe("skill-installer-platform symlink install", () => {
 
     expect(fsMocks.symlink).toHaveBeenCalledWith(
       "/prompthub/skills/skill-a",
-      "/platform/skills/writer",
+      path.join("/platform/skills", "writer"),
       "dir",
     );
     expect(fsMocks.writeFile).toHaveBeenCalledWith(
-      "/platform/skills/.prompthub-platform-activations.json",
+      path.join("/platform/skills", ".prompthub-platform-activations.json"),
       expect.stringContaining('"writer"'),
       "utf-8",
     );
@@ -413,16 +413,16 @@ describe("skill-installer-platform symlink install", () => {
 
   it("checks install status using logical platform directory plus activation state", async () => {
     internalMocks.fileExists.mockImplementation(async (target: string) => {
-      if (target === "/platform/skills/writer/SKILL.md") {
+      if (target === path.join("/platform/skills", "writer", "SKILL.md")) {
         return true;
       }
-      if (target === "/platform/skills/.prompthub-platform-activations.json") {
+      if (target === path.join("/platform/skills", ".prompthub-platform-activations.json")) {
         return true;
       }
       return false;
     });
     fsMocks.readFile = vi.fn(async (target: string) => {
-      if (target === "/platform/skills/.prompthub-platform-activations.json") {
+      if (target === path.join("/platform/skills", ".prompthub-platform-activations.json")) {
         return JSON.stringify({
           writer: {
             skillId: "skill-a",
