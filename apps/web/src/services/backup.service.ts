@@ -165,9 +165,9 @@ export class BackupService {
     const includeShared = actor.role === 'admin';
     const rows = this.db
       .prepare(
-        'SELECT id, owner_user_id, visibility FROM prompts WHERE (owner_user_id = ? AND visibility = ?) OR (? = 1 AND visibility = ?) ORDER BY updated_at DESC',
+        'SELECT id, owner_user_id, visibility FROM prompts WHERE owner_user_id = ? OR (? = 1 AND visibility = ?) ORDER BY updated_at DESC',
       )
-      .all(actor.userId, 'private', includeShared ? 1 : 0, 'shared') as PromptRecordRow[];
+      .all(actor.userId, includeShared ? 1 : 0, 'shared') as PromptRecordRow[];
 
     const prompts: Prompt[] = [];
 
@@ -193,9 +193,9 @@ export class BackupService {
     const includeShared = actor.role === 'admin';
     const rows = this.db
       .prepare(
-        'SELECT id, owner_user_id, visibility FROM folders WHERE (owner_user_id = ? AND visibility = ?) OR (? = 1 AND visibility = ?) ORDER BY sort_order ASC',
+        'SELECT id, owner_user_id, visibility FROM folders WHERE owner_user_id = ? OR (? = 1 AND visibility = ?) ORDER BY sort_order ASC',
       )
-      .all(actor.userId, 'private', includeShared ? 1 : 0, 'shared') as FolderRecordRow[];
+      .all(actor.userId, includeShared ? 1 : 0, 'shared') as FolderRecordRow[];
 
     const folders: Folder[] = [];
 
@@ -221,9 +221,9 @@ export class BackupService {
     const includeShared = actor.role === 'admin';
     const rows = this.db
       .prepare(
-        'SELECT id, owner_user_id, visibility FROM skills WHERE (owner_user_id = ? AND visibility = ?) OR (? = 1 AND visibility = ?) ORDER BY updated_at DESC',
+        'SELECT id, owner_user_id, visibility FROM skills WHERE owner_user_id = ? OR (? = 1 AND visibility = ?) ORDER BY updated_at DESC',
       )
-      .all(actor.userId, 'private', includeShared ? 1 : 0, 'shared') as SkillRecordRow[];
+      .all(actor.userId, includeShared ? 1 : 0, 'shared') as SkillRecordRow[];
 
     const skills: Skill[] = [];
 
