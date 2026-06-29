@@ -327,6 +327,7 @@
     "tableVersion": "Version",
     "tableVisibility": "Visibility",
     "tableApproval": "Approval",
+    "tableCategory": "Category",
     "tableCreatedAt": "Created",
     "tableActions": "Actions",
     "tableUsername": "Username",

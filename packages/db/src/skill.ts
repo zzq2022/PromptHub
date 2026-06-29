@@ -68,13 +68,13 @@ interface SkillVersionRow {
   created_at: number;
 }
 
+import type { SkillSortType } from "@prompthub/shared/types";
+
 /**
  * Minimal projection of a skill row used by SkillHub catalog/ownership
  * queries. Only the columns required for visibility/ownership decisions and
  * summary mapping are selected; the rest of the `skills` row is intentionally
  * omitted to keep the surface area small.
- * SkillHub 目录/所有权查询所用的技能行最小投影。仅选取可见性/所有权判定与摘要
- * 映射所需的列，其余列有意省略以保持最小接口面。
  */
 export interface SkillCatalogRow {
   id: string;
@@ -82,6 +82,37 @@ export interface SkillCatalogRow {
   description: string | null;
   owner_user_id: string | null;
   visibility: string | null;
+  registry_slug?: string | null;
+  approval_status?: string | null;
+  star_count?: number;
+  download_count?: number;
+  view_count?: number;
+  featured?: number;
+}
+
+/**
+ * Wider projection for marketplace browsing. Includes author info (from
+ * users JOIN) and engagement counters for the card grid.
+ */
+export interface SkillCatalogMarketplaceRow {
+  id: string;
+  name: string;
+  description: string | null;
+  slug: string | null;
+  owner_user_id: string | null;
+  owner_display_name: string | null;
+  owner_avatar_url: string | null;
+  category: string | null;
+  icon_emoji: string | null;
+  icon_url: string | null;
+  visibility: string | null;
+  star_count: number;
+  download_count: number;
+  view_count: number;
+  trending_score: number;
+  featured: number;
+  updated_at: string | null;
+  created_at: string | null;
 }
 
 function parseJsonArray<T>(value: string | null | undefined): T[] | undefined {
@@ -118,6 +149,16 @@ export class SkillDB {
     }
     const stmt = this.db.prepare("SELECT * FROM skills WHERE source_id = ?");
     const row = stmt.get(normalizedSourceId) as SkillRow | undefined;
+    return row ? this.rowToSkill(row) : null;
+  }
+
+  getByRegistrySlug(registrySlug: string): Skill | null {
+    const normalizedSlug = registrySlug.trim().toLowerCase();
+    if (!normalizedSlug) {
+      return null;
+    }
+    const stmt = this.db.prepare("SELECT * FROM skills WHERE LOWER(registry_slug) = ? AND visibility = 'shared'");
+    const row = stmt.get(normalizedSlug) as SkillRow | undefined;
     return row ? this.rowToSkill(row) : null;
   }
 
@@ -788,11 +829,10 @@ export class SkillDB {
    */
   listPrivateByOwner(ownerUserId: string): SkillCatalogRow[] {
     const stmt = this.db.prepare(
-      `SELECT id, name, description, owner_user_id, visibility, registry_slug
+      `SELECT id, name, description, owner_user_id, visibility, registry_slug, approval_status
        FROM skills
        WHERE owner_user_id IS NOT NULL
          AND owner_user_id = ?
-         AND visibility = 'private'
        ORDER BY name COLLATE NOCASE ASC, id ASC`,
     );
     return stmt.all(ownerUserId) as SkillCatalogRow[];
@@ -806,7 +846,11 @@ export class SkillDB {
    */
   getOwnership(id: string): SkillCatalogRow | null {
     const stmt = this.db.prepare(
-      `SELECT id, name, description, owner_user_id, visibility, registry_slug
+      `SELECT id, name, description, owner_user_id, visibility, registry_slug, approval_status,
+              COALESCE(star_count, 0) AS star_count,
+              COALESCE(download_count, 0) AS download_count,
+              COALESCE(view_count, 0) AS view_count,
+              COALESCE(featured, 0) AS featured
        FROM skills
        WHERE id = ?`,
     );
@@ -1052,6 +1096,60 @@ export class SkillDB {
     };
   }
 
+  /**
+   * Delete a skill and its associated versions by id.
+   * Returns true if a row was deleted, false when the id does not exist.
+   * 删除指定 id 的技能及其关联版本。返回是否有行被删除(id 不存在时返回 false)。
+   */
+  deleteSkill(id: string): boolean {
+    const txn = this.db.transaction(() => {
+      // Delete associated versions first
+      this.db.prepare("DELETE FROM skill_versions WHERE skill_id = ?").run(id);
+      // Then delete the skill itself
+      const result = this.db.prepare("DELETE FROM skills WHERE id = ?").run(id);
+      return result.changes > 0;
+    });
+    return txn();
+  }
+
+  /**
+   * List all skills owned by a specific user, with optional visibility filter.
+   * 列出指定用户拥有的所有技能,可选可见性过滤器。
+   */
+  listByOwner(
+    ownerUserId: string,
+    options?: { visibility?: SkillVisibility; limit?: number; offset?: number },
+  ): { skills: SkillCatalogRow[]; total: number } {
+    const conditions = ["owner_user_id = ?"];
+    const params: any[] = [ownerUserId];
+
+    if (options?.visibility) {
+      conditions.push("visibility = ?");
+      params.push(options.visibility);
+    }
+
+    const where = conditions.join(" AND ");
+
+    const countRow = this.db
+      .prepare(`SELECT COUNT(*) as count FROM skills WHERE ${where}`)
+      .get(...params) as { count: number };
+
+    const limit = options?.limit ?? 20;
+    const offset = options?.offset ?? 0;
+
+    const rows = this.db
+      .prepare(
+        `SELECT id, name, description, owner_user_id, visibility, registry_slug
+         FROM skills
+         WHERE ${where}
+         ORDER BY updated_at DESC, id ASC
+         LIMIT ? OFFSET ?`,
+      )
+      .all(...params, limit, offset) as SkillCatalogRow[];
+
+    return { skills: rows, total: countRow.count };
+  }
+
   private resolveOwnerUserId(ownerUserId: string | null | undefined): string | null {
     if (!ownerUserId) {
       return null;
@@ -1064,5 +1162,260 @@ export class SkillDB {
     } catch {
       return null;
     }
+  }
+
+  // ─── Marketplace Methods ────────────────────────────────────────────────
+
+  /** SQL fragment for the LEFT JOIN to users for author info. */
+  private static readonly AUTHOR_JOIN = `
+    LEFT JOIN users u ON u.id = s.owner_user_id
+  `;
+
+  /** Columns for the marketplace row projection. */
+  private static readonly MARKETPLACE_COLS = `
+    s.id,
+    s.name,
+    s.description,
+    s.registry_slug AS slug,
+    s.owner_user_id,
+    u.username      AS owner_display_name,
+    NULL            AS owner_avatar_url,
+    s.category,
+    s.icon_emoji,
+    s.icon_url,
+    s.visibility,
+    COALESCE(s.star_count, 0)       AS star_count,
+    COALESCE(s.download_count, 0)   AS download_count,
+    COALESCE(s.view_count, 0)       AS view_count,
+    COALESCE(s.trending_score, 0)   AS trending_score,
+    COALESCE(s.featured, 0)         AS featured,
+    s.updated_at,
+    s.created_at
+  `;
+
+  /**
+   * Build the ORDER BY clause for a given sort type.
+   * Only public/visible skills should be passed in.
+   */
+  private sortClause(sort: SkillSortType): string {
+    switch (sort) {
+      case "trending":
+        return "ORDER BY s.trending_score DESC, s.updated_at DESC";
+      case "top":
+        return "ORDER BY s.download_count DESC, s.star_count DESC";
+      case "new":
+        return "ORDER BY s.updated_at DESC, s.created_at DESC";
+      case "most_starred":
+        return "ORDER BY s.star_count DESC, s.download_count DESC";
+      case "featured":
+        return "ORDER BY s.featured DESC, s.trending_score DESC";
+      default:
+        return "ORDER BY s.trending_score DESC, s.updated_at DESC";
+    }
+  }
+
+  /**
+   * List marketplace skills (public/visible only) with sort and optional
+   * category filter. Returns a wider row projection that includes author
+   * info and engagement counters.
+   */
+  listMarketplace(
+    sort: SkillSortType,
+    limit: number,
+    offset: number,
+    category?: string,
+  ): SkillCatalogMarketplaceRow[] {
+    const conditions = ["s.visibility = 'shared'"];
+    const params: any[] = [];
+
+    if (category && category !== "all") {
+      conditions.push("s.category = ?");
+      params.push(category);
+    }
+
+    const where = conditions.join(" AND ");
+    const order = this.sortClause(sort);
+
+    const sql = `
+      SELECT ${SkillDB.MARKETPLACE_COLS}
+      FROM skills s
+      ${SkillDB.AUTHOR_JOIN}
+      WHERE ${where}
+      ${order}
+      LIMIT ? OFFSET ?
+    `;
+
+    return this.db.prepare(sql).all(...params, limit, offset) as SkillCatalogMarketplaceRow[];
+  }
+
+  /**
+   * Count marketplace skills (public/visible only), optionally filtered
+   * by category.
+   */
+  countMarketplace(category?: string): number {
+    const conditions = ["visibility = 'shared'"];
+    const params: any[] = [];
+
+    if (category && category !== "all") {
+      conditions.push("category = ?");
+      params.push(category);
+    }
+
+    const where = conditions.join(" AND ");
+    const row = this.db
+      .prepare(`SELECT COUNT(*) AS count FROM skills WHERE ${where}`)
+      .get(...params) as { count: number };
+
+    return row.count;
+  }
+
+  /**
+   * Increment the download_count for a skill by 1.
+   */
+  incrementDownloadCount(id: string): void {
+    this.db
+      .prepare("UPDATE skills SET download_count = COALESCE(download_count, 0) + 1 WHERE id = ?")
+      .run(id);
+  }
+
+  /**
+   * Increment the view_count for a skill by 1.
+   */
+  incrementViewCount(id: string): void {
+    this.db
+      .prepare("UPDATE skills SET view_count = COALESCE(view_count, 0) + 1 WHERE id = ?")
+      .run(id);
+  }
+
+  /**
+   * Toggle star for a skill. Returns { starred: true } if starred,
+   * { starred: false } if unstarred.
+   */
+  toggleStar(userId: string, skillId: string): { starred: boolean } {
+    const txn = this.db.transaction(() => {
+      const existing = this.db
+        .prepare("SELECT 1 FROM skill_stars WHERE user_id = ? AND skill_id = ?")
+        .get(userId, skillId) as unknown;
+
+      if (existing) {
+        // Un-star
+        this.db
+          .prepare("DELETE FROM skill_stars WHERE user_id = ? AND skill_id = ?")
+          .run(userId, skillId);
+        this.db
+          .prepare(
+            "UPDATE skills SET star_count = MAX(COALESCE(star_count, 1) - 1, 0) WHERE id = ?",
+          )
+          .run(skillId);
+        this.recalculateTrendingScore(skillId);
+        return { starred: false };
+      } else {
+        // Star
+        this.db
+          .prepare(
+            "INSERT INTO skill_stars (user_id, skill_id, created_at) VALUES (?, ?, ?)",
+          )
+          .run(userId, skillId, Math.floor(Date.now() / 1000));
+        this.db
+          .prepare(
+            "UPDATE skills SET star_count = COALESCE(star_count, 0) + 1 WHERE id = ?",
+          )
+          .run(skillId);
+        this.recalculateTrendingScore(skillId);
+        return { starred: true };
+      }
+    });
+
+    return txn();
+  }
+
+  /**
+   * Check if a user has starred a skill.
+   */
+  isStarred(userId: string, skillId: string): boolean {
+    const row = this.db
+      .prepare("SELECT 1 FROM skill_stars WHERE user_id = ? AND skill_id = ?")
+      .get(userId, skillId) as unknown;
+    return !!row;
+  }
+
+  /**
+   * Get aggregate marketplace stats.
+   */
+  getMarketplaceStats(): { totalSkills: number; totalStars: number; totalDownloads: number } {
+    const row = this.db
+      .prepare(
+        `SELECT
+           COUNT(*)                          AS totalSkills,
+           COALESCE(SUM(star_count), 0)      AS totalStars,
+           COALESCE(SUM(download_count), 0)  AS totalDownloads
+         FROM skills
+         WHERE visibility = 'shared'`,
+      )
+      .get() as { totalSkills: number; totalStars: number; totalDownloads: number };
+
+    return row;
+  }
+
+  /**
+   * List featured skills (public, featured=1), ordered by trending_score.
+   */
+  listFeatured(limit: number = 6): SkillCatalogMarketplaceRow[] {
+    const sql = `
+      SELECT ${SkillDB.MARKETPLACE_COLS}
+      FROM skills s
+      ${SkillDB.AUTHOR_JOIN}
+      WHERE s.visibility = 'shared' AND s.featured = 1
+      ORDER BY s.trending_score DESC, s.updated_at DESC
+      LIMIT ?
+    `;
+
+    return this.db.prepare(sql).all(limit) as SkillCatalogMarketplaceRow[];
+  }
+
+  /**
+   * Recalculate trending_score for a single skill.
+   *
+   * Formula: (star_count × 3) + (download_count × 0.1) + (view_count × 0.05) + recency_bonus
+   * recency_bonus: updated within 7d → +50, 30d → +20, 90d → +5, else 0
+   */
+  private recalculateTrendingScore(skillId: string): void {
+    const row = this.db
+      .prepare(
+        `SELECT
+           COALESCE(star_count, 0)     AS star_count,
+           COALESCE(download_count, 0) AS download_count,
+           COALESCE(view_count, 0)     AS view_count,
+           updated_at                  AS updated_at
+         FROM skills
+         WHERE id = ?`,
+      )
+      .get(skillId) as {
+      star_count: number;
+      download_count: number;
+      view_count: number;
+      updated_at: string | null;
+    } | undefined;
+
+    if (!row) return;
+
+    const now = Math.floor(Date.now() / 1000);
+    const updatedAt = row.updated_at ? Math.floor(new Date(row.updated_at).getTime() / 1000) : 0;
+    const ageDays = (now - updatedAt) / 86400;
+
+    let recencyBonus = 0;
+    if (ageDays <= 7) recencyBonus = 50;
+    else if (ageDays <= 30) recencyBonus = 20;
+    else if (ageDays <= 90) recencyBonus = 5;
+
+    const score =
+      row.star_count * 3 +
+      row.download_count * 0.1 +
+      row.view_count * 0.05 +
+      recencyBonus;
+
+    this.db
+      .prepare("UPDATE skills SET trending_score = ? WHERE id = ?")
+      .run(Math.round(score * 100) / 100, skillId);
   }
 }

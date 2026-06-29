@@ -45,9 +45,10 @@ export class SkillAdminService {
     }
 
     const db = getServerDatabase();
-    const skillRow = db.get('SELECT approval_status, visibility FROM skills WHERE id = ?', id) as {
+    const skillRow = db.get('SELECT approval_status, visibility, registry_slug FROM skills WHERE id = ?', id) as {
       approval_status: string | null;
       visibility: string;
+      registry_slug: string | null;
     } | undefined;
 
     if (!skillRow) {
@@ -56,6 +57,16 @@ export class SkillAdminService {
 
     if (skillRow.approval_status !== 'pending') {
       throw new SkillAdminError(400, ErrorCode.VALIDATION_ERROR, 'Skill is not pending review');
+    }
+
+    if (decision === 'approved') {
+      const targetSlug = skillRow.registry_slug;
+      if (targetSlug) {
+        const conflict = this.skillDb.getByRegistrySlug(targetSlug);
+        if (conflict && conflict.id !== id) {
+          throw new SkillAdminError(409, ErrorCode.VALIDATION_ERROR, '公开市场上已存在相同命名空间的技能，审批被拦截。');
+        }
+      }
     }
 
     // Apply the decision

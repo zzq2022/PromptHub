@@ -109,19 +109,41 @@ export class SkillPublisher {
     }
 
     // Check if already pending
+    const db = getServerDatabase();
     const ownership = this.skillDb.getOwnership(id);
     if (ownership) {
       // Check approval_status via direct query since getOwnership doesn't return it
-      const db = getServerDatabase();
       const row = db.get('SELECT approval_status FROM skills WHERE id = ?', id) as { approval_status: string | null } | undefined;
       if (row?.approval_status === 'pending') {
         return { alreadyPending: true };
       }
     }
 
+    const userRow = db.prepare('SELECT username FROM users WHERE id = ?').get(row.owner_user_id) as { username: string } | undefined;
+    const username = userRow?.username || 'system';
+
+    const slugify = (input: string): string => {
+      return input
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+    };
+    const targetSlug = `${username}/${slugify(row.name)}`;
+
+    const conflict = this.skillDb.getByRegistrySlug(targetSlug);
+    if (conflict && conflict.id !== id) {
+      throw new SkillPublisherError(
+        409,
+        ErrorCode.VALIDATION_ERROR,
+        '公开市场上已存在相同命名空间的技能，请修改本地技能名称后再试。'
+      );
+    }
+
     let updated: boolean;
     try {
-      updated = this.skillDb.setApprovalStatus(id, 'pending');
+      db.prepare("UPDATE skills SET approval_status = ?, registry_slug = ? WHERE id = ?")
+        .run('pending', targetSlug, id);
+      updated = true;
     } catch (cause) {
       throw new SkillPublisherError(
         500,

@@ -219,7 +219,7 @@ adminRoutes.get('/skills', (c) => {
   const rows = db.prepare(`
     SELECT s.id, s.name, s.description, s.version, s.author, s.visibility,
            s.approval_status, s.tags, s.created_at, s.updated_at, s.owner_user_id,
-           s.registry_slug,
+           s.registry_slug, s.category,
            u.username as owner_username
     FROM skills s
     LEFT JOIN users u ON s.owner_user_id = u.id
@@ -240,6 +240,7 @@ adminRoutes.get('/skills', (c) => {
     owner_user_id: string | null;
     owner_username: string | null;
     registry_slug: string | null;
+    category: string | null;
   }>;
 
   return success(c, {
@@ -257,6 +258,7 @@ adminRoutes.get('/skills', (c) => {
       createdAt: new Date(r.created_at).toISOString(),
       updatedAt: new Date(r.updated_at).toISOString(),
       registrySlug: r.registry_slug ?? null,
+      category: r.category ?? 'general',
     })),
     total,
     page,
@@ -279,6 +281,7 @@ adminRoutes.put('/skills/:id', async (c) => {
   const body = await c.req.json().catch(() => null) as {
     visibility?: string;
     approvalStatus?: string;
+    category?: string;
   } | null;
 
   if (!body) {
@@ -308,6 +311,15 @@ adminRoutes.put('/skills/:id', async (c) => {
     }
     updates.push('approval_status = ?');
     updateParams.push(body.approvalStatus ?? null);
+  }
+
+  if (body.category !== undefined) {
+    const allowed = ['general', 'office', 'dev', 'ai', 'data', 'management', 'deploy', 'design', 'security', 'meta'];
+    if (!allowed.includes(body.category)) {
+      return error(c, 400, ErrorCode.VALIDATION_ERROR, `category must be one of: ${allowed.join(', ')}`);
+    }
+    updates.push('category = ?');
+    updateParams.push(body.category);
   }
 
   if (updates.length === 0) {

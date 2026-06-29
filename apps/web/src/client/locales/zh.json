@@ -327,6 +327,7 @@
     "tableVersion": "版本",
     "tableVisibility": "可见性",
     "tableApproval": "审核状态",
+    "tableCategory": "分类标签",
     "tableCreatedAt": "创建时间",
     "tableActions": "操作",
     "tableUsername": "用户名",

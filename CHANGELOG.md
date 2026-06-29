@@ -1,5 +1,13 @@
 ## [Unreleased]
 
+### 新功能 / Features
+
+- 🏷️ **管理员技能分类打标签**：管理员后台支持直接编辑管理公开技能的分类标签（分类限制为 10 大合规标签类型），支持 inline-edit 下拉选择即时保存，且提供完美的多语言 i18n 兼容。
+  - **Admin Skill Categorization**: Admins can now manage and assign category tags directly in the admin panel table with an inline-edit dropdown, validating against 10 core category types, with full i18n support.
+- 🔒 **公开技能命名空间与唯一性校验（方案B）**：正式引入公开技能的独立命名空间规范，发布审核时自动生成格式为 `{用户名}/{技能名}` 的唯一 `registry_slug`；数据库增加局部唯一索引限制，提交审核与审批双重强拦截，彻底避免公开市场上重名冲突。
+  - **Public Skill Namespace and Unique Slug (Option B)**: Introduced a namespace standard for public skills, auto-generating `{username}/{skill_name}` as the `registry_slug` upon publish request. Added a database filtered unique index with verification on publish and review phases, preventing duplicate conflicts on the public marketplace.
+
+
 ## [0.7.1] - 2026-06-22
 
 ### 新功能 / Features

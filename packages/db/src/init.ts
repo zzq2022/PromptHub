@@ -44,6 +44,8 @@ const REQUIRED_MIGRATION_NAMES = [
   "server_auth_tables_v1",
   "drop_skill_name_unique_v2",
   "fix_prompt_current_version_v1",
+  "marketplace_v1",
+  "unique_registry_slug_v1",
 ] as const;
 
 const REQUIRED_TABLES = [
@@ -52,6 +54,7 @@ const REQUIRED_TABLES = [
   "refresh_tokens",
   "user_settings",
   "skill_versions",
+  "skill_stars",
   "rules",
   "rule_versions",
 ] as const;
@@ -105,6 +108,11 @@ const REQUIRED_COLUMNS: Record<string, string[]> = {
     "approval_status",
     "owner_user_id",
     "visibility",
+    "star_count",
+    "download_count",
+    "view_count",
+    "trending_score",
+    "featured",
   ],
   users: ["role"],
   refresh_tokens: ["last_active_at"],
@@ -706,6 +714,76 @@ export function initDatabase(
          )`,
       );
       markMigration("fix_prompt_current_version_v1");
+    }
+
+    // ── marketplace_v1: engagement counters + skill_stars ───────────────
+    if (!hasMigration("marketplace_v1")) {
+      console.log("Migrating: Adding marketplace columns and skill_stars table");
+      const skillCols = (
+        db!.pragma("table_info(skills)") as PragmaColumnInfo[]
+      ).map((c) => c.name);
+
+      if (!skillCols.includes("star_count")) {
+        db!.run("ALTER TABLE skills ADD COLUMN star_count INTEGER DEFAULT 0");
+      }
+      if (!skillCols.includes("download_count")) {
+        db!.run("ALTER TABLE skills ADD COLUMN download_count INTEGER DEFAULT 0");
+      }
+      if (!skillCols.includes("view_count")) {
+        db!.run("ALTER TABLE skills ADD COLUMN view_count INTEGER DEFAULT 0");
+      }
+      if (!skillCols.includes("trending_score")) {
+        db!.run("ALTER TABLE skills ADD COLUMN trending_score REAL DEFAULT 0");
+      }
+      if (!skillCols.includes("featured")) {
+        db!.run("ALTER TABLE skills ADD COLUMN featured INTEGER DEFAULT 0");
+      }
+
+      db!.exec(`
+        CREATE TABLE IF NOT EXISTS skill_stars (
+          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          skill_id TEXT NOT NULL REFERENCES skills(id) ON DELETE CASCADE,
+          created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+          PRIMARY KEY (user_id, skill_id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_skill_stars_skill ON skill_stars(skill_id);
+      `);
+
+      markMigration("marketplace_v1");
+    }
+
+    if (!hasMigration("unique_registry_slug_v1")) {
+      console.log("Migrating: Creating unique registry slug index and backfilling slugs");
+      try {
+        const sharedSkills = db!.all(
+          "SELECT s.id, s.name, s.registry_slug, u.username FROM skills s LEFT JOIN users u ON s.owner_user_id = u.id WHERE s.visibility = 'shared'"
+        ) as Array<{ id: string; name: string; registry_slug: string | null; username: string | null }>;
+
+        const slugify = (input: string): string => {
+          return input
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-+|-+$/g, "");
+        };
+
+        for (const skill of sharedSkills) {
+          const username = skill.username || "system";
+          const nameSlug = slugify(skill.name);
+          const targetSlug = `${username}/${nameSlug}`;
+          db!.run("UPDATE skills SET registry_slug = ? WHERE id = ?", targetSlug, skill.id);
+        }
+
+        db!.run(`
+          CREATE UNIQUE INDEX IF NOT EXISTS idx_skills_registry_slug_unique 
+          ON skills(registry_slug) 
+          WHERE visibility = 'shared' AND registry_slug IS NOT NULL AND registry_slug != ''
+        `);
+      } catch (err) {
+        console.error("Failed to run unique_registry_slug_v1 migration:", err);
+        return;
+      }
+
+      markMigration("unique_registry_slug_v1");
     }
   });
 

@@ -8,6 +8,19 @@ import {
   type PaginatedSkills,
 } from '../../api/admin';
 
+const CATEGORY_MAP: Record<string, string> = {
+  general: '🛠️ 通用',
+  office: '📊 办公',
+  dev: '💻 开发',
+  ai: '🤖 AI智能',
+  data: '📈 数据分析',
+  management: '📅 项目管理',
+  deploy: '🚀 运维部署',
+  design: '🎨 设计',
+  security: '🔒 安全',
+  meta: '🧠 元技能',
+};
+
 export function AdminSkillManage() {
   const { t } = useTranslation();
   const [data, setData] = useState<PaginatedSkills | null>(null);
@@ -141,6 +154,7 @@ export function AdminSkillManage() {
                 <th>{t('admin.tableVersion')}</th>
                 <th>{t('admin.tableVisibility')}</th>
                 <th>{t('admin.tableApproval')}</th>
+                <th>{t('admin.tableCategory')}</th>
                 <th>{t('admin.tableCreatedAt')}</th>
                 <th>{t('admin.tableActions')}</th>
               </tr>
@@ -165,6 +179,28 @@ export function AdminSkillManage() {
                     <span className={`admin-badge admin-badge-${skill.approvalStatus ?? 'none'}`}>
                       {skill.approvalStatus ? approvalLabels[skill.approvalStatus] : '—'}
                     </span>
+                  </td>
+                  <td>
+                    <select
+                      className="admin-select"
+                      style={{ fontSize: '0.85rem', padding: '2px 6px', height: 'auto', minWidth: '110px' }}
+                      value={skill.category}
+                      onChange={async (e) => {
+                        const newCat = e.target.value;
+                        setStatusMsg(null);
+                        try {
+                          await updateAdminSkill(skill.id, { category: newCat });
+                          setStatusMsg(t('admin.skillUpdated'));
+                          void load(page);
+                        } catch (err) {
+                          setError(err instanceof Error ? err.message : 'Update failed');
+                        }
+                      }}
+                    >
+                      {Object.entries(CATEGORY_MAP).map(([key, label]) => (
+                        <option key={key} value={key}>{label}</option>
+                      ))}
+                    </select>
                   </td>
                   <td>{new Date(skill.createdAt).toLocaleString()}</td>
                   <td className="admin-table-actions">

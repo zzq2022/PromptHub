@@ -49,6 +49,7 @@ export interface SkillSummary {
   createdAt: string;
   updatedAt: string;
   registrySlug?: string | null;
+  category: string;
 }
 
 export interface PaginatedSkills {
@@ -148,7 +149,7 @@ export async function fetchAdminSkills(
 
 export async function updateAdminSkill(
   skillId: string,
-  updates: { visibility?: 'private' | 'shared'; approvalStatus?: 'pending' | 'approved' | 'rejected' | null },
+  updates: { visibility?: 'private' | 'shared'; approvalStatus?: 'pending' | 'approved' | 'rejected' | null; category?: string },
 ): Promise<{ id: string; updated: boolean }> {
   return apiPut<{ id: string; updated: boolean }>(`/skills/${skillId}`, updates);
 }
