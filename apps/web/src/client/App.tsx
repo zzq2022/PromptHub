@@ -3,7 +3,9 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { useTranslation } from 'react-i18next';
 import { LoginPage } from './pages/Login';
 import { SetupPage } from './pages/Setup';
-import { DesktopWorkspacePage } from './pages/DesktopWorkspace';
+import SkillCatalogPage from './pages/SkillCatalog';
+import { MySkillsPage } from './pages/MySkillsPage';
+import { ConsoleLayout } from './layouts/ConsoleLayout';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import {
   AdminLayout,
@@ -12,7 +14,7 @@ import {
   AdminSkillManage,
   AdminUserManage,
 } from './pages/admin';
-
+ 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, isBootstrapLoading, isInitialized } = useAuth();
   const location = useLocation();
@@ -33,6 +35,21 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function PublicRoute({ children }: { children: React.ReactNode }) {
+  const { isInitialized, isBootstrapLoading } = useAuth();
+  const { t } = useTranslation();
+
+  if (isBootstrapLoading) {
+    return <div className="loading-screen">{t('dashboard.loading')}</div>;
+  }
+
+  if (!isInitialized) {
+    return <Navigate to="/setup" replace />;
+  }
+
+  return <>{children}</>;
+}
+
 function SetupRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isBootstrapLoading, isInitialized } = useAuth();
   const { t } = useTranslation();
@@ -42,7 +59,7 @@ function SetupRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (isInitialized) {
-    return <Navigate to={isAuthenticated ? '/' : '/login'} replace />;
+    return <Navigate to={isAuthenticated ? '/console/skills' : '/login'} replace />;
   }
 
   return <>{children}</>;
@@ -56,16 +73,22 @@ export function App() {
           <Route path="/setup" element={<SetupRoute><SetupPage /></SetupRoute>} />
           <Route path="/login" element={<LoginPage />} />
           <Route
-            path="/admin"
-            element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}
+            path="/console"
+            element={<ProtectedRoute><ConsoleLayout /></ProtectedRoute>}
           >
-            <Route index element={<AdminDashboard />} />
-            <Route path="skills" element={<AdminSkillManage />} />
-            <Route path="skills/review" element={<AdminSkillReview />} />
-            <Route path="users" element={<AdminUserManage />} />
+            <Route index element={<Navigate to="/console/skills" replace />} />
+            <Route path="skills" element={<MySkillsPage />} />
+            <Route path="admin" element={<AdminLayout />}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="skills" element={<AdminSkillManage />} />
+              <Route path="skills/review" element={<AdminSkillReview />} />
+              <Route path="users" element={<AdminUserManage />} />
+            </Route>
           </Route>
-          <Route path="/" element={<ProtectedRoute><DesktopWorkspacePage /></ProtectedRoute>} />
-          <Route path="*" element={<ProtectedRoute><DesktopWorkspacePage /></ProtectedRoute>} />
+          <Route path="/" element={<PublicRoute><SkillCatalogPage /></PublicRoute>} />
+          <Route path="/dashboard" element={<Navigate to="/console/skills" replace />} />
+          <Route path="/workspace" element={<Navigate to="/console/skills" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

@@ -53,6 +53,7 @@ function TestWrapper({
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/" element={<div data-testid="home">Home</div>} />
+          <Route path="/console/skills" element={<div data-testid="dashboard">Dashboard</div>} />
           <Route path="/target" element={<div data-testid="target">Target</div>} />
         </Routes>
       </MemoryRouter>
@@ -70,7 +71,7 @@ describe('LoginPage', () => {
 
   it('redirects if already authenticated', () => {
     render(<TestWrapper isAuthenticated={true} />);
-    expect(screen.getByTestId('home')).toBeTruthy();
+    expect(screen.getByTestId('dashboard')).toBeTruthy();
   });
 
   it('redirects to setup when bootstrap is not initialized', () => {

@@ -17,15 +17,15 @@ export function AdminLayout() {
   }
 
   const navItems = [
-    { to: '/admin', label: t('admin.navDashboard'), end: true },
-    { to: '/admin/skills/review', label: t('admin.navReview') },
-    { to: '/admin/skills', label: t('admin.navSkills') },
-    { to: '/admin/users', label: t('admin.navUsers') },
+    { to: '/console/admin', label: t('admin.navDashboard'), end: true },
+    { to: '/console/admin/skills/review', label: t('admin.navReview') },
+    { to: '/console/admin/skills', label: t('admin.navSkills') },
+    { to: '/console/admin/users', label: t('admin.navUsers') },
   ];
 
   return (
     <div className="admin-layout">
-      <aside className="admin-sidebar">
+      <aside className="admin-sidebar" style={{ top: '64px' }}>
         <div className="admin-sidebar-header">
           <h2 className="admin-sidebar-title">{t('admin.title')}</h2>
         </div>
@@ -44,7 +44,7 @@ export function AdminLayout() {
           ))}
         </nav>
         <div className="admin-sidebar-footer">
-          <NavLink to="/" className="admin-nav-item admin-back-link">
+          <NavLink to="/console/skills" className="admin-nav-item admin-back-link">
             {t('admin.backToApp')}
           </NavLink>
         </div>

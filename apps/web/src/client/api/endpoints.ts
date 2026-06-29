@@ -187,6 +187,52 @@ export async function createSkill(
   );
 }
 
+export async function updateSkill(
+  token: string,
+  id: string,
+  data: Partial<{ name: string; description?: string; content?: string; visibility?: 'private' | 'shared' }>,
+): Promise<ApiEnvelope<Skill>> {
+  return requestJson<Skill>(
+    `/api/skills/${id}`,
+    {
+      method: 'PUT',
+      headers: getAuthHeaders(token, 'application/json'),
+      body: JSON.stringify(data),
+    },
+    'Request failed',
+  );
+}
+
+export async function deleteSkill(
+  token: string,
+  id: string,
+): Promise<ApiEnvelope<{ ok: true }>> {
+  return requestJson<{ ok: true }>(
+    `/api/skills/${id}`,
+    {
+      method: 'DELETE',
+      headers: getAuthHeaders(token),
+    },
+    'Request failed',
+  );
+}
+
+export async function triggerSkillSafetyScan(
+  token: string,
+  id: string,
+  payload?: any,
+): Promise<ApiEnvelope<SkillSafetyReport>> {
+  return requestJson<SkillSafetyReport>(
+    `/api/skills/${id}/safety-scan`,
+    {
+      method: 'POST',
+      headers: getAuthHeaders(token, 'application/json'),
+      body: JSON.stringify(payload ?? {}),
+    },
+    'Request failed',
+  );
+}
+
 export async function fetchSkillVersions(token: string, skillId: string): Promise<ApiEnvelope<SkillVersion[]>> {
   return requestJson<SkillVersion[]>(`/api/skills/${skillId}/versions`, { headers: getAuthHeaders(token) }, 'Request failed');
 }

@@ -1,4 +1,4 @@
-import type { SkillVisibility } from "./skill";
+import type { SkillVisibility, SkillApprovalStatus } from "./skill";
 
 /**
  * SkillHub shared contracts.
@@ -12,7 +12,21 @@ import type { SkillVisibility } from "./skill";
  * (`'private' | 'shared'`) as the single source of truth; it is
  * re-exported here for ergonomic SkillHub imports.
  */
-export type { SkillVisibility };
+export type { SkillVisibility, SkillApprovalStatus };
+
+/**
+ * Sort options for marketplace browsing.
+ */
+export type SkillSortType = "trending" | "top" | "new" | "most_starred" | "featured";
+
+/**
+ * Aggregate marketplace statistics.
+ */
+export interface SkillStats {
+  totalSkills: number;
+  totalStars: number;
+  totalDownloads: number;
+}
 
 /**
  * Public-facing skill summary returned for anonymous browsing/search.
@@ -24,6 +38,24 @@ export interface SkillPublicSummary {
   /** Truncated to <=500 characters; shorter descriptions are kept as-is. */
   description: string;
   slug?: string;
+  /** Author display name (from users table). */
+  authorName?: string;
+  /** Author avatar URL (from users table). */
+  authorAvatar?: string;
+  /** Skill category (matches DB enum: general, dev, office, ai, etc.). */
+  category?: string;
+  /** Emoji icon for the skill. */
+  iconEmoji?: string;
+  /** URL to a custom icon image. */
+  iconUrl?: string;
+  /** Total star/favorite count. */
+  starCount: number;
+  /** Total download count. */
+  downloadCount: number;
+  /** ISO-8601 timestamp of last update. */
+  updatedAt: string;
+  /** Whether the current (authenticated) user has starred this skill. */
+  isStarred?: boolean;
 }
 
 /**
@@ -36,6 +68,7 @@ export interface SkillPrivateSummary {
   description: string;
   visibility: SkillVisibility;
   slug?: string;
+  approvalStatus?: SkillApprovalStatus | null;
 }
 
 /**
@@ -54,6 +87,27 @@ export interface SkillDetail {
   /** Corresponds to Requirements 1.8 / 5.8. */
   skillMdAvailable: boolean;
   slug?: string;
+  approvalStatus?: SkillApprovalStatus | null;
+  /** Author display name (from users table). */
+  authorName?: string;
+  /** Author avatar URL (from users table). */
+  authorAvatar?: string;
+  /** Skill category. */
+  category?: string;
+  /** Emoji icon for the skill. */
+  iconEmoji?: string;
+  /** URL to a custom icon image. */
+  iconUrl?: string;
+  /** Total star/favorite count. */
+  starCount: number;
+  /** Total download count. */
+  downloadCount: number;
+  /** Total view count. */
+  viewCount: number;
+  /** Whether the current (authenticated) user has starred this skill. */
+  isStarred?: boolean;
+  /** Whether this skill is featured by admins. */
+  featured?: boolean;
 }
 
 /**

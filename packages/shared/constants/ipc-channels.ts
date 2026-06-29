@@ -216,6 +216,7 @@ export const IPC_CHANNELS = {
   AGENT_GATEWAY_STOP: "agentGateway:stop",
   AGENT_GATEWAY_STATUS: "agentGateway:status",
   AGENT_GATEWAY_VERIFY_PID: "agentGateway:verifyPid",
+  AGENT_GATEWAY_VERIFY_PORT: "agentGateway:verifyPort",
 
   // Session (REST API pass-through to Agent Gateway)
   AGENT_SESSION_LIST: "agentSession:list",

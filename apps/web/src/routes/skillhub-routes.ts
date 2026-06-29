@@ -25,6 +25,8 @@ import { SkillDownloadService, SkillDownloadError } from '../services/skill-down
 import { SkillPublisher, SkillPublisherError } from '../services/skill-publisher.service.js';
 import { error, success } from '../utils/response.js';
 import type { Actor } from '@prompthub/core/skillhub';
+import type { SkillSortType } from '@prompthub/shared';
+import { SkillHubErrorCode } from '@prompthub/shared';
 
 // ---------------------------------------------------------------------------
 // Service singletons (stateless, safe to reuse across requests)
@@ -44,10 +46,13 @@ const skillhubPublicRoutes = new Hono();
  * GET /public — browse public (shared) skills, paginated.
  * Requirements: 1.1, 2.1, 8.3
  */
-skillhubPublicRoutes.get('/public', (c) => {
+skillhubPublicRoutes.get('/public', optionalAuth(), (c) => {
+  const actor = extractOptionalActor(c);
   const page = Number(c.req.query('page') ?? '1');
+  const sort = (c.req.query('sort') ?? 'trending') as SkillSortType;
+  const category = c.req.query('category') ?? undefined;
   try {
-    return success(c, catalogService.browsePublic(page));
+    return success(c, catalogService.browseMarketplace(sort, category, page, actor?.userId));
   } catch (err) {
     return toCatalogErrorResponse(c, err);
   }
@@ -57,11 +62,37 @@ skillhubPublicRoutes.get('/public', (c) => {
  * GET /public/search — search public skills by name/description substring.
  * Requirements: 1.1, 2.1, 8.3
  */
-skillhubPublicRoutes.get('/public/search', (c) => {
+skillhubPublicRoutes.get('/public/search', optionalAuth(), (c) => {
+  const actor = extractOptionalActor(c);
   const q = c.req.query('q') ?? '';
   const page = Number(c.req.query('page') ?? '1');
+  const sort = (c.req.query('sort') ?? undefined) as SkillSortType | undefined;
+  const category = c.req.query('category') ?? undefined;
   try {
-    return success(c, catalogService.searchPublic(q, page));
+    return success(c, catalogService.searchPublic(q, page, sort, category, actor?.userId));
+  } catch (err) {
+    return toCatalogErrorResponse(c, err);
+  }
+});
+
+/**
+ * GET /public/stats — aggregate marketplace statistics.
+ */
+skillhubPublicRoutes.get('/public/stats', (c) => {
+  try {
+    return success(c, catalogService.getMarketplaceStats());
+  } catch (err) {
+    return toCatalogErrorResponse(c, err);
+  }
+});
+
+/**
+ * GET /public/featured — featured skills for the hero section.
+ */
+skillhubPublicRoutes.get('/public/featured', (c) => {
+  const limit = Number(c.req.query('limit') ?? '6');
+  try {
+    return success(c, catalogService.getFeaturedSkills(limit));
   } catch (err) {
     return toCatalogErrorResponse(c, err);
   }
@@ -71,9 +102,10 @@ skillhubPublicRoutes.get('/public/search', (c) => {
  * GET /public/:id — get public skill detail (name, description, SKILL.md).
  * Requirements: 1.6, 1.8
  */
-skillhubPublicRoutes.get('/public/:id', (c) => {
+skillhubPublicRoutes.get('/public/:id', optionalAuth(), (c) => {
+  const actor = extractOptionalActor(c);
   try {
-    return success(c, catalogService.getPublicDetail(c.req.param('id')));
+    return success(c, catalogService.getPublicDetail(c.req.param('id'), actor?.userId));
   } catch (err) {
     return toCatalogErrorResponse(c, err);
   }
@@ -91,12 +123,40 @@ skillhubPublicRoutes.get('/:id/download', optionalAuth(), (c) => {
   const actor = extractOptionalActor(c);
   try {
     const result = downloadService.download(actor, c.req.param('id'));
+    catalogService.incrementDownload(c.req.param('id'));
     c.header('Content-Type', 'application/zip');
     c.header('Content-Disposition', `attachment; filename="${encodeURIComponent(result.fileName)}"`);
     c.header('Content-Length', String(result.byteLength));
     return c.body(result.body as any);
   } catch (err) {
     return toDownloadErrorResponse(c, err);
+  }
+});
+
+/**
+ * POST /public/:id/star — toggle star on a skill (auth required).
+ */
+skillhubPublicRoutes.post('/public/:id/star', optionalAuth(), (c) => {
+  const actor = extractOptionalActor(c);
+  if (!actor) {
+    return error(c, 401, SkillHubErrorCode.UNAUTHORIZED, 'Authentication required');
+  }
+  try {
+    return success(c, catalogService.starSkill(actor, c.req.param('id')));
+  } catch (err) {
+    return toCatalogErrorResponse(c, err);
+  }
+});
+
+/**
+ * POST /public/:id/view — increment view count (fire-and-forget, no auth required).
+ */
+skillhubPublicRoutes.post('/public/:id/view', (c) => {
+  try {
+    catalogService.incrementView(c.req.param('id'));
+    return success(c, { ok: true });
+  } catch (err) {
+    return toCatalogErrorResponse(c, err);
   }
 });
 
@@ -128,6 +188,30 @@ skillhubPrivateRoutes.post('/:id/publish', (c) => {
     return success(c, publisher.submitForApproval(actor, c.req.param('id')));
   } catch (err) {
     return toPublisherErrorResponse(c, err);
+  }
+});
+
+/**
+ * POST /:id/unpublish — revert a shared skill to private (owner-based authorization).
+ */
+skillhubPrivateRoutes.post('/:id/unpublish', (c) => {
+  const actor = toActor(c);
+  try {
+    return success(c, catalogService.unpublish(actor, c.req.param('id')));
+  } catch (err) {
+    return toCatalogErrorResponse(c, err);
+  }
+});
+
+/**
+ * DELETE /:id — permanently delete a private skill (owner-based authorization).
+ */
+skillhubPrivateRoutes.delete('/:id', (c) => {
+  const actor = toActor(c);
+  try {
+    return success(c, catalogService.deleteSkill(actor, c.req.param('id')));
+  } catch (err) {
+    return toCatalogErrorResponse(c, err);
   }
 });
 

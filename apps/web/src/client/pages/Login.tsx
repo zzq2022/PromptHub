@@ -22,7 +22,7 @@ export function LoginPage() {
   const location = useLocation();
 
   const state = location.state as { from?: { pathname?: string } } | null;
-  const from = state?.from?.pathname || '/';
+  const from = state?.from?.pathname ? state.from.pathname : '/console/skills';
 
   if (isBootstrapLoading) {
     return <div className="loading-screen">{t('dashboard.loading')}</div>;

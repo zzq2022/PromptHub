@@ -1,4 +1,5 @@
 import { SkillDB } from '@prompthub/db';
+import type { SkillCatalogMarketplaceRow } from '@prompthub/db';
 import type { Actor, SkillCatalogRow } from '@prompthub/core';
 import {
   ValidationError,
@@ -18,6 +19,8 @@ import type {
   SkillDetail,
   SkillPrivateSummary,
   SkillPublicSummary,
+  SkillSortType,
+  SkillStats,
   SkillVisibility,
 } from '@prompthub/shared';
 import { SKILLHUB, SkillHubErrorCode } from '@prompthub/shared';
@@ -75,6 +78,119 @@ export class SkillCatalogService {
   }
 
   /**
+   * Browse public skills with marketplace sort, category filtering, and
+   * engagement counters.
+   *
+   * Uses database-level pagination via {@link SkillDB.listMarketplace} and
+   * {@link SkillDB.countMarketplace}, then maps each row to a rich public
+   * summary with author info and engagement metrics.
+   */
+  browseMarketplace(
+    sort: SkillSortType,
+    category: string | undefined,
+    page: number,
+    userId?: string,
+  ): PaginatedResult<SkillPublicSummary> {
+    const safePage = normalizePage(page);
+    const total = this.skillDb.countMarketplace(category);
+    const offset = (safePage - 1) * SKILLHUB.PAGE_SIZE;
+    const rows = this.skillDb.listMarketplace(
+      sort,
+      SKILLHUB.PAGE_SIZE,
+      offset,
+      category,
+    );
+    const items = rows.map((row) => toMarketplaceSummary(row, userId));
+    return buildPagedResult(items, total, safePage, offset);
+  }
+
+  /**
+   * Aggregate marketplace statistics: total public skills, total stars, and
+   * total downloads across all public skills.
+   */
+  getMarketplaceStats(): SkillStats {
+    const totalSkills = this.skillDb.countMarketplace();
+    // Sum stars and downloads across all public skills via a single query.
+    const db = getServerDatabase();
+    const row = db
+      .prepare(
+        `SELECT
+           COALESCE(SUM(star_count), 0)     AS totalStars,
+           COALESCE(SUM(download_count), 0)  AS totalDownloads
+         FROM skills
+         WHERE visibility = 'shared'`,
+      )
+      .get() as { totalStars: number; totalDownloads: number } | undefined;
+    return {
+      totalSkills,
+      totalStars: row?.totalStars ?? 0,
+      totalDownloads: row?.totalDownloads ?? 0,
+    };
+  }
+
+  /**
+   * Toggle star on a skill for the given actor. Returns `{ starred: true }`
+   * when starred, `{ starred: false }` when unstarred.
+   *
+   * Validates the skill id before any mutation (Property 16). Verifies the
+   * skill exists and is public before allowing a star action.
+   */
+  starSkill(
+    actor: Actor | null,
+    skillId: string,
+  ): { starred: boolean } {
+    const authed = requireActor(actor);
+    const validId = this.runValidation(() => validateSkillId(skillId));
+    const row = this.skillDb.getOwnership(validId);
+    if (!row) {
+      throw new SkillCatalogServiceError(
+        404,
+        SkillHubErrorCode.NOT_FOUND,
+        'Skill not found',
+      );
+    }
+    const vis = normalizeVisibility(row.visibility);
+    if (vis === 'private') {
+      throw new SkillCatalogServiceError(
+        404,
+        SkillHubErrorCode.NOT_FOUND,
+        'Skill not found',
+      );
+    }
+    return this.skillDb.toggleStar(authed.userId, validId);
+  }
+
+  /**
+   * Get featured skills for the hero/landing section.
+   * Returns an array of public summaries for skills marked as featured,
+   * ordered by trending score.
+   */
+  getFeaturedSkills(limit: number = 6): SkillPublicSummary[] {
+    const safeLimit = Math.max(1, Math.min(20, Math.trunc(limit)));
+    const rows = this.skillDb.listFeatured(safeLimit);
+    return rows.map((row) => toMarketplaceSummary(row));
+  }
+
+  /**
+   * Increment the view count for a skill (fire-and-forget).
+   * Validates the skill id before any mutation (Property 16).
+   */
+  incrementView(skillId: string): void {
+    const validId = this.runValidation(() => validateSkillId(skillId));
+    this.skillDb.incrementViewCount(validId);
+  }
+
+  /**
+   * Increment the download count for a skill.
+   * Called after a successful download. Validates the skill id before any
+   * mutation (Property 16).
+   */
+  incrementDownload(skillId: string): void {
+    const validId = this.runValidation(() => validateSkillId(skillId));
+    this.skillDb.incrementDownloadCount(validId);
+  }
+
+  /**
    * Search public (shared) skills by a case-insensitive substring of name or
    * description.
    *
@@ -85,11 +201,17 @@ export class SkillCatalogService {
    * in memory via `matchesQuery` to keep case/literal semantics consistent before
    * paginating (Requirements 2.1, 2.2, 2.4, 2.6).
    */
-  searchPublic(rawQuery: string, page: number): PaginatedResult<SkillPublicSummary> {
+  searchPublic(
+    rawQuery: string,
+    page: number,
+    sort?: SkillSortType,
+    category?: string,
+    userId?: string,
+  ): PaginatedResult<SkillPublicSummary> {
     const validated = this.runValidation(() => validateSearchInput(rawQuery));
     const query = normalizeSearchQuery(validated);
     if (query.isEmpty) {
-      return this.browsePublic(page);
+      return this.browseMarketplace(sort ?? 'trending', category, page, userId);
     }
 
     const { pattern, escape } = buildLikePattern(query.term);
@@ -108,7 +230,7 @@ export class SkillCatalogService {
    * read `shared` skills; a `private` skill (or a missing id) is reported as
    * NOT_FOUND so private skills are not leaked (Requirements 1.6, 1.8, 8.1, 8.2).
    */
-  getPublicDetail(id: string): SkillDetail {
+  getPublicDetail(id: string, userId?: string): SkillDetail {
     const validId = this.runValidation(() => validateSkillId(id));
     const row = this.skillDb.getOwnership(validId);
     if (!row) {
@@ -120,7 +242,7 @@ export class SkillCatalogService {
       throw new SkillCatalogServiceError(404, SkillHubErrorCode.NOT_FOUND, 'Skill not found');
     }
 
-    return this.toDetail(row, visibility);
+    return this.toDetail(row, visibility, userId);
   }
 
   /**
@@ -161,12 +283,81 @@ export class SkillCatalogService {
   }
 
   /**
-   * Build a {@link SkillDetail} from an ownership row, reading the on-disk
-   * `SKILL.md`. A missing/unreadable `SKILL.md` yields `skillMd = null` and
-   * `skillMdAvailable = false` rather than failing the request (Req 1.8 / 5.8).
+   * Unpublish a shared skill — revert its visibility to private.
+   * Only the skill owner may perform this action.
+   * 取消发布已共享的技能——将可见性恢复为私有。仅技能所有者可执行此操作。
    */
-  private toDetail(row: SkillCatalogRow, visibility: SkillVisibility): SkillDetail {
+  unpublish(actor: Actor | null, id: string): { ok: boolean } {
+    const authed = requireActor(actor);
+    const validId = this.runValidation(() => validateSkillId(id));
+    const row = this.skillDb.getOwnership(validId);
+    if (!row) {
+      throw new SkillCatalogServiceError(404, SkillHubErrorCode.NOT_FOUND, 'Skill not found');
+    }
+    if (row.owner_user_id !== authed.userId) {
+      throw new SkillCatalogServiceError(403, SkillHubErrorCode.FORBIDDEN, 'Not the skill owner');
+    }
+    const ok = this.skillDb.setVisibility(validId, 'private');
+    return { ok };
+  }
+
+  /**
+   * Delete a private skill permanently. Shared skills cannot be deleted —
+   * they must be unpublished first.
+   * 永久删除一个私有技能。已共享的技能不能直接删除——需先取消发布。
+   */
+  deleteSkill(actor: Actor | null, id: string): { deleted: boolean } {
+    const authed = requireActor(actor);
+    const validId = this.runValidation(() => validateSkillId(id));
+    const row = this.skillDb.getOwnership(validId);
+    if (!row) {
+      throw new SkillCatalogServiceError(404, SkillHubErrorCode.NOT_FOUND, 'Skill not found');
+    }
+    if (row.owner_user_id !== authed.userId) {
+      throw new SkillCatalogServiceError(403, SkillHubErrorCode.FORBIDDEN, 'Not the skill owner');
+    }
+    const visibility = normalizeVisibility(row.visibility);
+    if (visibility === 'shared') {
+      throw new SkillCatalogServiceError(
+        409,
+        SkillHubErrorCode.VALIDATION_ERROR,
+        'Cannot delete a shared skill. Unpublish it first.',
+      );
+    }
+    const deleted = this.skillDb.deleteSkill(validId);
+    return { deleted };
+  }
+
+  /**
+   * Map a wider marketplace row to the public summary contract.
+   */
+  private toMarketplaceSummary(row: SkillCatalogMarketplaceRow, userId?: string): SkillPublicSummary {
+    const isStarred = userId ? this.skillDb.isStarred(userId, row.id) : undefined;
+    return {
+      id: row.id,
+      name: row.name,
+      description: (row.description ?? '').slice(0, 500),
+      slug: row.slug ?? undefined,
+      authorName: row.owner_display_name ?? undefined,
+      authorAvatar: row.owner_avatar_url ?? undefined,
+      category: row.category ?? undefined,
+      iconEmoji: row.icon_emoji ?? undefined,
+      iconUrl: row.icon_url ?? undefined,
+      starCount: row.star_count ?? 0,
+      downloadCount: row.download_count ?? 0,
+      updatedAt: row.updated_at ?? row.created_at ?? new Date().toISOString(),
+      isStarred,
+    };
+  }
+
+  private toDetail(row: SkillCatalogRow, visibility: SkillVisibility, userId?: string): SkillDetail {
     const skillMd = readSkillMarkdownById(row.id);
+    const starCount = row.star_count ?? 0;
+    const downloadCount = row.download_count ?? 0;
+    const viewCount = row.view_count ?? 0;
+    const isStarred = userId ? this.skillDb.isStarred(userId, row.id) : false;
+    const featured = row.featured === 1;
+
     return {
       id: row.id,
       name: row.name,
@@ -176,6 +367,12 @@ export class SkillCatalogService {
       skillMd,
       skillMdAvailable: skillMd !== null,
       slug: row.registry_slug ?? undefined,
+      approvalStatus: (row.approval_status as any) || undefined,
+      starCount,
+      downloadCount,
+      viewCount,
+      isStarred,
+      featured,
     };
   }
 
@@ -197,6 +394,34 @@ export class SkillCatalogService {
       throw err;
     }
   }
+}
+
+/** Convert a marketplace row to a rich public summary with engagement counters. */
+function toMarketplaceSummary(
+  row: SkillCatalogMarketplaceRow,
+  userId?: string,
+): SkillPublicSummary {
+  return {
+    id: row.id,
+    name: row.name,
+    description: truncateDescription(row.description),
+    slug: row.slug ?? undefined,
+    authorName: row.owner_display_name ?? undefined,
+    authorAvatar: row.owner_avatar_url ?? undefined,
+    category: row.category ?? undefined,
+    iconEmoji: row.icon_emoji ?? undefined,
+    iconUrl: row.icon_url ?? undefined,
+    starCount: row.star_count,
+    downloadCount: row.download_count,
+    updatedAt: row.updated_at ?? new Date(0).toISOString(),
+    isStarred: userId ? undefined : undefined, // TODO: batch-star check
+  };
+}
+
+/** Truncate description to a max length for summary display. */
+function truncateDescription(desc: string | null, maxLen = 500): string {
+  if (!desc) return '';
+  return desc.length > maxLen ? desc.slice(0, maxLen) + '…' : desc;
 }
 
 /** Normalize a 1-based page number to a finite integer >= 1 (matches `paginate`). */

@@ -31,4 +31,9 @@ export interface SkillCatalogRow {
   owner_user_id: string | null;
   visibility: string | null;
   registry_slug?: string | null;
+  approval_status?: string | null;
+  star_count?: number;
+  download_count?: number;
+  view_count?: number;
+  featured?: number;
 }

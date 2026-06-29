@@ -346,11 +346,7 @@ export class SkillDownloadService {
 
         // 读取为原始字节，避免对二进制内容做文本转换（需求 3.8 往返一致）。
         const contents = fs.readFileSync(absolutePath);
-        zipInput[entry.relativePath] = new Uint8Array(
-          contents.buffer,
-          contents.byteOffset,
-          contents.byteLength,
-        );
+        zipInput[entry.relativePath] = new Uint8Array(contents);
       }
 
       return zipSync(zipInput);

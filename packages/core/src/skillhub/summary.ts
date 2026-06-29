@@ -51,6 +51,9 @@ export function toPublicSummary(row: SkillCatalogRow): SkillPublicSummary {
     name: row.name,
     description: truncateDescription(row.description),
     slug: row.registry_slug ?? undefined,
+    starCount: 0,
+    downloadCount: 0,
+    updatedAt: new Date(0).toISOString(),
   };
 }
 
@@ -68,5 +71,6 @@ export function toPrivateSummary(row: SkillCatalogRow): SkillPrivateSummary {
     description: truncateDescription(row.description),
     visibility: normalizeVisibility(row.visibility),
     slug: row.registry_slug ?? undefined,
+    approvalStatus: (row.approval_status as any) || undefined,
   };
 }
