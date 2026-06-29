@@ -1,14 +1,14 @@
 {
   "id": "fbe04ea9-2d63-471e-96c4-513b0e186e03",
   "ownerUserId": "96dda1e7-fa8d-4d30-bfe8-3e80d273097c",
-  "visibility": "shared",
+  "visibility": "private",
   "name": "autoplan",
   "description": "|",
   "protocol_type": "skill",
   "version": "1.0.0",
   "author": "User",
   "source_url": null,
-  "local_repo_path": null,
+  "local_repo_path": "C:\\Users\\Administrator\\AppData\\Roaming\\PromptHub\\users\\zzq02\\data\\skills\\autoplan--33a80365\\repo",
   "tags": [],
   "original_tags": [],
   "is_favorite": false,
@@ -25,6 +25,6 @@
   "compatibility": [],
   "mcp_config": null,
   "safetyReport": null,
-  "created_at": 1781960014260,
-  "updated_at": 1781961446281
+  "created_at": 1782725072918,
+  "updated_at": 1782729890161
 }

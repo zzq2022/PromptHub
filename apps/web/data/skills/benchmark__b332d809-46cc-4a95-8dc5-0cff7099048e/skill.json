@@ -19,12 +19,12 @@
   "icon_background": null,
   "category": "general",
   "is_builtin": false,
-  "registry_slug": null,
+  "registry_slug": "zzq02/benchmark",
   "content_url": null,
   "prerequisites": [],
   "compatibility": [],
   "mcp_config": null,
   "safetyReport": null,
-  "created_at": 1782622842883,
-  "updated_at": 1782624043139
+  "created_at": 1782725072797,
+  "updated_at": 1782729890234
 }

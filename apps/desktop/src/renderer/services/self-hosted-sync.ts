@@ -542,7 +542,23 @@ function mergeDesktopBackupWithRemote(
     (skill) => skill.id,
     (skill) => skill.updated_at,
   );
-  const mergedSkillIds = new Set(normalizedSkills.map((skill) => skill.id));
+
+  const deDuplicatedSkills: Skill[] = [];
+  const seenSharedSlugs = new Set<string>();
+  // Sort so that the latest updated skill is kept first during de-duplication
+  const sortedSkills = [...normalizedSkills].sort((a, b) => toTimestamp(b.updated_at) - toTimestamp(a.updated_at));
+  for (const skill of sortedSkills) {
+    const slug = skill.registry_slug?.trim().toLowerCase();
+    if (skill.visibility === "shared" && slug) {
+      if (seenSharedSlugs.has(slug)) {
+        continue;
+      }
+      seenSharedSlugs.add(slug);
+    }
+    deDuplicatedSkills.push(skill);
+  }
+
+  const mergedSkillIds = new Set(deDuplicatedSkills.map((skill) => skill.id));
   const normalizedSkillVersions = mergeSkillVersions(
     localBackup.skillVersions || [],
     payload.skillVersions,
@@ -567,7 +583,7 @@ function mergeDesktopBackupWithRemote(
       (rule) => rule.id,
       (rule) => rule.versions[0]?.savedAt || 0,
     ),
-    skills: normalizedSkills,
+    skills: deDuplicatedSkills,
     skillVersions: normalizedSkillVersions,
     skillFiles: mergeSkillFileMaps(localBackup.skillFiles, payload.skillFiles),
   };

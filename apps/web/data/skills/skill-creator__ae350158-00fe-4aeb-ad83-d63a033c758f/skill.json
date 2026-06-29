@@ -1,7 +1,7 @@
 {
   "id": "ae350158-00fe-4aeb-ad83-d63a033c758f",
   "ownerUserId": "96dda1e7-fa8d-4d30-bfe8-3e80d273097c",
-  "visibility": "shared",
+  "visibility": "private",
   "name": "skill-creator",
   "description": "Guide for creating effective skills. This skill should be used when users want to create a new skill (or update an existing skill) that extends Claude's capabilities with specialized knowledge, workflows, or tool integrations.",
   "protocol_type": "skill",
@@ -25,6 +25,6 @@
   "compatibility": [],
   "mcp_config": null,
   "safetyReport": null,
-  "created_at": 1781957865838,
-  "updated_at": 1781961446260
+  "created_at": 1782725072943,
+  "updated_at": 1782729890154
 }

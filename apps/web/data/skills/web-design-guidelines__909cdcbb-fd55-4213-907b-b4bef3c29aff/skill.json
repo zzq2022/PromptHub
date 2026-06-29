@@ -1,14 +1,14 @@
 {
   "id": "909cdcbb-fd55-4213-907b-b4bef3c29aff",
   "ownerUserId": "96dda1e7-fa8d-4d30-bfe8-3e80d273097c",
-  "visibility": "shared",
+  "visibility": "private",
   "name": "web-design-guidelines",
   "description": "Review UI code for Web Interface Guidelines compliance. Use when asked to \"review my UI\", \"check accessibility\", \"audit design\", \"review UX\", or \"check my site against best practices\".",
   "protocol_type": "skill",
   "version": "1.0.0",
   "author": "vercel-labs",
   "source_url": null,
-  "local_repo_path": null,
+  "local_repo_path": "C:\\Users\\Administrator\\AppData\\Roaming\\PromptHub\\users\\zzq02\\data\\skills\\web-design-guidelines--67828ceb\\repo",
   "tags": [],
   "original_tags": [],
   "is_favorite": false,
@@ -25,6 +25,6 @@
   "compatibility": [],
   "mcp_config": null,
   "safetyReport": null,
-  "created_at": 1782119141241,
-  "updated_at": 1782119192580
+  "created_at": 1782725072871,
+  "updated_at": 1782729890198
 }

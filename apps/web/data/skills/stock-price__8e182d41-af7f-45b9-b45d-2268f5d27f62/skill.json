@@ -19,12 +19,12 @@
   "icon_background": null,
   "category": "general",
   "is_builtin": false,
-  "registry_slug": null,
+  "registry_slug": "zzq02/stock-price",
   "content_url": null,
   "prerequisites": [],
   "compatibility": [],
   "mcp_config": null,
   "safetyReport": null,
-  "created_at": 1782622842893,
-  "updated_at": 1782624043127
+  "created_at": 1782725072773,
+  "updated_at": 1782729890245
 }

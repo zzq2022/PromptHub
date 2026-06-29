@@ -1,7 +1,7 @@
 {
   "id": "0cac723b-f856-41d0-ac1d-70c3a370aa50",
   "ownerUserId": "96dda1e7-fa8d-4d30-bfe8-3e80d273097c",
-  "visibility": "shared",
+  "visibility": "private",
   "name": "agent-browser",
   "description": "Browser automation CLI for AI agents. Use when the user needs to interact with websites, including navigating pages, filling forms, clicking buttons, taking screenshots, extracting data, testing web apps, or automating any browser task. Triggers include requests to \"open a website\", \"fill out a form\", \"click a button\", \"take a screenshot\", \"scrape data from a page\", \"test this web app\", \"login to a site\", \"automate browser actions\", or any task requiring programmatic web interaction.",
   "protocol_type": "skill",
@@ -25,6 +25,6 @@
   "compatibility": [],
   "mcp_config": null,
   "safetyReport": null,
-  "created_at": 1781948876270,
-  "updated_at": 1781961446301
+  "created_at": 1782725072899,
+  "updated_at": 1782729890179
 }

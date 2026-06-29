@@ -19,12 +19,12 @@
   "icon_background": null,
   "category": "general",
   "is_builtin": true,
-  "registry_slug": "27afc455-f07e-4a79-87e6-86039251f4e2",
+  "registry_slug": "zzq02/design-review",
   "content_url": "http://localhost:3000/api/skillhub/public/27afc455-f07e-4a79-87e6-86039251f4e2",
   "prerequisites": [],
   "compatibility": [],
   "mcp_config": null,
   "safetyReport": null,
-  "created_at": 1782622842825,
-  "updated_at": 1782624043179
+  "created_at": 1782725072758,
+  "updated_at": 1782729890257
 }

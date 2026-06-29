@@ -1,7 +1,7 @@
 {
   "id": "f0bd4bb3-0e0f-4a82-aef0-c2b084562cf4",
   "ownerUserId": "96dda1e7-fa8d-4d30-bfe8-3e80d273097c",
-  "visibility": "shared",
+  "visibility": "private",
   "name": "frontend-design",
   "description": "Create new skills, modify and improve existing skills, and measure skill performance. Use when users want to create a skill from scratch, edit, or optimize an existing skill, run evals to test a skill, benchmark skill performance with variance analysis, or optimize a skill's description for better triggering accuracy.",
   "protocol_type": "skill",
@@ -36,6 +36,6 @@
   ],
   "mcp_config": null,
   "safetyReport": null,
-  "created_at": 1781957865884,
-  "updated_at": 1781961446269
+  "created_at": 1782725072932,
+  "updated_at": 1782729890167
 }

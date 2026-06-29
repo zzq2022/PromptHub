@@ -696,7 +696,21 @@ export async function importDatabase(backup: DatabaseBackup): Promise<void> {
   }
 
   if (normalizedBackup.skills && normalizedBackup.skills.length > 0) {
+    const uniqueSkills: Skill[] = [];
+    const seenSharedSlugs = new Set<string>();
     for (const skill of normalizedBackup.skills) {
+      const slug = skill.registry_slug?.trim().toLowerCase();
+      if (skill.visibility === "shared" && slug) {
+        if (seenSharedSlugs.has(slug)) {
+          console.warn(`Skipping duplicate shared registry_slug during restore: ${slug}`);
+          continue;
+        }
+        seenSharedSlugs.add(slug);
+      }
+      uniqueSkills.push(skill);
+    }
+
+    for (const skill of uniqueSkills) {
       if (!skill.name || typeof skill.name !== "string" || !skill.name.trim()) {
         console.warn("Skipping skill from backup with missing name:", skill.id);
         continue;

@@ -1,14 +1,14 @@
 {
   "id": "47e38cf8-4b09-4132-80be-6b3675cfdade",
   "ownerUserId": "96dda1e7-fa8d-4d30-bfe8-3e80d273097c",
-  "visibility": "shared",
+  "visibility": "private",
   "name": "caveman",
   "description": ">",
   "protocol_type": "skill",
   "version": "1.0.0",
   "author": "User",
   "source_url": null,
-  "local_repo_path": null,
+  "local_repo_path": "C:\\Users\\Administrator\\AppData\\Roaming\\PromptHub\\users\\zzq02\\data\\skills\\caveman--db55fc2f\\repo",
   "tags": [],
   "original_tags": [],
   "is_favorite": false,
@@ -25,6 +25,6 @@
   "compatibility": [],
   "mcp_config": null,
   "safetyReport": null,
-  "created_at": 1782654845554,
-  "updated_at": 1782718233871
+  "created_at": 1782725072852,
+  "updated_at": 1782729890209
 }

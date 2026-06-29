@@ -1,7 +1,7 @@
 {
   "id": "59a18318-2ad4-4058-894b-126ed5dedb58",
   "ownerUserId": "96dda1e7-fa8d-4d30-bfe8-3e80d273097c",
-  "visibility": "shared",
+  "visibility": "private",
   "name": "query-writing",
   "description": "Write and execute SQL queries to answer user questions about the database",
   "protocol_type": "skill",
@@ -25,6 +25,6 @@
   "compatibility": [],
   "mcp_config": null,
   "safetyReport": null,
-  "created_at": 1781957865819,
-  "updated_at": 1781961446232
+  "created_at": 1782725072962,
+  "updated_at": 1782729890143
 }

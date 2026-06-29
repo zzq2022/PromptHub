@@ -1,7 +1,7 @@
 {
   "id": "a3801d6c-a707-4682-b723-64e46247a00e",
   "ownerUserId": "96dda1e7-fa8d-4d30-bfe8-3e80d273097c",
-  "visibility": "shared",
+  "visibility": "private",
   "name": "excalidraw-diagram",
   "description": "Generate Excalidraw diagrams from text content for Obsidian. Use when user asks to create diagrams, flowcharts, mind maps, or visual representations in Excalidraw format. Triggers on \"Excalidraw\", \"画图\", \"流程图\", \"思维导图\", \"可视化\", \"diagram\".",
   "protocol_type": "skill",
@@ -25,6 +25,6 @@
   "compatibility": [],
   "mcp_config": null,
   "safetyReport": null,
-  "created_at": 1781957865810,
-  "updated_at": 1781961446246
+  "created_at": 1782725072953,
+  "updated_at": 1782729890148
 }

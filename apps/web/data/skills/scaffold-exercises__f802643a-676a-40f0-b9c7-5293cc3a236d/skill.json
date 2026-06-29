@@ -1,14 +1,14 @@
 {
   "id": "f802643a-676a-40f0-b9c7-5293cc3a236d",
   "ownerUserId": "96dda1e7-fa8d-4d30-bfe8-3e80d273097c",
-  "visibility": "shared",
+  "visibility": "private",
   "name": "scaffold-exercises",
   "description": "Create exercise directory structures with sections, problems, solutions, and explainers that pass linting. Use when user wants to scaffold exercises, create exercise stubs, or set up a new course section.",
   "protocol_type": "skill",
   "version": "1.0.0",
   "author": "User",
   "source_url": null,
-  "local_repo_path": null,
+  "local_repo_path": "C:\\Users\\Administrator\\AppData\\Roaming\\PromptHub\\users\\zzq02\\data\\skills\\scaffold-exercises--56a0dfd3\\repo",
   "tags": [],
   "original_tags": [],
   "is_favorite": false,
@@ -25,6 +25,6 @@
   "compatibility": [],
   "mcp_config": null,
   "safetyReport": null,
-  "created_at": 1781960015784,
-  "updated_at": 1781961446293
+  "created_at": 1782725072907,
+  "updated_at": 1782729890174
 }

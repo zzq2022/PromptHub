@@ -136,7 +136,20 @@ export class BackupService {
 
     this.mergePromptVersions(payload);
 
+    const uniqueSkills: Skill[] = [];
+    const seenSharedSlugs = new Set<string>();
     for (const skill of payload.skills) {
+      const slug = skill.registry_slug?.trim().toLowerCase();
+      if (skill.visibility === 'shared' && slug) {
+        if (seenSharedSlugs.has(slug)) {
+          continue;
+        }
+        seenSharedSlugs.add(slug);
+      }
+      uniqueSkills.push(skill);
+    }
+
+    for (const skill of uniqueSkills) {
       if (this.mergeSkill(actor, skill)) {
         skillsImported += 1;
       }
