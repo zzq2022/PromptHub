@@ -12,6 +12,7 @@ import { usePromptStore } from "./stores/prompt.store";
 import { useFolderStore } from "./stores/folder.store";
 import { useSettingsStore } from "./stores/settings.store";
 import { useUIStore } from "./stores/ui.store";
+import { useSkillStore } from "./stores/skill.store";
 import {
   getRenderedBackgroundImageBlur,
   getRenderedBackgroundImageOpacity,
@@ -89,6 +90,21 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const { showToast } = useToast();
   const backupImportController = useBackupImportController();
+
+  const selectSkill = useSkillStore((state) => state.selectSkill);
+  const setAppModule = useUIStore((state) => state.setAppModule);
+
+  useEffect(() => {
+    if (isWebRuntime()) {
+      setAppModule("skill");
+    }
+    const params = new URLSearchParams(window.location.search);
+    const skillId = params.get("skillId");
+    if (skillId) {
+      selectSkill(skillId);
+      setAppModule("skill");
+    }
+  }, [selectSkill, setAppModule]);
 
   const clipboardImportEnabled = useSettingsStore(
     (state) => state.clipboardImportEnabled,

@@ -2,7 +2,7 @@
  * AgentSessionList — Middle column showing Agent sessions.
  */
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   PlusIcon,
@@ -13,6 +13,7 @@ import {
   RefreshCwIcon,
 } from "lucide-react";
 import type { SkillProject, AgentSessionInfo } from "@prompthub/shared/types";
+import { useSettingsStore } from "../../stores/settings.store";
 
 interface AgentSessionListProps {
   project: SkillProject;
@@ -21,6 +22,7 @@ interface AgentSessionListProps {
   onNewChat: () => void;
   retryDelayMs?: number;
   maxRetryCount?: number;
+  refreshTrigger?: number;
 }
 
 function formatSessionTime(ts: number): string {
@@ -45,6 +47,7 @@ export function AgentSessionList({
   onNewChat,
   retryDelayMs = 1500,
   maxRetryCount = 20,
+  refreshTrigger,
 }: AgentSessionListProps) {
   const { t } = useTranslation();
   const [sessions, setSessions] = useState<AgentSessionInfo[]>([]);
@@ -97,6 +100,13 @@ export function AgentSessionList({
             : t("agentProject.sessionLoadFailed"),
         );
         setLoading(false);
+
+        // If gateway is unreachable after max retries, clear the stale gateway state
+        if (isConnectionError) {
+          console.warn(`[AgentSessionList] Gateway on port ${project.gatewayPort} is unreachable. Clearing stale gateway state.`);
+          const updateAgentGateway = useSettingsStore.getState().updateAgentGateway;
+          updateAgentGateway(project.id, null);
+        }
       }
     }
   }, [project.gatewayPort, t, retryDelayMs, maxRetryCount]);
@@ -111,7 +121,23 @@ export function AgentSessionList({
         clearTimeout(retryTimeoutRef.current);
       }
     };
-  }, [project.id, project.gatewayPort, fetchSessions]);
+  }, [project.id, project.gatewayPort, fetchSessions, refreshTrigger]);
+
+  const displaySessions = useMemo(() => {
+    if (!activeSessionId) return sessions;
+    const exists = sessions.some((s) => s.session_id === activeSessionId);
+    if (exists) return sessions;
+    return [
+      {
+        session_id: activeSessionId,
+        title: activeSessionId,
+        created_at: Math.floor(Date.now() / 1000),
+        updated_at: Math.floor(Date.now() / 1000),
+        message_count: 0,
+      },
+      ...sessions,
+    ];
+  }, [sessions, activeSessionId]);
 
   const handleDeleteSession = useCallback(
     async (sessionKey: string, e: React.MouseEvent) => {
@@ -154,7 +180,7 @@ export function AgentSessionList({
 
       {/* Session list */}
       <div className="flex-1 overflow-y-auto">
-        {loading && sessions.length === 0 ? (
+        {loading && displaySessions.length === 0 ? (
           <div className="flex items-center justify-center py-8">
             <Loader2Icon className="h-5 w-5 animate-spin text-muted-foreground" />
           </div>
@@ -167,7 +193,7 @@ export function AgentSessionList({
           </div>
         ) : error ? (
           <div className="p-3 text-xs text-red-500">{error}</div>
-        ) : sessions.length === 0 ? (
+        ) : displaySessions.length === 0 ? (
           <div className="p-4 text-center">
             <MessageSquareIcon className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
             <p className="text-xs text-muted-foreground">
@@ -176,7 +202,7 @@ export function AgentSessionList({
           </div>
         ) : (
           <div className="p-1.5">
-            {sessions.map((session) => {
+            {displaySessions.map((session) => {
               const isActive = session.session_id === activeSessionId;
               const title = session.title || session.session_id;
               const timeStr = formatSessionTime(

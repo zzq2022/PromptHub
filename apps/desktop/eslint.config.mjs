@@ -45,6 +45,7 @@ export default [
       "coverage/**",
       "website/**",
       "src/renderer/out/**",
+      "resources/agent-venv/**",
       "**/*.d.ts",
       "**/*.js",
       "*.tsbuildinfo",

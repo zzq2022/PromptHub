@@ -1,5 +1,15 @@
 [
   {
+    "id": "e9ec3047-4da9-4122-9aab-cfe59671aafd",
+    "type": "browser",
+    "name": "Google Chrome",
+    "platform": "Windows",
+    "clientVersion": "self-hosted-web",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",
+    "firstSeenAt": "2026-06-19T14:18:52.233Z",
+    "lastSeenAt": "2026-06-28T12:29:43.295Z"
+  },
+  {
     "id": "229ae642-b2f1-4199-87f6-7e34a9e359b4",
     "type": "browser",
     "name": "Microsoft Edge",
@@ -7,7 +17,17 @@
     "clientVersion": "self-hosted-web",
     "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0",
     "firstSeenAt": "2026-06-16T13:18:31.146Z",
-    "lastSeenAt": "2026-06-24T12:41:46.582Z"
+    "lastSeenAt": "2026-06-28T05:05:09.791Z"
+  },
+  {
+    "id": "548923ff-0614-46f7-baec-073bd962e2c4",
+    "type": "browser",
+    "name": "Microsoft Edge",
+    "platform": "Windows",
+    "clientVersion": "self-hosted-web",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0",
+    "firstSeenAt": "2026-06-28T05:02:04.825Z",
+    "lastSeenAt": "2026-06-28T05:02:04.825Z"
   },
   {
     "id": "3994cd7f-577a-4aa5-bbf6-bb1175d24e2a",
@@ -28,15 +48,5 @@
     "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
     "firstSeenAt": "2026-06-20T12:48:01.284Z",
     "lastSeenAt": "2026-06-20T14:42:29.161Z"
-  },
-  {
-    "id": "e9ec3047-4da9-4122-9aab-cfe59671aafd",
-    "type": "browser",
-    "name": "Google Chrome",
-    "platform": "Windows",
-    "clientVersion": "self-hosted-web",
-    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",
-    "firstSeenAt": "2026-06-19T14:18:52.233Z",
-    "lastSeenAt": "2026-06-19T14:19:50.045Z"
   }
 ]

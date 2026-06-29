@@ -14,7 +14,7 @@ import type {
 } from "@prompthub/shared/types";
 
 interface ManagedProcess {
-  child: ChildProcess;
+  child?: ChildProcess;
   port: number;
   pid: number;
 }
@@ -93,6 +93,43 @@ async function waitForGatewayReady(url: string, timeoutMs: number): Promise<void
  * become healthy within `GATEWAY_HEALTH_TIMEOUT_MS`, the child process is
  * killed and an error is thrown.
  */
+function normalizePath(p: string): string {
+  return path.resolve(p).toLowerCase().replace(/[\\/]+/g, "/").replace(/\/$/, "");
+}
+
+interface HealthCheckResult {
+  isRunning: boolean;
+  workspace?: string;
+  pid?: number;
+}
+
+async function checkPortHealth(port: number): Promise<HealthCheckResult> {
+  try {
+    const resp = await fetch(`http://127.0.0.1:${port}/api/health`, {
+      signal: AbortSignal.timeout(1000),
+    });
+    if (resp.ok) {
+      try {
+        const data = await resp.json() as any;
+        if (data && data.status === "ok") {
+          return {
+            isRunning: true,
+            workspace: data.workspace,
+            pid: data.pid,
+          };
+        }
+      } catch {
+        // Not a JSON response, but the port is active
+        return { isRunning: true };
+      }
+    }
+    // Responded, but not successful or not our API
+    return { isRunning: true };
+  } catch {
+    return { isRunning: false };
+  }
+}
+
 export async function startAgentGateway(
   projectRootPath: string,
   resourcesPath: string,
@@ -105,6 +142,8 @@ export async function startAgentGateway(
     return { port: existing.port, pid: existing.pid };
   }
 
+  const normProjectRoot = normalizePath(projectRootPath);
+
   const pythonPath = findAgentPython(resourcesPath);
 
   // Always venv — compute paths from the venv location
@@ -115,8 +154,58 @@ export async function startAgentGateway(
     "site-packages",
   );
 
-  const port = existingPort ?? nextPort++;
-  const gatewayScript = path.join(projectRootPath, "run_gateway.py");
+  let port = existingPort;
+  const configPath = path.join(projectRootPath, "config.json");
+  if (fs.existsSync(configPath)) {
+    try {
+      const cfg = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+      const gatewayPort = cfg?.gateway?.port;
+      if (gatewayPort) {
+        port = parseInt(gatewayPort, 10);
+      }
+    } catch { /* ignore */ }
+  }
+
+  // If a port is candidate, check if it's occupied by the current project or someone else
+  if (port) {
+    const health = await checkPortHealth(port);
+    if (health.isRunning) {
+      if (health.workspace && normalizePath(health.workspace) === normProjectRoot) {
+        // Already running for this project! Reuse it
+        const pid = health.pid ?? 0;
+        runningGateways.set(projectId, { port, pid });
+        return { port, pid };
+      } else {
+        // Occupied by someone else. Discard it so we scan for a new one
+        port = undefined;
+      }
+    }
+  }
+
+  // If no port or candidate port is occupied by someone else, scan for a free one
+  if (!port) {
+    while (true) {
+      const candidate = nextPort++;
+      const health = await checkPortHealth(candidate);
+      if (health.isRunning) {
+        if (health.workspace && normalizePath(health.workspace) === normProjectRoot) {
+          port = candidate;
+          const pid = health.pid ?? 0;
+          runningGateways.set(projectId, { port, pid });
+          return { port, pid };
+        }
+        // Occupied by another workspace/service, continue scanning
+      } else {
+        port = candidate;
+        break;
+      }
+    }
+  }
+
+  // Shared runtime: run_gateway.py now lives in agent-runtime/ alongside the app
+  // The per-agent workspace is passed via AGENT_WORKSPACE env var
+  const runtimeDir = path.join(resourcesPath, "agent-runtime");
+  const gatewayScript = path.join(runtimeDir, "run_gateway.py");
 
   if (!fs.existsSync(gatewayScript)) {
     throw new Error(`Gateway script not found: ${gatewayScript}`);
@@ -127,25 +216,32 @@ export async function startAgentGateway(
   const pythonDir = path.dirname(pythonPath);
   const venvPath = `${pythonDir}${path.delimiter}${currentPath}`;
 
-  const isWin = process.platform === "win32";
-
-  const child = spawn(pythonPath, [gatewayScript], {
-    cwd: projectRootPath,
+  let child: ChildProcess;
+  // Spawn Python directly on all platforms.
+  // Previously, Windows used `cmd.exe /c start` to show a console window,
+  // but this caused orphan zombie processes: cmd.exe exits immediately,
+  // `child.on("exit")` fires removing the entry from runningGateways,
+  // while the actual Python process lives on in its own console window.
+  // Spawning Python directly gives us the real PID and proper lifecycle.
+  child = spawn(pythonPath, [gatewayScript], {
+    cwd: runtimeDir,
     env: {
       ...process.env,
       PATH: venvPath,
+      AGENT_WORKSPACE: projectRootPath,
       PROMPTHUB_PYTHON: pythonPath,
       PYTHONUTF8: "1",
       PYTHONIOENCODING: "utf-8",
+      PYTHONUNBUFFERED: "1",
       PYTHONPATH: venvSitePackages,
       AGENT_PORT: String(port),
     },
     stdio: ["ignore", "pipe", "pipe"],
-    detached: isWin,
+    detached: false,
     windowsHide: true,
   });
 
-  const pid = child.pid ?? 0;
+  let pid = child.pid ?? 0;
 
   // Collect stderr for error diagnostics (keep last 500 chars)
   let stderrBuffer = "";
@@ -186,6 +282,12 @@ export async function startAgentGateway(
     );
   }
 
+  // Update PID in registry (use the real Python PID from child.pid)
+  const managed = runningGateways.get(projectId);
+  if (managed) {
+    managed.pid = pid;
+  }
+
   return { port, pid };
 }
 
@@ -201,10 +303,12 @@ export function stopAgentGateway(projectRootPath: string): void {
   }
 
   try {
-    managed.child.kill("SIGTERM");
-  } catch {
-    // Process may already be dead
-  }
+    if (managed.child) {
+      managed.child.kill("SIGTERM");
+    } else if (managed.pid) {
+      process.kill(managed.pid, "SIGTERM");
+    }
+  } catch { /* ignore */ }
 
   runningGateways.delete(projectId);
 }
@@ -256,4 +360,35 @@ export function stopAllGateways(): void {
   for (const [projectId] of runningGateways) {
     stopAgentGateway(projectId);
   }
+}
+
+/**
+ * Verify whether a gateway port belongs to a specific project workspace.
+ *
+ * Hits the `/api/health` endpoint and compares the reported workspace
+ * against the expected project root path. Returns `{ match: true }` if
+ * they agree, `{ match: false }` if the port is running a different
+ * project's gateway, or `{ match: false, isRunning: false }` if the
+ * port is not serving at all.
+ */
+export async function verifyGatewayPort(
+  port: number,
+  expectedProjectRootPath: string,
+): Promise<{ match: boolean; isRunning: boolean; workspace?: string; pid?: number }> {
+  const health = await checkPortHealth(port);
+  if (!health.isRunning) {
+    return { match: false, isRunning: false };
+  }
+  if (!health.workspace) {
+    // Running but no workspace info — can't verify ownership
+    return { match: false, isRunning: true };
+  }
+  const match =
+    normalizePath(health.workspace) === normalizePath(expectedProjectRootPath);
+  return {
+    match,
+    isRunning: true,
+    workspace: health.workspace,
+    pid: health.pid,
+  };
 }

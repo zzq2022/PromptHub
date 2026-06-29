@@ -1,4 +1,4 @@
-﻿import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   FolderPlusIcon,
@@ -16,6 +16,7 @@ import {
   PlayIcon,
   SquareIcon,
   GaugeIcon,
+  Loader2Icon,
 } from "lucide-react";
 import { useSettingsStore } from "../../stores/settings.store";
 import { useToast } from "../ui/Toast";
@@ -26,7 +27,11 @@ import { ProjectCard } from "../shared/ProjectCard";
 import type { SkillProject, AgentSessionInfo } from "@prompthub/shared/types";
 import { chatCompletion, type AIConfig } from "../../services/ai";
 import { resolveScenarioAIConfig } from "../../services/ai-defaults";
-import { generateSessionId } from "../../services/agent-service";
+import {
+  generateSessionId,
+  getDefaultUserId,
+  getCachedUserId,
+} from "../../services/agent-service";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -591,6 +596,8 @@ export function ProjectsManager() {
   );
   const [gatewayLoading, setGatewayLoading] = useState(false);
   const [gatewayProgress, setGatewayProgress] = useState("");
+  const [isGatewayStaleCheckDone, setIsGatewayStaleCheckDone] = useState(false);
+  const [sessionsRefreshTrigger, setSessionsRefreshTrigger] = useState(0);
 
   const displayedProjects = useMemo(() => {
     // Show ALL projects (unified list — no tab separation)
@@ -618,32 +625,90 @@ export function ProjectsManager() {
     setActiveSession(null);
   }, [selectedProjectId]);
 
-  // ── Startup: verify saved gateway PIDs and clear stale ones ──
+  // Precache default userId on mount
   useEffect(() => {
-    let cancelled = false;
+    getDefaultUserId().catch((err) => {
+      console.error("Failed to load default userId on mount:", err);
+    });
+  }, []);
+
+  // ── Startup: verify saved gateway PIDs and clear stale ones ──
+  const hasVerifiedRef = useRef(false);
+  useEffect(() => {
+    if (skillProjects.length === 0) {
+      setIsGatewayStaleCheckDone(true);
+      return;
+    }
+    if (hasVerifiedRef.current) return;
+    hasVerifiedRef.current = true;
+    setIsGatewayStaleCheckDone(false);
+
     (async () => {
-      for (const project of skillProjects) {
+      const projectsToVerify = [...skillProjects];
+      for (const project of projectsToVerify) {
         if (!project.gatewayPid && !project.gatewayPort) continue;
-        if (cancelled) return;
         try {
+          // First: if we have a port, verify it actually belongs to this project's workspace
+          if (project.gatewayPort && project.rootPath) {
+            const portCheck = await window.api.agent.verifyGatewayPort(
+              project.gatewayPort,
+              project.rootPath,
+            );
+            if (!portCheck.isRunning || !portCheck.match) {
+              console.log(
+                `[GatewayStartup] Port ${project.gatewayPort} for "${project.name}" is ${
+                  !portCheck.isRunning
+                    ? "not running"
+                    : `owned by different workspace: ${portCheck.workspace}`
+                }, clearing stale state`,
+              );
+              const current = useSettingsStore.getState().skillProjects.find(
+                (p) => p.id === project.id,
+              );
+              if (
+                current &&
+                current.gatewayPort === project.gatewayPort
+              ) {
+                updateAgentGateway(project.id, null);
+              }
+              continue;
+            }
+            // Port matches — update PID if available from health check
+            if (portCheck.pid && portCheck.pid !== project.gatewayPid) {
+              updateAgentGateway(project.id, {
+                gatewayPort: project.gatewayPort,
+                gatewayPid: portCheck.pid,
+              });
+            }
+            continue;
+          }
+
+          // Fallback: PID-only check (no port saved)
           const isAlive = await window.api.agent.verifyProcessPid(
             project.gatewayPid ?? 0,
           );
-          if (!isAlive && !cancelled) {
+          if (!isAlive) {
             console.log(
               `[GatewayStartup] Stale gateway detected for "${project.name}" (PID ${project.gatewayPid}), clearing state`,
             );
-            updateAgentGateway(project.id, null);
+            const current = useSettingsStore.getState().skillProjects.find(
+              (p) => p.id === project.id,
+            );
+            if (
+              current &&
+              current.gatewayPid === project.gatewayPid &&
+              current.gatewayPort === project.gatewayPort
+            ) {
+              updateAgentGateway(project.id, null);
+            }
           }
         } catch {
           // If verify fails (e.g. channel not ready), skip silently
         }
       }
+      setIsGatewayStaleCheckDone(true);
     })();
-    return () => {
-      cancelled = true;
-    };
-  }, []); // Run once on mount
+  }, [skillProjects.length > 0, updateAgentGateway]);
 
   const handleDelete = useCallback(() => {
     if (!deleteTarget) return;
@@ -804,7 +869,7 @@ export function ProjectsManager() {
       </div>
 
       {/* Middle: Agent session list (only for agent projects with gateway running) */}
-      {isAgentProject && selectedProject?.gatewayPort && (
+      {isAgentProject && selectedProject?.gatewayPort && isGatewayStaleCheckDone && (
         <div className="w-56 shrink-0">
           <AgentSessionList
             project={selectedProject}
@@ -814,7 +879,8 @@ export function ProjectsManager() {
               setActiveSession(session);
             }}
             onNewChat={() => {
-              const newId = generateSessionId();
+              const userId = getCachedUserId();
+              const newId = `websocket:${userId}__${generateSessionId()}`;
               setActiveSessionId(newId);
               setActiveSession({
                 session_id: newId,
@@ -825,6 +891,7 @@ export function ProjectsManager() {
               });
               // AgentChatPanel will detect the new session and connect/switch
             }}
+            refreshTrigger={sessionsRefreshTrigger}
           />
         </div>
       )}
@@ -833,11 +900,20 @@ export function ProjectsManager() {
       <div className="flex-1 min-w-0">
         {selectedProject ? (
           isAgentProject ? (
-            selectedProject.gatewayPort ? (
+            selectedProject.gatewayPort && isGatewayStaleCheckDone ? (
               <AgentChatPanel
                 project={selectedProject}
                 activeSession={activeSession}
+                onRefreshSessions={() => setSessionsRefreshTrigger((t) => t + 1)}
               />
+            ) : !isGatewayStaleCheckDone ? (
+              // Stale check in progress
+              <div className="flex flex-col items-center justify-center h-full text-center">
+                <Loader2Icon className="h-8 w-8 animate-spin text-primary/50 mb-2" />
+                <p className="text-xs text-muted-foreground">
+                  {t("agentProject.connecting")}
+                </p>
+              </div>
             ) : (
               // Agent project with no gateway running
               <div className="flex flex-col items-center justify-center h-full text-center">

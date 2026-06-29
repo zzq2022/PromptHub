@@ -62,6 +62,13 @@ export const agentApi = {
       pid,
     ) as Promise<boolean>,
 
+  verifyGatewayPort: (port: number, expectedProjectRootPath: string) =>
+    ipcRenderer.invoke(
+      IPC_CHANNELS.AGENT_GATEWAY_VERIFY_PORT,
+      port,
+      expectedProjectRootPath,
+    ) as Promise<{ match: boolean; isRunning: boolean; workspace?: string; pid?: number }>,
+
   // ── Session management ──────────────────────────────────────
   listSessions: (port: number) =>
     ipcRenderer.invoke(IPC_CHANNELS.AGENT_SESSION_LIST, port) as Promise<

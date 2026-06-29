@@ -384,13 +384,15 @@ export function Sidebar({
       disposed = true;
     };
   }, [activeModule, disabledPlatformIds, runtimeCapabilities.skillLocalScan]);
-  const visibleDesktopModules = useMemo(
-    () =>
-      desktopHomeModules.filter((moduleId) =>
-        DESKTOP_HOME_MODULES.includes(moduleId),
-      ),
-    [desktopHomeModules],
-  );
+  const visibleDesktopModules = useMemo(() => {
+    const modules = desktopHomeModules.filter((moduleId) =>
+      DESKTOP_HOME_MODULES.includes(moduleId),
+    );
+    if (webRuntime) {
+      return modules.filter((m) => m === "prompt" || m === "skill");
+    }
+    return modules;
+  }, [desktopHomeModules, webRuntime]);
   const hasVisibleModule = visibleDesktopModules.length > 0;
   const isPromptModuleVisible = visibleDesktopModules.includes("prompt");
   const isSkillModuleVisible = visibleDesktopModules.includes("skill");

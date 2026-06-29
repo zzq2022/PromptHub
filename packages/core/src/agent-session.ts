@@ -32,8 +32,27 @@ export async function listAgentSessions(
   if (!resp.ok) {
     throw new Error(`Agent session list failed: ${resp.status} ${resp.statusText}`);
   }
-  const data = (await resp.json()) as { sessions: AgentSessionInfo[] };
-  return data.sessions ?? [];
+  const data = (await resp.json()) as { sessions: any[] };
+  const rawSessions = data.sessions ?? [];
+  return rawSessions.map((s) => {
+    const createdTime = s.created_at
+      ? typeof s.created_at === "number"
+        ? s.created_at
+        : Math.floor(new Date(s.created_at).getTime() / 1000)
+      : 0;
+    const updatedTime = s.updated_at
+      ? typeof s.updated_at === "number"
+        ? s.updated_at
+        : Math.floor(new Date(s.updated_at).getTime() / 1000)
+      : 0;
+    return {
+      session_id: s.session_id || s.key || "",
+      title: s.title || s.session_id || s.key || "Unnamed Session",
+      created_at: isNaN(createdTime) ? 0 : createdTime,
+      updated_at: isNaN(updatedTime) ? 0 : updatedTime,
+      message_count: s.message_count ?? 0,
+    };
+  });
 }
 
 /**
@@ -51,8 +70,24 @@ export async function getAgentSessionMessages(
   if (!resp.ok) {
     throw new Error(`Agent session get failed: ${resp.status} ${resp.statusText}`);
   }
-  const data = (await resp.json()) as { messages: AgentSessionMessage[] };
-  return data.messages ?? [];
+  const data = (await resp.json()) as { messages: any[] };
+  const rawMessages = data.messages ?? [];
+  return rawMessages.map((m) => {
+    let ts = 0;
+    if (m.timestamp) {
+      if (typeof m.timestamp === "number") {
+        ts = m.timestamp;
+      } else {
+        const parsed = Date.parse(m.timestamp);
+        ts = isNaN(parsed) ? 0 : parsed;
+      }
+    }
+    return {
+      role: m.role,
+      content: m.content,
+      timestamp: ts,
+    };
+  });
 }
 
 /**

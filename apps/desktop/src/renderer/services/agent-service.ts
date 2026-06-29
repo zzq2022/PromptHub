@@ -27,6 +27,21 @@ interface AgentConnection {
 }
 
 const connections = new Map<string, AgentConnection>();
+const connectionChangeListeners = new Map<string, Set<ConnectionChangeCallback>>();
+
+function notifyConnectionChange(projectId: string, connected: boolean): void {
+  const listeners = connectionChangeListeners.get(projectId);
+  if (listeners) {
+    for (const cb of listeners) {
+      try {
+        cb(connected);
+      } catch (err) {
+        console.error("Error in connection change callback:", err);
+      }
+    }
+  }
+}
+
 let cachedUserId: string | null = null;
 
 /** Maximum delay between reconnection attempts (caps exponential backoff). */
@@ -119,6 +134,7 @@ function connectOnce(
           for (const cb of conn.attachedCallbacks) {
             cb(chatId);
           }
+          notifyConnectionChange(projectId, true);
           return;
         }
 
@@ -212,10 +228,7 @@ function connectOnce(
         settled = true;
         reject(new Error("WebSocket closed before connection was established"));
       }
-      // Notify subscribers that the connection dropped
-      for (const cb of conn.connectionChangeCallbacks) {
-        cb(false);
-      }
+      notifyConnectionChange(projectId, false);
     };
   });
 }
@@ -295,6 +308,7 @@ export function disconnectFromAgent(projectId: string): void {
   conn.reasoningDeltaCallbacks.clear();
 
   connections.delete(projectId);
+  notifyConnectionChange(projectId, false);
 }
 
 /**
@@ -433,19 +447,25 @@ export function onAgentConnectionChange(
   projectId: string,
   callback: ConnectionChangeCallback,
 ): () => void {
+  let listeners = connectionChangeListeners.get(projectId);
+  if (!listeners) {
+    listeners = new Set();
+    connectionChangeListeners.set(projectId, listeners);
+  }
+  listeners.add(callback);
+
   // Fire immediately with current status
   const connected = isAgentConnected(projectId);
   callback(connected);
 
-  const conn = connections.get(projectId);
-  if (!conn) {
-    // not connected — just return noop
-    return () => {};
-  }
-
-  conn.connectionChangeCallbacks.add(callback);
   return () => {
-    conn.connectionChangeCallbacks.delete(callback);
+    const sets = connectionChangeListeners.get(projectId);
+    if (sets) {
+      sets.delete(callback);
+      if (sets.size === 0) {
+        connectionChangeListeners.delete(projectId);
+      }
+    }
   };
 }
 
@@ -453,7 +473,9 @@ export function onAgentConnectionChange(
  * Check if a project is currently connected.
  */
 export function isAgentConnected(projectId: string): boolean {
-  return connections.has(projectId);
+  const conn = connections.get(projectId);
+  if (!conn) return false;
+  return conn.ws.readyState === WebSocket.OPEN;
 }
 
 /**

@@ -14,10 +14,20 @@
   "providers": {
     "custom": {
       "api_key": "YOUR_API_KEY_HERE",
-      "api_base": "https://api.minimaxi.com/v1"
+      "api_base": "https://api.gotoken.top/v1"
     }
   },
-  "skills": {},
+  "skills": {
+    "schema-exploration": {
+      "enabled": true
+    },
+    "image-generation": {
+      "enabled": false
+    },
+    "memory": {
+      "enabled": true
+    }
+  },
   "tools": {
     "web": {
       "enable": false
@@ -27,6 +37,49 @@
       "timeout": 30
     }
   },
+  "skill_llm": {
+    "api_base": "https://api.gotoken.top/v1",
+    "api_key": "YOUR_API_KEY_HERE",
+    "model": "MiniMax-M3",
+    "ocr_model": "qwen-vl-plus"
+  },
+  "skill_embedding": {
+    "api_base": "https://api.siliconflow.cn/v1",
+    "api_key": "YOUR_API_KEY_HERE",
+    "model": "BAAI/bge-large-zh-v1.5"
+  },
   "memory_backend": "markdown",
-  "custom_instructions": "Extract ONLY persistent, long-term facts and preferences about the user (e.g., name, personal preferences, language choices, habits). ABSOLUTELY FORBID extracting temporary query results, conversational fillers, or real-time API responses."
+  "gateway": {
+    "host": "127.0.0.1",
+    "port": 18793
+  },
+  "custom_instructions": "Extract ONLY persistent, long-term facts and preferences about the user (e.g., name, personal preferences, language choices, habits). ABSOLUTELY FORBID extracting temporary database query results, row contents, database schema info, real-time API responses (e.g., stock prices, weather data, exchange rates), or any conversational fillers.",
+  "mem0": {
+    "llm": {
+      "provider": "openai",
+      "config": {
+        "model": "MiniMax-M3",
+        "openai_base_url": "https://api.gotoken.top/v1",
+        "api_key": "YOUR_API_KEY_HERE"
+      }
+    },
+    "embedder": {
+      "provider": "openai",
+      "config": {
+        "model": "BAAI/bge-large-zh-v1.5",
+        "openai_base_url": "https://api.siliconflow.cn/v1",
+        "api_key": "YOUR_API_KEY_HERE"
+      }
+    },
+    "version": "v1.1",
+    "vector_store": {
+      "provider": "milvus",
+      "config": {
+        "collection_name": "nanobot_sql_memories",
+        "url": "http://localhost:19530",
+        "token": "",
+        "embedding_model_dims": 1024
+      }
+    }
+  }
 }

@@ -32,6 +32,10 @@
       "to": "agent-template"
     },
     {
+      "from": "resources/agent-runtime",
+      "to": "agent-runtime"
+    },
+    {
       "from": "resources/agent-venv",
       "to": "agent-venv"
     }

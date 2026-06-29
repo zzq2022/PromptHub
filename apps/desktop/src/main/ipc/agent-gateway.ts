@@ -13,6 +13,7 @@ import {
   stopAgentGateway,
   getAgentGatewayStatus,
   verifyProcessPid,
+  verifyGatewayPort,
 } from "@prompthub/core";
 import { getAgentResourcesPath } from "../agent-resources";
 
@@ -49,6 +50,17 @@ export function registerAgentGatewayIPC(): void {
     IPC_CHANNELS.AGENT_GATEWAY_VERIFY_PID,
     async (_event, pid: number): Promise<boolean> => {
       return verifyProcessPid(pid);
+    },
+  );
+
+  ipcMain.handle(
+    IPC_CHANNELS.AGENT_GATEWAY_VERIFY_PORT,
+    async (
+      _event,
+      port: number,
+      expectedProjectRootPath: string,
+    ): Promise<{ match: boolean; isRunning: boolean; workspace?: string; pid?: number }> => {
+      return verifyGatewayPort(port, expectedProjectRootPath);
     },
   );
 }

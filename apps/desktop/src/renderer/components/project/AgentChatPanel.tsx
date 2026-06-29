@@ -13,6 +13,8 @@ import {
   Loader2Icon,
   WifiIcon,
   WifiOffIcon,
+  PowerIcon,
+  Trash2Icon,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -41,6 +43,7 @@ interface ChatMessage {
 interface AgentChatPanelProps {
   project: SkillProject;
   activeSession: AgentSessionInfo | null;
+  onRefreshSessions?: () => void;
 }
 
 type ConnectionStatus = "disconnected" | "connecting" | "connected" | "error";
@@ -53,6 +56,7 @@ function formatTime(ts: number): string {
 export function AgentChatPanel({
   project,
   activeSession,
+  onRefreshSessions,
 }: AgentChatPanelProps) {
   const { t } = useTranslation();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -90,25 +94,29 @@ export function AgentChatPanel({
 
       // If user already selected a session inside this panel,
       // ensure the connection is active
-      if (activeSession?.session_id && !isAgentConnected(project.id)) {
-        const port = project.gatewayPort;
-        if (!port) return;
-        setConnectionStatus("connecting");
-        setConnectionError("");
-        try {
-          await connectToAgent(
-            project.id,
-            port,
-            getCachedUserId(),
-            activeSession.session_id,
-          );
+      if (activeSession?.session_id) {
+        if (isAgentConnected(project.id)) {
           if (!cancelled) setConnectionStatus("connected");
-        } catch (err) {
-          if (!cancelled) {
-            setConnectionStatus("error");
-            setConnectionError(
-              err instanceof Error ? err.message : "Connection failed",
+        } else {
+          const port = project.gatewayPort;
+          if (!port) return;
+          setConnectionStatus("connecting");
+          setConnectionError("");
+          try {
+            await connectToAgent(
+              project.id,
+              port,
+              getCachedUserId(),
+              activeSession.session_id,
             );
+            if (!cancelled) setConnectionStatus("connected");
+          } catch (err) {
+            if (!cancelled) {
+              setConnectionStatus("error");
+              setConnectionError(
+                err instanceof Error ? err.message : "Connection failed",
+              );
+            }
           }
         }
       }
@@ -120,7 +128,6 @@ export function AgentChatPanel({
       cancelled = true;
     };
     // Intentionally only run on mount/project change — session switching is handled below
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project.id, project.rootPath]);
 
   // Re-attach WebSocket when activeSession changes
@@ -137,9 +144,26 @@ export function AgentChatPanel({
     setIsStreaming(false);
     assistantIdRef.current = null;
 
+    // Fetch historical messages for the session
+    window.api.agent
+      .getSessionMessages(project.gatewayPort, currentId)
+      .then((history) => {
+        const mapped: ChatMessage[] = history.map((msg, idx) => ({
+          id: `hist-${idx}-${Date.now()}`,
+          role: msg.role as "user" | "assistant",
+          content: msg.content,
+          timestamp: msg.timestamp || Date.now(),
+        }));
+        setMessages(mapped);
+      })
+      .catch((err) => {
+        console.error("Failed to load session history:", err);
+      });
+
     // If already connected, switch session; otherwise establish a new connection
     if (isAgentConnected(project.id)) {
       switchAgentSession(project.id, getCachedUserId(), currentId);
+      setConnectionStatus("connected");
     } else {
       setConnectionStatus("connecting");
       setConnectionError("");
@@ -175,6 +199,7 @@ export function AgentChatPanel({
     const unsubEnd = onAgentTurnEnd(project.id, () => {
       setIsStreaming(false);
       assistantIdRef.current = null;
+      onRefreshSessions?.();
     });
 
     const unsubError = onAgentError(project.id, (error) => {
@@ -196,12 +221,14 @@ export function AgentChatPanel({
       unsubEnd();
       unsubError();
     };
-  }, [project.id, connectionStatus]);
+  }, [project.id, connectionStatus, onRefreshSessions]);
 
   // Listen for WebSocket connection changes (e.g. unexpected disconnect)
   useEffect(() => {
     const unsub = onAgentConnectionChange(project.id, (connected) => {
-      if (!connected) {
+      if (connected) {
+        setConnectionStatus("connected");
+      } else {
         setConnectionStatus("disconnected");
         setIsStreaming(false);
         assistantIdRef.current = null;
@@ -286,6 +313,11 @@ export function AgentChatPanel({
     }
   }, [project.id, project.gatewayPort, activeSession?.session_id]);
 
+  const handleDisconnect = useCallback(() => {
+    disconnectFromAgent(project.id);
+    setConnectionStatus("disconnected");
+  }, [project.id]);
+
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Header */}
@@ -303,49 +335,67 @@ export function AgentChatPanel({
         </div>
         <div className="flex items-center gap-2">
           {/* Connection status */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 bg-muted/40 px-2 py-0.5 rounded border border-border">
             {connectionStatus === "connected" && (
               <>
-                <WifiIcon className="h-3.5 w-3.5 text-green-500" />
-                <span className="text-[11px] text-green-600">
+                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                <span className="text-[11px] font-medium text-green-600 dark:text-green-400">
                   {t("agentProject.connected")}
                 </span>
               </>
             )}
             {connectionStatus === "connecting" && (
               <>
-                <Loader2Icon className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
-                <span className="text-[11px] text-muted-foreground">
+                <Loader2Icon className="h-3 w-3 animate-spin text-muted-foreground" />
+                <span className="text-[11px] font-medium text-muted-foreground">
                   {t("agentProject.connecting")}
                 </span>
               </>
             )}
             {connectionStatus === "disconnected" && (
               <>
-                <WifiOffIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="text-[11px] text-muted-foreground">
+                <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40" />
+                <span className="text-[11px] font-medium text-muted-foreground">
                   {t("agentProject.disconnected")}
                 </span>
               </>
             )}
             {connectionStatus === "error" && (
-              <button
-                className="flex items-center gap-1.5 hover:opacity-80"
-                onClick={handleReconnect}
-              >
-                <WifiOffIcon className="h-3.5 w-3.5 text-red-500" />
-                <span className="text-[11px] text-red-600">
-                  {t("agentProject.reconnect")}
+              <>
+                <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                <span className="text-[11px] font-medium text-red-600 dark:text-red-400">
+                  {t("agentProject.error")}
                 </span>
+              </>
+            )}
+          </div>
+
+          {/* Connection actions */}
+          <div className="flex items-center gap-1 border-l border-border pl-2">
+            <button
+              className="p-1 rounded hover:bg-muted text-muted-foreground"
+              onClick={handleReconnect}
+              title={t("agentProject.reconnect")}
+            >
+              <RefreshCwIcon className="h-3.5 w-3.5" />
+            </button>
+            {(connectionStatus === "connected" || connectionStatus === "connecting") && (
+              <button
+                className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+                onClick={handleDisconnect}
+                title={t("agentProject.disconnect")}
+              >
+                <PowerIcon className="h-3.5 w-3.5" />
               </button>
             )}
           </div>
+
           <button
-            className="p-1.5 rounded-md hover:bg-muted text-muted-foreground"
+            className="p-1.5 rounded-md hover:bg-muted text-muted-foreground border-l border-border pl-2"
             onClick={() => setMessages([])}
             title={t("agentProject.clearChat")}
           >
-            <RefreshCwIcon className="h-4 w-4" />
+            <Trash2Icon className="h-4 w-4" />
           </button>
         </div>
       </div>
@@ -468,40 +518,46 @@ export function AgentChatPanel({
       </div>
 
       {/* Input */}
-      <div className="border-t border-border px-4 py-3">
-        <div className="flex gap-2 max-w-2xl mx-auto">
-          <textarea
-            ref={textareaRef}
-            className="flex-1 resize-none rounded-xl border border-border bg-card px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 max-h-[200px]"
-            rows={1}
-            placeholder={
-              connectionStatus === "connected"
-                ? t("agentProject.chatPlaceholder")
-                : t("agentProject.waitingForGateway")
-            }
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={isStreaming || connectionStatus !== "connected"}
-          />
-          {isStreaming ? (
-            <button
-              className="px-4 py-3 rounded-xl text-sm font-medium bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
-              onClick={() => setIsStreaming(false)}
-            >
-              <StopCircleIcon className="h-4 w-4" />
-            </button>
-          ) : (
-            <button
-              className="px-4 py-3 rounded-xl text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
-              onClick={sendMessage}
-              disabled={!input.trim() || connectionStatus !== "connected"}
-            >
-              <SendIcon className="h-4 w-4" />
-            </button>
-          )}
+      {activeSession && (
+        <div className="border-t border-border px-4 py-3">
+          <div className="flex gap-2 max-w-2xl mx-auto">
+            <textarea
+              ref={textareaRef}
+              className="flex-1 resize-none rounded-xl border border-border bg-card px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 max-h-[200px]"
+              rows={1}
+              placeholder={
+                connectionStatus === "connected"
+                  ? t("agentProject.chatPlaceholder")
+                  : connectionStatus === "connecting"
+                  ? t("agentProject.connecting")
+                  : connectionStatus === "error"
+                  ? t("agentProject.connectionFailed")
+                  : t("agentProject.disconnected")
+              }
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              disabled={isStreaming || connectionStatus !== "connected"}
+            />
+            {isStreaming ? (
+              <button
+                className="px-4 py-3 rounded-xl text-sm font-medium bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
+                onClick={() => setIsStreaming(false)}
+              >
+                <StopCircleIcon className="h-4 w-4" />
+              </button>
+            ) : (
+              <button
+                className="px-4 py-3 rounded-xl text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                onClick={sendMessage}
+                disabled={!input.trim() || connectionStatus !== "connected"}
+              >
+                <SendIcon className="h-4 w-4" />
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

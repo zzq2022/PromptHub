@@ -1,4 +1,4 @@
-# Python virtual environment
+# 1. 忽略 Python 虚拟环境与缓存
 .venv/
 __pycache__/
 *.pyc
@@ -6,19 +6,21 @@ __pycache__/
 *.pyd
 .pytest_cache/
 
-# Session history (managed by Agent)
-sessions/*.jsonl
-sessions/*_extractor.json
+# 2. 忽略前端依赖与构建产物
+node_modules/
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+.next/
+out/
 
-# Memory files (managed by Agent)
-memory/**/MEMORY.md
-memory/**/HISTORY.md
-
-# Agent runtime
-gateway.pid
-logs/
+# 3. 忽略打包分发文件夹及临时文件
 dist/
 *.log
 *.tmp
 __temp_*
-.env
+.idea/
+.vscode/
+
+# 4. 忽略本地用户聊天历史
+sessions/

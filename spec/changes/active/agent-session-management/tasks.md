@@ -1,6 +1,6 @@
 # Agent Session 管理改进 — 实施任务
 
-**当前进度：** 待实现
+**当前进度：** 已完成
 
 ---
 
@@ -8,27 +8,19 @@
 
 **文件：** `apps/desktop/src/renderer/services/agent-service.ts`
 
-### T1.1 新增 `generateSessionId()`
+### T1.1 新增 `generateSessionId()` [x]
 
 生成 `session_YYYYMMDD_HHmmss` 格式的 session ID。
 
-```typescript
-export function generateSessionId(): string {
-  const now = new Date();
-  const pad = (n: number): string => String(n).padStart(2, "0");
-  return `session_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
-}
-```
-
-### T1.2 修正 `buildChatId()`
+### T1.2 修正 `buildChatId()` [x]
 
 确保 chat_id 格式为 `{userId}__session_YYYYMMDD_HHmmss`。
 
-### T1.3 `connectToAgent` 默认参数
+### T1.3 `connectToAgent` 默认参数 [x]
 
 默认 sessionId 改为 `generateSessionId()`，不再用 `"default"`。
 
-### T1.4 导出 `switchAgentSession()`
+### T1.4 导出 `switchAgentSession()` [x]
 
 已有实现，确认可正常工作。
 
@@ -38,25 +30,25 @@ export function generateSessionId(): string {
 
 ## T2: Preload + IPC — 注入 userId
 
-### T2.1 Preload 新增 `getUserId()`
+### T2.1 Preload 新增 `getUserId()` [x]
 
 ```typescript
 // preload/api/agent.ts
 getUserId: () => ipcRenderer.invoke(IPC_CHANNELS.AGENT_GET_USER_ID) as Promise<string>,
 ```
 
-### T2.2 IPC 通道常量
+### T2.2 IPC 通道常量 [x]
 
 `packages/shared/constants/ipc-channels.ts` 新增：
 ```typescript
 AGENT_GET_USER_ID: "agent:getUserId",
 ```
 
-### T2.3 IPC Handler
+### T2.3 IPC Handler [x]
 
 `apps/desktop/src/main/ipc/agent-session.ts` 新增 handler，返回 OS 用户名。
 
-### T2.4 agent-service 使用
+### T2.4 agent-service 使用 [x]
 
 `getDefaultUserId()` 改为同步返回缓存值，首次调用时通过 preload 获取。
 
@@ -68,7 +60,7 @@ AGENT_GET_USER_ID: "agent:getUserId",
 
 **文件：** `apps/desktop/src/renderer/components/project/AgentSessionList.tsx`
 
-### T3.1 新增 `onNewChat` prop
+### T3.1 新增 `onNewChat` prop [x]
 
 ```typescript
 interface AgentSessionListProps {
@@ -79,7 +71,7 @@ interface AgentSessionListProps {
 }
 ```
 
-### T3.2 Header 添加按钮
+### T3.2 Header 添加按钮 [x]
 
 在 session 列表 header 的 refresh 按钮旁边加 `PlusIcon` "新建对话" 按钮。
 
@@ -91,11 +83,11 @@ interface AgentSessionListProps {
 
 **文件：** `apps/desktop/src/renderer/components/project/AgentChatPanel.tsx`
 
-### T4.1 session 切换时重新 attach
+### T4.1 session 切换时重新 attach [x]
 
 监听 `activeSession` 变化 → 调用 `switchAgentSession()` 重新绑定 WebSocket → 清空本地消息 → 加载历史消息。
 
-### T4.2 建议问题空状态
+### T4.2 建议问题空状态 [x]
 
 空消息时显示 4 个建议按钮（参考 Tpa_RuYiBot 的 `QuickHint`）：
 
